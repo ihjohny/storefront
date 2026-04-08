@@ -1,0 +1,79 @@
+{
+  "common": {
+    "home": "Home",
+    "products": "Products",
+    "categories": "Categories",
+    "cart": "Cart",
+    "checkout": "Checkout",
+    "account": "Account",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "search": "Search",
+    "addToCart": "Add to Cart",
+    "buyNow": "Buy Now",
+    "viewAll": "View All",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "noResults": "No results found",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous"
+  },
+  "auth": {
+    "loginTitle": "Sign In",
+    "registerTitle": "Create Account",
+    "email": "Email",
+    "phone": "Phone",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "forgotPassword": "Forgot Password?",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "loginWithGoogle": "Continue with Google",
+    "loginWithFacebook": "Continue with Facebook"
+  },
+  "product": {
+    "addedToCart": "Added to cart",
+    "outOfStock": "Out of Stock",
+    "reviews": "Reviews",
+    "writeReview": "Write a Review",
+    "relatedProducts": "Related Products"
+  },
+  "cart": {
+    "title": "Shopping Cart",
+    "empty": "Your cart is empty",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "tax": "Tax",
+    "total": "Total",
+    "checkout": "Proceed to Checkout",
+    "continueShopping": "Continue Shopping",
+    "remove": "Remove",
+    "updateQuantity": "Update Quantity"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "shippingAddress": "Shipping Address",
+    "billingAddress": "Billing Address",
+    "shippingMethod": "Shipping Method",
+    "payment": "Payment",
+    "placeOrder": "Place Order",
+    "orderSummary": "Order Summary"
+  },
+  "order": {
+    "confirmation": "Order Confirmed",
+    "orderNumber": "Order Number",
+    "status": "Status",
+    "placed": "Placed",
+    "trackOrder": "Track Order"
+  },
+  "vendor": {
+    "directory": "Vendors",
+    "storefront": "Store",
+    "becomeVendor": "Become a Vendor",
+    "products": "Products",
+    "rating": "Rating",
+    "since": "Member since"
+  }
+}
