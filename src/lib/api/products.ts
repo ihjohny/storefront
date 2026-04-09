@@ -20,8 +20,6 @@ export async function getProducts(
   filters: ProductFilters = {},
 ): Promise<ProductsResponse> {
   const params = new URLSearchParams();
-  params.set("where[status][equals]", "published");
-  params.set("depth", "1");
   params.set("limit", String(filters.limit ?? ITEMS_PER_PAGE));
   params.set("page", String(filters.page ?? 1));
 
@@ -51,7 +49,7 @@ export async function getProducts(
   }
 
   return apiClient<ProductsResponse>(`/products?${params.toString()}`, {
-    next: { revalidate: 30 },
+    cache: "no-store",
   } as RequestInit);
 }
 
@@ -76,7 +74,6 @@ export async function getProductVariants(productId: string): Promise<ProductVari
   const params = new URLSearchParams();
   params.set("where[product][equals]", productId);
   params.set("where[isActive][equals]", "true");
-  params.set("depth", "1");
   params.set("limit", "100");
 
   const response = await apiClient<PaginatedResponse<ProductVariant>>(

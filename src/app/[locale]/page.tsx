@@ -5,6 +5,7 @@ import { getHeader } from "@/lib/api/globals";
 import { features } from "@/lib/config/features";
 import { formatPrice } from "@/lib/utils/format-price";
 import { getMediaUrl } from "@/lib/utils/url";
+import { getProductMedia } from "@/lib/utils/product-media";
 import type { PaginatedResponse } from "@/lib/types/api-response";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { i18nConfig, type Locale } from "@/lib/i18n/config";
@@ -139,10 +140,8 @@ export default async function LocaleHomePage({ params }: LocalePageProps) {
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {featuredProducts.map((product) => {
-              const firstImage = product.images?.[0];
-              const mediaUrl = getMediaUrl(
-                typeof firstImage === "object" ? firstImage?.url : null,
-              );
+              const firstImage = getProductMedia(product.images ?? undefined)[0];
+              const mediaUrl = getMediaUrl(firstImage?.url);
               const price = Number(product.basePrice ?? 0);
 
               return (
@@ -155,11 +154,7 @@ export default async function LocaleHomePage({ params }: LocalePageProps) {
                     {mediaUrl ? (
                       <Image
                         src={mediaUrl}
-                        alt={
-                          typeof firstImage === "object" && firstImage?.alt
-                            ? firstImage.alt
-                            : product.name
-                        }
+                        alt={firstImage?.alt ? firstImage.alt : product.name}
                         fill
                         className="object-cover"
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"

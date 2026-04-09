@@ -1,7 +1,9 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getTopLevelCategories } from "@/lib/api/categories";
 import { i18nConfig, type Locale } from "@/lib/i18n/config";
+import { getMediaUrl } from "@/lib/utils/url";
 
 export const dynamic = "force-dynamic";
 
@@ -36,12 +38,25 @@ export default async function CategoriesPage({ params }: CategoriesPageProps) {
             <Link
               key={category.id}
               href={`/${locale}/categories/${category.slug}`}
-              className="rounded-xl border border-slate-200 bg-white p-4 transition hover:shadow-sm dark:border-slate-800 dark:bg-slate-950"
+              className="overflow-hidden rounded-xl border border-slate-200 bg-white transition hover:shadow-sm dark:border-slate-800 dark:bg-slate-950"
             >
-              <h2 className="text-base font-semibold sm:text-lg">{category.name}</h2>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                Explore products in this category.
-              </p>
+              <div className="relative aspect-3/2 bg-slate-100 dark:bg-slate-900">
+                {category.image ? (
+                  <Image
+                    src={getMediaUrl(category.image.url) ?? ""}
+                    alt={category.image.alt || category.name}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  />
+                ) : null}
+              </div>
+              <div className="p-4">
+                <h2 className="text-base font-semibold sm:text-lg">{category.name}</h2>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                  Explore products in this category.
+                </p>
+              </div>
             </Link>
           ))}
         </section>

@@ -39,6 +39,7 @@ export function Pagination({
       {currentPage > 1 ? (
         <Link
           href={buildHref(pathname, query, currentPage - 1)}
+          scroll={false}
           className="rounded-md border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-900"
         >
           Previous
@@ -48,6 +49,7 @@ export function Pagination({
         <Link
           key={page}
           href={buildHref(pathname, query, page)}
+          scroll={false}
           aria-current={currentPage === page ? "page" : undefined}
           className={`rounded-md px-3 py-1.5 text-sm ${
             currentPage === page
@@ -61,6 +63,7 @@ export function Pagination({
       {currentPage < totalPages ? (
         <Link
           href={buildHref(pathname, query, currentPage + 1)}
+          scroll={false}
           className="rounded-md border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-900"
         >
           Next

@@ -8,6 +8,8 @@ import { ProductGrid } from "@/components/product/product-grid";
 import { Pagination } from "@/components/shared/pagination";
 import { CategoryBreadcrumb } from "@/components/category/category-breadcrumb";
 
+export const dynamic = "force-dynamic";
+
 type CategoryPageProps = {
   params: Promise<{ locale: string; slug: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;

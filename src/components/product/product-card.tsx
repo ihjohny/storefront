@@ -3,6 +3,7 @@ import Link from "next/link";
 import { features } from "@/lib/config/features";
 import { formatPrice } from "@/lib/utils/format-price";
 import { getMediaUrl } from "@/lib/utils/url";
+import { getProductMedia } from "@/lib/utils/product-media";
 import type { Product } from "@/lib/types/product";
 import { AddToCartButton } from "@/components/product/add-to-cart-button";
 
@@ -19,7 +20,8 @@ function getVendorName(tenant: Product["tenant"]) {
 }
 
 export function ProductCard({ product, locale }: ProductCardProps) {
-  const firstImage = product.images?.[0];
+  const media = getProductMedia(product.images);
+  const firstImage = media[0];
   const imageUrl = getMediaUrl(firstImage?.url);
   const vendorName = getVendorName(product.tenant);
   const productHref = `/${locale}/products/${product.slug}`;

@@ -3,6 +3,7 @@ import { ProductVariants } from "@/components/product/product-variants";
 import { AddToCartButton } from "@/components/product/add-to-cart-button";
 import { ProductReviews } from "@/components/product/product-reviews";
 import { formatPrice } from "@/lib/utils/format-price";
+import { getProductMedia } from "@/lib/utils/product-media";
 import type { Product, ProductVariant } from "@/lib/types/product";
 
 type ProductDetailProps = {
@@ -13,10 +14,11 @@ type ProductDetailProps = {
 
 export function ProductDetail({ product, variants, locale }: ProductDetailProps) {
   const hasVariants = product.hasVariants && variants.length > 0;
+  const galleryImages = getProductMedia(product.images);
 
   return (
     <section className="grid gap-8 lg:grid-cols-2">
-      <ProductGallery images={product.images} fallbackAlt={product.name} />
+      <ProductGallery images={galleryImages} fallbackAlt={product.name} />
       <div className="space-y-5">
         <div className="space-y-2">
           <h1 className="text-2xl font-semibold sm:text-3xl">{product.name}</h1>

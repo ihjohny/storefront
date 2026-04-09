@@ -6,6 +6,8 @@ import { ProductGrid } from "@/components/product/product-grid";
 import { ProductFilters } from "@/components/product/product-filters";
 import { Pagination } from "@/components/shared/pagination";
 
+export const dynamic = "force-dynamic";
+
 type ProductsPageProps = {
   params: Promise<{ locale: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;

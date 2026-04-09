@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getProductBySlug, getProductVariants } from "@/lib/api/products";
 import { getMediaUrl } from "@/lib/utils/url";
+import { getProductMedia } from "@/lib/utils/product-media";
 import { i18nConfig, type Locale } from "@/lib/i18n/config";
 import { ProductDetail } from "@/components/product/product-detail";
 
@@ -22,9 +23,8 @@ export async function generateMetadata({
     return {};
   }
 
-  const firstImageUrl = product.images[0]?.url
-    ? getMediaUrl(product.images[0].url)
-    : null;
+  const firstImage = getProductMedia(product.images)[0];
+  const firstImageUrl = firstImage?.url ? getMediaUrl(firstImage.url) : null;
 
   return {
     title: product.meta?.title || product.name,
