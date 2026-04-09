@@ -44,6 +44,7 @@ export default async function ProductsPage({
     sort: firstParam(query.sort) ?? "-createdAt",
     minPrice: toNumber(firstParam(query.minPrice)),
     maxPrice: toNumber(firstParam(query.maxPrice)),
+    featured: firstParam(query.featured) === "1",
   };
 
   const [productsResponse, categories] = await Promise.all([
@@ -57,6 +58,7 @@ export default async function ProductsPage({
     sort: filters.sort,
     minPrice: filters.minPrice ? String(filters.minPrice) : undefined,
     maxPrice: filters.maxPrice ? String(filters.maxPrice) : undefined,
+    featured: filters.featured ? "1" : undefined,
   };
 
   return (
@@ -64,13 +66,12 @@ export default async function ProductsPage({
       <header className="space-y-2">
         <h1 className="text-2xl font-semibold sm:text-3xl">Products</h1>
         <p className="text-sm text-slate-600 dark:text-slate-300">
-          Browse published products with category, search, and price filters.
+          Browse published products with category, sort, and price filters.
         </p>
       </header>
 
       <section className="grid gap-6 lg:grid-cols-[280px_1fr]">
-        <ProductFilters categories={categories} />
-        <div className="space-y-5">
+        <div className="order-2 space-y-5 lg:order-2">
           <ProductGrid products={productsResponse.docs} locale={locale} />
           <Pagination
             currentPage={productsResponse.page}
@@ -78,6 +79,9 @@ export default async function ProductsPage({
             pathname={`/${locale}/products`}
             query={paginationQuery}
           />
+        </div>
+        <div className="order-1 lg:order-1 lg:sticky lg:top-24 lg:self-start">
+          <ProductFilters categories={categories} />
         </div>
       </section>
     </main>

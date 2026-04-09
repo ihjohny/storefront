@@ -36,7 +36,7 @@ export function MobileMenu({
 
   return (
     <Transition show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-50 md:hidden" onClose={onClose}>
+      <Dialog as="div" className="relative z-50 xl:hidden" onClose={onClose}>
         <TransitionChild
           as={Fragment}
           enter="ease-out duration-200"

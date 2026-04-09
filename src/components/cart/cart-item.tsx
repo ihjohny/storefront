@@ -23,8 +23,17 @@ export function CartItem({
   onDecrease,
   onRemove,
 }: CartItemProps) {
-  const image = item.variant?.image ?? item.product.images?.[0] ?? null;
-  const imageUrl = getMediaUrl(image?.url);
+  const rawProductImage = item.product.images?.[0] ?? null;
+  const image =
+    item.variant?.image ??
+    (rawProductImage && typeof rawProductImage === "object" && "image" in rawProductImage
+      ? rawProductImage.image
+      : rawProductImage);
+  const imageUrl = getMediaUrl(
+    image && typeof image === "object" && "url" in image ? image.url : null,
+  );
+  const imageAlt =
+    image && typeof image === "object" && "alt" in image ? image.alt : item.product.name;
   const lineTotal = item.unitPrice * item.quantity;
 
   return (
@@ -33,7 +42,7 @@ export function CartItem({
         {imageUrl ? (
           <Image
             src={imageUrl}
-            alt={image?.alt || item.product.name}
+            alt={imageAlt}
             fill
             className="object-cover"
             sizes="(max-width: 640px) 88px, 112px"

@@ -1,21 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type SearchBarProps = {
   locale: string;
   placeholder?: string;
   onSearchComplete?: () => void;
+  focusOnMount?: boolean;
 };
 
 export function SearchBar({
   locale,
   placeholder = "Search products",
   onSearchComplete,
+  focusOnMount = false,
 }: SearchBarProps) {
   const router = useRouter();
   const [query, setQuery] = useState("");
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (!focusOnMount) {
+      return;
+    }
+
+    inputRef.current?.focus();
+  }, [focusOnMount]);
 
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -34,6 +45,7 @@ export function SearchBar({
   return (
     <form onSubmit={onSubmit} className="flex w-full items-center gap-2">
       <input
+        ref={inputRef}
         type="search"
         value={query}
         onChange={(event) => setQuery(event.target.value)}
