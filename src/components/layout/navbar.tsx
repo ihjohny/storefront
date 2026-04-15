@@ -7,6 +7,7 @@ import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { SearchBar } from "@/components/layout/search-bar";
 import { StoreSelector } from "@/components/layout/store-selector";
 import { MobileMenu } from "@/components/layout/mobile-menu";
+import { features } from "@/lib/config/features";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useCart } from "@/lib/hooks/use-cart";
 
@@ -32,17 +33,18 @@ export function Navbar({ locale, navItems }: NavbarProps) {
   return (
     <>
       <div className="relative">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-3">
-          <Link href={`/${locale}`} className="text-base font-semibold tracking-tight">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-2 px-4 py-3 sm:gap-3 sm:px-6 lg:px-8">
+        <div className="flex w-full min-w-0 flex-wrap items-center justify-between gap-3">
+          <Link
+            href={`/${locale}`}
+            className="shrink-0 text-base font-semibold tracking-tight"
+          >
             BS Commerce
           </Link>
-          <StoreSelector />
-        </div>
 
         <nav
           aria-label="Primary navigation"
-          className="hidden items-center gap-3 text-sm md:flex"
+          className="hidden min-w-0 items-center gap-3 text-sm md:flex"
         >
           {safeItems.map((item) => (
             <Link
@@ -292,6 +294,12 @@ export function Navbar({ locale, navItems }: NavbarProps) {
         >
           Menu
         </button>
+        </div>
+        {features.multiStore ? (
+          <div className="min-w-0 border-t border-slate-100 pt-2 dark:border-slate-800 sm:pt-3">
+            <StoreSelector />
+          </div>
+        ) : null}
         </div>
 
         {isSearchExpanded ? (

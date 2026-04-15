@@ -1,4 +1,4 @@
-import { apiClient } from "./client";
+import { apiClient, ApiError } from "./client";
 import type { Cart } from "../types/cart";
 import type { PaginatedResponse } from "../types/api-response";
 
@@ -72,6 +72,23 @@ export async function deleteCart(cartId: string, guestId?: string): Promise<void
     method: "DELETE",
     guestId,
   });
+}
+
+/** DELETE preferred; PATCH empty `items` when DELETE is not allowed (e.g. some guest/session edge cases). */
+export async function removeCartDocument(
+  cartId: string,
+  guestId: string | undefined,
+  storeId: string | undefined,
+): Promise<void> {
+  try {
+    await deleteCart(cartId, guestId);
+  } catch (e) {
+    if (e instanceof ApiError && (e.status === 403 || e.status === 401)) {
+      await updateCart(cartId, [], guestId, storeId);
+      return;
+    }
+    throw e;
+  }
 }
 
 export async function applyCoupon(

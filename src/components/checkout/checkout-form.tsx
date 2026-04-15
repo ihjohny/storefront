@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { flushSync } from "react-dom";
 import { useRouter, useParams } from "next/navigation";
 import { ApiError } from "@/lib/api/client";
 import { getAddresses, type Address } from "@/lib/api/addresses";
@@ -12,7 +13,12 @@ import { features } from "@/lib/config/features";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useGuestId } from "@/lib/hooks/use-guest-id";
 import { useCart } from "@/lib/hooks/use-cart";
-import { AddressForm, type AddressFormValues } from "@/components/checkout/address-form";
+import { useStore } from "@/lib/hooks/use-store";
+import {
+  AddressForm,
+  type AddressFormValues,
+  type ServiceAreaReadonlyFields,
+} from "@/components/checkout/address-form";
 import { ShippingSelector } from "@/components/checkout/shipping-selector";
 import { OrderReview } from "@/components/checkout/order-review";
 import { PaymentForm } from "@/components/checkout/payment-form";
@@ -69,6 +75,32 @@ export function CheckoutForm() {
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const guestId = useGuestId();
   const { items, subtotal, refreshCart } = useCart();
+  const { serviceArea, canShopCurrentArea } = useStore();
+
+  const serviceAreaReadonly: ServiceAreaReadonlyFields | undefined = useMemo(() => {
+    if (!features.serviceAreaStoreSelection || !features.geography) return undefined;
+    if (!serviceArea || !canShopCurrentArea) return undefined;
+    const c = serviceArea.countries.find((x) => x.id === serviceArea.selectedCountryId);
+    const sub = serviceArea.subdivisions.find((x) => x.id === serviceArea.selectedSubdivisionId);
+    if (!c || !sub) return undefined;
+    const loc = serviceArea.selectedLocalityId
+      ? serviceArea.localities.find((l) => l.id === serviceArea.selectedLocalityId)
+      : null;
+    return {
+      countryIso: c.isoCode.slice(0, 2).toUpperCase(),
+      region: sub.name,
+      localityName: loc?.name ?? null,
+    };
+  }, [serviceArea, canShopCurrentArea]);
+
+  const requireServiceAreaAlignedAddress =
+    Boolean(serviceAreaReadonly) && canShopCurrentArea;
+
+  useEffect(() => {
+    if (requireServiceAreaAlignedAddress) {
+      setUseSavedAddress(false);
+    }
+  }, [requireServiceAreaAlignedAddress]);
 
   const [step, setStep] = useState<CheckoutStep>("address");
   const [isLoadingData, setIsLoadingData] = useState(true);
@@ -230,7 +262,9 @@ export function CheckoutForm() {
         !isAuthenticated ? guestId ?? undefined : undefined,
       );
 
-      setCheckoutComplete(true);
+      flushSync(() => {
+        setCheckoutComplete(true);
+      });
 
       try {
         sessionStorage.setItem("bs-checkout-result", JSON.stringify(response));
@@ -245,7 +279,9 @@ export function CheckoutForm() {
         router.push(`/${params.locale}/checkout/success?order=${orderId}`);
       }
 
-      void refreshCart();
+      queueMicrotask(() => {
+        void refreshCart();
+      });
     } catch (error) {
       setErrorMessage(toMessage(error));
     } finally {
@@ -277,7 +313,11 @@ export function CheckoutForm() {
     );
   }
 
-  const showSavedAddressPicker = isAuthenticated && addresses.length > 0 && useSavedAddress;
+  const showSavedAddressPicker =
+    isAuthenticated &&
+    addresses.length > 0 &&
+    useSavedAddress &&
+    !requireServiceAreaAlignedAddress;
 
   return (
     <section className="space-y-5">
@@ -352,6 +392,7 @@ export function CheckoutForm() {
             <AddressForm
               requireGuestEmail={!isAuthenticated && features.guestCheckout}
               defaultValues={draftedAddress ?? undefined}
+              serviceAreaReadonly={serviceAreaReadonly}
               isSubmitting={isSubmitting}
               onSubmit={handleAddressSubmit}
             />

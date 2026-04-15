@@ -1,8 +1,14 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useEffect, useRef } from "react";
+import { useForm, useFormState } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+
+const emailOrEmpty = z.union([
+  z.literal(""),
+  z.string().email("Enter a valid email"),
+]);
 
 const addressSchema = z.object({
   label: z.string().min(1, "Label is required"),
@@ -15,14 +21,27 @@ const addressSchema = z.object({
   postalCode: z.string().min(1, "Postal code is required"),
   country: z.string().min(2, "Country is required").max(2, "Use ISO country code"),
   phone: z.string().optional(),
-  guestEmail: z.string().email("Enter a valid email").optional(),
+  guestEmail: emailOrEmpty,
 });
 
 export type AddressFormValues = z.infer<typeof addressSchema>;
 
+/**
+ * Locks checkout fields to match the header service-area selection only at the levels the shopper chose:
+ * - Country + region (subdivision) always locked when geography checkout is active.
+ * - City locked only if they picked a specific locality; otherwise they enter street-level / local area detail.
+ */
+export type ServiceAreaReadonlyFields = {
+  countryIso: string;
+  region: string;
+  /** When set, user chose a locality in the header — city matches it. When null, only region is fixed. */
+  localityName: string | null;
+};
+
 type AddressFormProps = {
   requireGuestEmail?: boolean;
   defaultValues?: Partial<AddressFormValues>;
+  serviceAreaReadonly?: ServiceAreaReadonlyFields;
   isSubmitting?: boolean;
   submitLabel?: string;
   onSubmit: (values: AddressFormValues) => Promise<void> | void;
@@ -31,10 +50,14 @@ type AddressFormProps = {
 export function AddressForm({
   requireGuestEmail = false,
   defaultValues,
+  serviceAreaReadonly,
   isSubmitting = false,
   submitLabel = "Continue to Shipping",
   onSubmit,
 }: AddressFormProps) {
+  const cityLocked = Boolean(serviceAreaReadonly?.localityName);
+  const regionLocked = Boolean(serviceAreaReadonly);
+
   const form = useForm<AddressFormValues>({
     resolver: zodResolver(addressSchema),
     defaultValues: {
@@ -43,17 +66,60 @@ export function AddressForm({
       lastName: defaultValues?.lastName ?? "",
       street1: defaultValues?.street1 ?? "",
       street2: defaultValues?.street2 ?? "",
-      city: defaultValues?.city ?? "",
-      state: defaultValues?.state ?? "",
+      city:
+        (cityLocked ? serviceAreaReadonly?.localityName : undefined) ??
+        defaultValues?.city ??
+        "",
+      state: serviceAreaReadonly?.region ?? defaultValues?.state ?? "",
       postalCode: defaultValues?.postalCode ?? "",
-      country: defaultValues?.country ?? "BD",
+      country: serviceAreaReadonly?.countryIso ?? defaultValues?.country ?? "BD",
       phone: defaultValues?.phone ?? "",
       guestEmail: defaultValues?.guestEmail ?? "",
     },
   });
 
+  const { errors, isSubmitted } = useFormState({ control: form.control });
+  const lastGeoSyncKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!serviceAreaReadonly) {
+      lastGeoSyncKeyRef.current = null;
+      return;
+    }
+    const key = [
+      serviceAreaReadonly.countryIso,
+      serviceAreaReadonly.region,
+      serviceAreaReadonly.localityName ?? "",
+    ].join("\0");
+    if (lastGeoSyncKeyRef.current === key) {
+      return;
+    }
+    lastGeoSyncKeyRef.current = key;
+    form.setValue("country", serviceAreaReadonly.countryIso, {
+      shouldValidate: false,
+      shouldDirty: false,
+    });
+    form.setValue("state", serviceAreaReadonly.region, {
+      shouldValidate: false,
+      shouldDirty: false,
+    });
+    if (
+      serviceAreaReadonly.localityName != null &&
+      serviceAreaReadonly.localityName !== ""
+    ) {
+      form.setValue("city", serviceAreaReadonly.localityName, {
+        shouldValidate: false,
+        shouldDirty: false,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- form instance stable; sync geo-only
+  }, [
+    serviceAreaReadonly?.countryIso,
+    serviceAreaReadonly?.region,
+    serviceAreaReadonly?.localityName,
+  ]);
+
   async function handleSubmit(values: AddressFormValues) {
-    if (requireGuestEmail && !values.guestEmail) {
+    if (requireGuestEmail && !values.guestEmail?.trim()) {
       form.setError("guestEmail", { message: "Guest email is required" });
       return;
     }
@@ -61,10 +127,27 @@ export function AddressForm({
     await onSubmit(values);
   }
 
-  const errors = form.formState.errors;
+  const hasErrors = Object.keys(errors).length > 0;
 
   return (
     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+      {isSubmitted && hasErrors ? (
+        <p
+          role="alert"
+          className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-100"
+        >
+          Please review the highlighted fields. Street address is required; guest checkout also
+          requires a valid email.
+        </p>
+      ) : null}
+      {regionLocked ? (
+        <p className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
+          {cityLocked
+            ? "Country, region, and city/area match your delivery selection. Enter street and postal code below."
+            : "Country and region match your delivery selection. Enter your local area, street, and postal code below."}
+        </p>
+      ) : null}
+
       {requireGuestEmail ? (
         <label className="block space-y-1">
           <span className="text-sm font-medium">Email</span>
@@ -141,19 +224,26 @@ export function AddressForm({
 
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="block space-y-1">
-          <span className="text-sm font-medium">City</span>
+          <span className="text-sm font-medium">
+            City / local area
+            {cityLocked ? " (from your selection)" : ""}
+          </span>
           <input
             {...form.register("city")}
-            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+            readOnly={cityLocked}
+            aria-readonly={cityLocked}
+            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 read-only:pointer-events-none read-only:bg-slate-100 dark:read-only:bg-slate-900"
           />
           {errors.city ? <span className="text-xs text-rose-600">{errors.city.message}</span> : null}
         </label>
 
         <label className="block space-y-1">
-          <span className="text-sm font-medium">State</span>
+          <span className="text-sm font-medium">Region</span>
           <input
             {...form.register("state")}
-            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+            readOnly={regionLocked}
+            aria-readonly={regionLocked}
+            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 read-only:pointer-events-none read-only:bg-slate-100 dark:read-only:bg-slate-900"
           />
         </label>
       </div>
@@ -175,7 +265,9 @@ export function AddressForm({
           <input
             {...form.register("country")}
             maxLength={2}
-            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm uppercase dark:border-slate-700 dark:bg-slate-950"
+            readOnly={regionLocked}
+            aria-readonly={regionLocked}
+            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm uppercase dark:border-slate-700 dark:bg-slate-950 read-only:pointer-events-none read-only:bg-slate-100 dark:read-only:bg-slate-900"
           />
           {errors.country ? (
             <span className="text-xs text-rose-600">{errors.country.message}</span>

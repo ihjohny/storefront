@@ -15,16 +15,55 @@ import { features } from "@/lib/config/features";
 import { useStore } from "@/lib/hooks/use-store";
 import { useCart } from "@/lib/hooks/use-cart";
 
-export function StoreSelector() {
-  const { stores, selectedStore, selectStore, isLoading } = useStore();
-  const { items, clearCart } = useCart();
-  const [pendingStoreId, setPendingStoreId] = useState<string | null>(null);
+function PolicyBanner({
+  tier,
+  extendedFeeNote,
+  extendedLeadTimeNote,
+  unservedMsg,
+}: {
+  tier: string;
+  extendedFeeNote: string | null;
+  extendedLeadTimeNote: string | null;
+  unservedMsg: string | null;
+}) {
+  if (tier === "unserved") {
+    return (
+      <p className="mb-2 rounded-md border border-red-200 bg-red-50 px-2 py-1.5 text-xs text-red-900 dark:border-red-900 dark:bg-red-950/60 dark:text-red-100">
+        {unservedMsg ||
+          "Delivery is not available for this area. Try another location."}
+      </p>
+    );
+  }
+  if (tier === "extended") {
+    return (
+      <p className="mb-2 rounded-md border border-amber-200 bg-amber-50 px-2 py-1.5 text-xs text-amber-950 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-100">
+        {extendedFeeNote && <span className="block">{extendedFeeNote}</span>}
+        {extendedLeadTimeNote && <span className="mt-0.5 block">{extendedLeadTimeNote}</span>}
+        {!extendedFeeNote && !extendedLeadTimeNote && (
+          <span>Extended delivery area: additional time or fees may apply.</span>
+        )}
+      </p>
+    );
+  }
+  return null;
+}
 
-  const handleChange = useCallback(
+type PendingDeliveryChange =
+  | { kind: "store"; storeId: string }
+  | { kind: "country"; countryId: string }
+  | { kind: "subdivision"; subdivisionId: string }
+  | { kind: "locality"; localityId: string | null };
+
+export function StoreSelector() {
+  const { stores, selectedStore, selectStore, isLoading, serviceArea } = useStore();
+  const { items, clearCart } = useCart();
+  const [pendingChange, setPendingChange] = useState<PendingDeliveryChange | null>(null);
+
+  const handleStorePick = useCallback(
     (id: string) => {
       if (id === selectedStore?.id) return;
       if (items.length > 0) {
-        setPendingStoreId(id);
+        setPendingChange({ kind: "store", storeId: id });
       } else {
         selectStore(id);
       }
@@ -33,132 +72,252 @@ export function StoreSelector() {
   );
 
   const confirmChange = useCallback(async () => {
-    if (!pendingStoreId) return;
-    await clearCart();
-    selectStore(pendingStoreId);
-    setPendingStoreId(null);
-  }, [clearCart, pendingStoreId, selectStore]);
+    if (!pendingChange) return;
+    const action = pendingChange;
+    if (items.length > 0) {
+      await clearCart();
+    }
+    switch (action.kind) {
+      case "store":
+        selectStore(action.storeId);
+        break;
+      case "country":
+        void serviceArea?.setCountry(action.countryId);
+        break;
+      case "subdivision":
+        void serviceArea?.setSubdivision(action.subdivisionId);
+        break;
+      case "locality":
+        void serviceArea?.setLocality(action.localityId);
+        break;
+    }
+    setPendingChange(null);
+  }, [clearCart, pendingChange, items.length, selectStore, serviceArea]);
 
   const cancelChange = useCallback(() => {
-    setPendingStoreId(null);
+    setPendingChange(null);
   }, []);
 
   if (!features.multiStore) return null;
   if (isLoading) {
     return (
-      <div className="inline-flex h-8 w-28 animate-pulse items-center rounded-md bg-slate-100 dark:bg-slate-800" />
+      <div className="inline-flex h-8 w-44 max-w-full animate-pulse items-center rounded-md bg-slate-100 dark:bg-slate-800" />
     );
   }
-  if (stores.length === 0) return null;
+
+  if (!serviceArea && stores.length === 0) return null;
+
+  const policy = serviceArea?.deliveryPolicy;
 
   return (
     <>
-      <Listbox
-        value={selectedStore?.id ?? ""}
-        onChange={handleChange}
-      >
-        <div className="relative">
-          <ListboxButton className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-1 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 dark:focus:ring-slate-500 sm:text-sm">
-            <svg
-              viewBox="0 0 20 20"
-              className="h-4 w-4 shrink-0 text-slate-500 dark:text-slate-400"
-              fill="none"
-              aria-hidden="true"
+      <div className="flex max-w-full flex-col gap-2 sm:flex-row sm:items-start sm:gap-3">
+        {serviceArea && (
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5 text-xs">
+            <label className="sr-only" htmlFor="bs-geo-country">
+              Country
+            </label>
+            <select
+              id="bs-geo-country"
+              className="max-w-[9rem] rounded-md border border-slate-300 bg-white py-1 pl-2 pr-6 text-xs dark:border-slate-600 dark:bg-slate-900"
+              value={serviceArea.selectedCountryId ?? ""}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === (serviceArea.selectedCountryId ?? "")) return;
+                if (items.length > 0) {
+                  setPendingChange({ kind: "country", countryId: v });
+                } else {
+                  void serviceArea.setCountry(v);
+                }
+              }}
             >
-              <path
-                d="M3 7l2-3h10l2 3M3 7v9a1 1 0 001 1h12a1 1 0 001-1V7M3 7h14M8 11h4"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <span className="max-w-40 truncate">
-              {selectedStore?.name ?? "Select Store"}
-            </span>
-            <svg
-              viewBox="0 0 20 20"
-              className="h-3.5 w-3.5 shrink-0 text-slate-400"
-              fill="none"
-              aria-hidden="true"
+              {serviceArea.countries.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            <label className="sr-only" htmlFor="bs-geo-sub">
+              Region
+            </label>
+            <select
+              id="bs-geo-sub"
+              className="max-w-[10rem] rounded-md border border-slate-300 bg-white py-1 pl-2 pr-6 text-xs dark:border-slate-600 dark:bg-slate-900"
+              value={serviceArea.selectedSubdivisionId ?? ""}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === (serviceArea.selectedSubdivisionId ?? "")) return;
+                if (items.length > 0) {
+                  setPendingChange({ kind: "subdivision", subdivisionId: v });
+                } else {
+                  void serviceArea.setSubdivision(v);
+                }
+              }}
             >
-              <path
-                d="M6 8l4 4 4-4"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </ListboxButton>
-
-          <Transition
-            as={Fragment}
-            leave="transition ease-in duration-100"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <ListboxOptions className="absolute left-0 z-50 mt-1 max-h-60 w-64 overflow-auto rounded-md border border-slate-200 bg-white py-1 text-sm shadow-lg outline-none dark:border-slate-700 dark:bg-slate-900">
-              {stores.map((store) => (
-                <ListboxOption
-                  key={store.id}
-                  value={store.id}
-                  className="cursor-pointer select-none px-3 py-2 transition data-focus:bg-slate-100 data-selected:font-medium dark:data-focus:bg-slate-800"
+              {serviceArea.subdivisions.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+            {serviceArea.localities.length > 0 && (
+              <>
+                <label className="sr-only" htmlFor="bs-geo-loc">
+                  Locality
+                </label>
+                <select
+                  id="bs-geo-loc"
+                  className="max-w-[10rem] rounded-md border border-slate-300 bg-white py-1 pl-2 pr-6 text-xs dark:border-slate-600 dark:bg-slate-900"
+                  value={serviceArea.selectedLocalityId ?? ""}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    const next = v === "" ? null : v;
+                    const cur = serviceArea.selectedLocalityId ?? null;
+                    if (next === cur) return;
+                    if (items.length > 0) {
+                      setPendingChange({ kind: "locality", localityId: next });
+                    } else {
+                      void serviceArea.setLocality(next);
+                    }
+                  }}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="truncate font-medium">{store.name}</p>
-                      {store.address?.city && (
-                        <p className="truncate text-xs text-slate-500 dark:text-slate-400">
-                          {[store.address.city, store.address.state]
-                            .filter(Boolean)
-                            .join(", ")}
+                  <option value="">All areas in region</option>
+                  {serviceArea.localities.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {l.name}
+                    </option>
+                  ))}
+                </select>
+              </>
+            )}
+          </div>
+        )}
+
+        {policy && (
+          <div className="min-w-0 flex-1">
+            <PolicyBanner
+              tier={policy.tier}
+              extendedFeeNote={policy.extendedFeeNote}
+              extendedLeadTimeNote={policy.extendedLeadTimeNote}
+              unservedMsg={policy.unservedCustomerMessage}
+            />
+          </div>
+        )}
+
+        {stores.length === 0 && serviceArea && (
+          <p className="text-xs text-slate-600 dark:text-slate-400">
+            {serviceArea.emptyReason === "no_public_stores_for_area" &&
+              "No stores serve this selection yet. Try another region or locality."}
+            {serviceArea.emptyReason === "unserved_area" && policy?.tier !== "unserved" && (
+              <span>No outlets available.</span>
+            )}
+          </p>
+        )}
+
+        {stores.length > 0 && (
+          <Listbox value={selectedStore?.id ?? ""} onChange={handleStorePick}>
+            <div className="relative shrink-0">
+              <ListboxButton className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-1 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 dark:focus:ring-slate-500 sm:text-sm">
+                <svg
+                  viewBox="0 0 20 20"
+                  className="h-4 w-4 shrink-0 text-slate-500 dark:text-slate-400"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M3 7l2-3h10l2 3M3 7v9a1 1 0 001 1h12a1 1 0 001-1V7M3 7h14M8 11h4"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span className="max-w-40 truncate">
+                  {selectedStore?.name ?? "Select Store"}
+                </span>
+                <svg
+                  viewBox="0 0 20 20"
+                  className="h-3.5 w-3.5 shrink-0 text-slate-400"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M6 8l4 4 4-4"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </ListboxButton>
+
+              <Transition
+                as={Fragment}
+                leave="transition ease-in duration-100"
+                leaveFrom="opacity-100"
+                leaveTo="opacity-0"
+              >
+                <ListboxOptions className="absolute right-0 z-50 mt-1 max-h-60 w-64 overflow-auto rounded-md border border-slate-200 bg-white py-1 text-sm shadow-lg outline-none dark:border-slate-700 dark:bg-slate-900">
+                  {stores.map((store) => (
+                    <ListboxOption
+                      key={store.id}
+                      value={store.id}
+                      className="cursor-pointer select-none px-3 py-2 transition data-focus:bg-slate-100 data-selected:font-medium dark:data-focus:bg-slate-800"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="truncate font-medium">{store.name}</p>
+                          {store.address?.city && (
+                            <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                              {[store.address.city, store.address.state]
+                                .filter(Boolean)
+                                .join(", ")}
+                            </p>
+                          )}
+                        </div>
+                        {store.id === selectedStore?.id && (
+                          <svg
+                            viewBox="0 0 20 20"
+                            className="h-4 w-4 shrink-0 text-slate-900 dark:text-white"
+                            fill="none"
+                            aria-hidden="true"
+                          >
+                            <path
+                              d="M5 10l3 3 7-7"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        )}
+                      </div>
+                      {store.storeDetails?.operatingHours && (
+                        <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+                          {store.storeDetails.operatingHours}
                         </p>
                       )}
-                    </div>
-                    {store.id === selectedStore?.id && (
-                      <svg
-                        viewBox="0 0 20 20"
-                        className="h-4 w-4 shrink-0 text-slate-900 dark:text-white"
-                        fill="none"
-                        aria-hidden="true"
-                      >
-                        <path
-                          d="M5 10l3 3 7-7"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    )}
-                  </div>
-                  {store.storeDetails?.operatingHours && (
-                    <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
-                      {store.storeDetails.operatingHours}
-                    </p>
-                  )}
-                </ListboxOption>
-              ))}
-            </ListboxOptions>
-          </Transition>
-        </div>
-      </Listbox>
+                    </ListboxOption>
+                  ))}
+                </ListboxOptions>
+              </Transition>
+            </div>
+          </Listbox>
+        )}
+      </div>
 
-      <Dialog
-        open={pendingStoreId !== null}
-        onClose={cancelChange}
-        className="relative z-110"
-      >
+      <Dialog open={pendingChange !== null} onClose={cancelChange} className="relative z-110">
         <div className="fixed inset-0 bg-black/50" />
         <div className="fixed inset-0 flex items-center justify-center p-4">
           <DialogPanel className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl dark:bg-slate-900">
             <DialogTitle className="text-base font-semibold text-slate-900 dark:text-white">
-              Change Store?
+              {pendingChange?.kind === "store" ? "Change Store?" : "Change delivery area?"}
             </DialogTitle>
             <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-              Switching to a different store will clear your current cart ({items.length}{" "}
-              {items.length === 1 ? "item" : "items"}). This cannot be undone.
+              {pendingChange?.kind === "store"
+                ? "Switching to a different store will clear your current cart"
+                : "Changing your delivery area will clear your current cart"}{" "}
+              ({items.length} {items.length === 1 ? "item" : "items"}). This cannot be undone.
             </p>
             <div className="mt-5 flex gap-3">
               <button
@@ -173,7 +332,7 @@ export function StoreSelector() {
                 onClick={() => void confirmChange()}
                 className="flex-1 rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
               >
-                Change Store
+                {pendingChange?.kind === "store" ? "Change Store" : "Change area"}
               </button>
             </div>
           </DialogPanel>

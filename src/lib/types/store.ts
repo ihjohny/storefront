@@ -5,6 +5,8 @@ export interface Store {
   code: string;
   isActive: boolean;
   isPublicStore: boolean;
+  /** Lower appears first when geography resolves stores */
+  sortPriority?: number;
   address?: {
     street?: string | null;
     city?: string | null;

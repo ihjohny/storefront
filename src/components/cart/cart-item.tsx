@@ -29,11 +29,15 @@ export function CartItem({
     (rawProductImage && typeof rawProductImage === "object" && "image" in rawProductImage
       ? rawProductImage.image
       : rawProductImage);
-  const imageUrl = getMediaUrl(
-    image && typeof image === "object" && "url" in image ? image.url : null,
-  );
+  const rawMediaUrl =
+    image && typeof image === "object" && "url" in image && typeof (image as { url: unknown }).url === "string"
+      ? (image as { url: string }).url
+      : null;
+  const imageUrl = getMediaUrl(rawMediaUrl);
   const imageAlt =
-    image && typeof image === "object" && "alt" in image ? image.alt : item.product.name;
+    image && typeof image === "object" && "alt" in image && typeof (image as { alt: unknown }).alt === "string"
+      ? (image as { alt: string }).alt
+      : item.product.name;
   const lineTotal = item.unitPrice * item.quantity;
 
   return (

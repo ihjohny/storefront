@@ -9,9 +9,15 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { createCart, deleteCart, getCart, updateCart } from "@/lib/api/cart";
+import {
+  createCart,
+  getCart,
+  removeCartDocument,
+  updateCart,
+} from "@/lib/api/cart";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useGuestId } from "@/lib/hooks/use-guest-id";
+import { features } from "@/lib/config/features";
 import { useStore } from "@/lib/hooks/use-store";
 import type { Cart, CartItem } from "@/lib/types/cart";
 
@@ -84,14 +90,16 @@ function mergeMutationItems(
 export function CartProvider({ children }: { children: ReactNode }) {
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const guestId = useGuestId();
-  const { selectedStore } = useStore();
-  const storeId = selectedStore?.id ?? undefined;
+  const { commerceStore } = useStore();
+  const storeId =
+    features.multiStore && commerceStore?.id ? commerceStore.id : undefined;
   const [cart, setCart] = useState<Cart | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const mergedForUserRef = useRef<string | null>(null);
 
   const items = useMemo(() => cart?.items ?? [], [cart]);
   const itemCount = items.reduce((total, item) => total + item.quantity, 0);
+
   const subtotal =
     typeof cart?.subtotal === "number"
       ? cart.subtotal
@@ -161,7 +169,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      await deleteCart(guestCart.id, guestId);
+      await removeCartDocument(guestCart.id, guestId, storeId);
       mergedForUserRef.current = activeUserId;
       await refreshCart();
     } finally {
@@ -182,12 +190,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (!activeUserId && !activeGuestId) {
         return;
       }
+      if (features.multiStore && !storeId && nextItems.length > 0) {
+        return;
+      }
 
       setIsLoading(true);
       try {
         if (nextItems.length === 0) {
           if (cart?.id) {
-            await deleteCart(cart.id, activeGuestId ?? undefined);
+            await removeCartDocument(cart.id, activeGuestId ?? undefined, storeId);
           }
           setCart(null);
           return;
@@ -208,6 +219,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addItem = useCallback(
     async (productId: string, variantId?: string, quantity = 1) => {
+      if (features.multiStore && !storeId) {
+        return;
+      }
       const safeQuantity = Math.max(1, quantity);
       const nextItems = toMutationItems(items);
       const key = cartItemKey(productId, variantId ?? null);
@@ -230,7 +244,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
       await persistItems(nextItems);
     },
-    [items, persistItems],
+    [items, persistItems, storeId],
   );
 
   const updateQuantity = useCallback(
@@ -265,13 +279,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     try {
       if (cart?.id) {
-        await deleteCart(cart.id, activeGuestId ?? undefined);
+        await removeCartDocument(cart.id, activeGuestId ?? undefined, storeId);
       }
       setCart(null);
     } finally {
       setIsLoading(false);
     }
-  }, [activeGuestId, cart?.id]);
+  }, [activeGuestId, cart?.id, storeId]);
 
   const value = useMemo<CartContextType>(
     () => ({
