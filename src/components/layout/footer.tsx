@@ -28,7 +28,7 @@ const fallbackColumns: FooterColumn[] = [
     title: "Support",
     links: [
       { label: "Cart", href: "/cart" },
-      { label: "Checkout", href: "/checkout" },
+      { label: "Track Your Order", href: "/track-order" },
     ],
   },
 ];

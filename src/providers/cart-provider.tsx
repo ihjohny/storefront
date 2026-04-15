@@ -12,6 +12,7 @@ import {
 import { createCart, deleteCart, getCart, updateCart } from "@/lib/api/cart";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useGuestId } from "@/lib/hooks/use-guest-id";
+import { useStore } from "@/lib/hooks/use-store";
 import type { Cart, CartItem } from "@/lib/types/cart";
 
 export type CartContextType = {
@@ -83,6 +84,8 @@ function mergeMutationItems(
 export function CartProvider({ children }: { children: ReactNode }) {
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const guestId = useGuestId();
+  const { selectedStore } = useStore();
+  const storeId = selectedStore?.id ?? undefined;
   const [cart, setCart] = useState<Cart | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const mergedForUserRef = useRef<string | null>(null);
@@ -152,9 +155,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
       if (mergedItems.length > 0) {
         if (userCart) {
-          await updateCart(userCart.id, mergedItems, undefined);
+          await updateCart(userCart.id, mergedItems, undefined, storeId);
         } else {
-          await createCart(mergedItems, undefined);
+          await createCart(mergedItems, undefined, storeId);
         }
       }
 
@@ -164,7 +167,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [activeUserId, guestId, refreshCart]);
+  }, [activeUserId, guestId, refreshCart, storeId]);
 
   useEffect(() => {
     if (isAuthLoading || !isAuthenticated || !activeUserId) {
@@ -191,8 +194,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
 
         const savedCart = cart?.id
-          ? await updateCart(cart.id, nextItems, activeGuestId ?? undefined)
-          : await createCart(nextItems, activeGuestId ?? undefined);
+          ? await updateCart(cart.id, nextItems, activeGuestId ?? undefined, storeId)
+          : await createCart(nextItems, activeGuestId ?? undefined, storeId);
 
         setCart(savedCart);
         await refreshCart();
@@ -200,7 +203,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [activeGuestId, activeUserId, cart?.id, refreshCart],
+    [activeGuestId, activeUserId, cart?.id, refreshCart, storeId],
   );
 
   const addItem = useCallback(

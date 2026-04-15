@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { SearchBar } from "@/components/layout/search-bar";
+import { StoreSelector } from "@/components/layout/store-selector";
 import { MobileMenu } from "@/components/layout/mobile-menu";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useCart } from "@/lib/hooks/use-cart";
@@ -32,9 +33,12 @@ export function Navbar({ locale, navItems }: NavbarProps) {
     <>
       <div className="relative">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
-        <Link href={`/${locale}`} className="text-base font-semibold tracking-tight">
-          BS Commerce
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link href={`/${locale}`} className="text-base font-semibold tracking-tight">
+            BS Commerce
+          </Link>
+          <StoreSelector />
+        </div>
 
         <nav
           aria-label="Primary navigation"
@@ -61,6 +65,12 @@ export function Navbar({ locale, navItems }: NavbarProps) {
             className="rounded-md border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-700"
           >
             Cart ({itemCount})
+          </Link>
+          <Link
+            href={`/${locale}/track-order`}
+            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-700"
+          >
+            Track Order
           </Link>
           {isAuthenticated ? (
             <>
@@ -163,6 +173,14 @@ export function Navbar({ locale, navItems }: NavbarProps) {
                     </Link>
                   </MenuItem>
                   <MenuItem>
+                    <Link
+                      href={`/${locale}/account/orders`}
+                      className="block rounded px-2 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    >
+                      My Orders
+                    </Link>
+                  </MenuItem>
+                  <MenuItem>
                     <button
                       type="button"
                       onClick={() => void logout()}
@@ -192,6 +210,16 @@ export function Navbar({ locale, navItems }: NavbarProps) {
                   </MenuItem>
                 </>
               )}
+              <div className="mt-1 border-t border-slate-200 pt-1 dark:border-slate-700">
+                <MenuItem>
+                  <Link
+                    href={`/${locale}/track-order`}
+                    className="block rounded px-2 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  >
+                    Track Order
+                  </Link>
+                </MenuItem>
+              </div>
               <div className="mt-1 border-t border-slate-200 px-2 py-2 dark:border-slate-700">
                 <LocaleSwitcher locale={locale} dataTestId="locale-switcher-header-compact" />
               </div>

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getProducts } from "@/lib/api/products";
 import { getCategories } from "@/lib/api/categories";
+import { getSelectedStoreId } from "@/lib/utils/get-store-id";
 import { i18nConfig, type Locale } from "@/lib/i18n/config";
 import { ProductGrid } from "@/components/product/product-grid";
 import { ProductFilters } from "@/components/product/product-filters";
@@ -35,6 +36,7 @@ export default async function ProductsPage({
   }
 
   const query = await searchParams;
+  const storeId = await getSelectedStoreId();
   const page = Math.max(1, toNumber(firstParam(query.page)) ?? 1);
   const filters = {
     locale,
@@ -45,6 +47,7 @@ export default async function ProductsPage({
     minPrice: toNumber(firstParam(query.minPrice)),
     maxPrice: toNumber(firstParam(query.maxPrice)),
     featured: firstParam(query.featured) === "1",
+    storeId,
   };
 
   const [productsResponse, categories] = await Promise.all([

@@ -14,12 +14,13 @@ export default async function AccountDashboardPage({ params }: AccountDashboardP
   const cookieStore = await cookies();
   const token = cookieStore.get("payload-token")?.value;
 
-  const me = await getMe(token ? `payload-token=${token}` : undefined);
+  const cookieHeader = token ? `payload-token=${token}` : undefined;
+  const me = await getMe(cookieHeader);
   if (!me.user) {
     return null;
   }
 
-  const ordersResponse = await getOrders(me.user.id, 1);
+  const ordersResponse = await getOrders(me.user.id, 1, cookieHeader);
   const recentOrders = ordersResponse.docs.slice(0, 5);
 
   return (

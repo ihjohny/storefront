@@ -1,3 +1,5 @@
+import { getAuthToken } from "./auth-token";
+
 type ApiClientOptions = RequestInit & {
   locale?: string;
   guestId?: string;
@@ -78,6 +80,16 @@ export async function apiClient<T>(
 
   if (guestId) {
     requestHeaders.set("X-Guest-Id", guestId);
+  }
+
+  if (
+    typeof window !== "undefined" &&
+    !requestHeaders.has("Authorization")
+  ) {
+    const bearer = getAuthToken();
+    if (bearer) {
+      requestHeaders.set("Authorization", `Bearer ${bearer}`);
+    }
   }
 
   const response = await fetch(toApiUrl(endpoint), {

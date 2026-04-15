@@ -25,5 +25,6 @@ export interface Cart {
   items: CartItem[];
   subtotal: number;
   couponCode: string | null;
+  store: string | { id: string; name: string } | null;
   expiresAt: string | null;
 }

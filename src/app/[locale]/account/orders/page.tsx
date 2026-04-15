@@ -23,12 +23,13 @@ export default async function AccountOrdersPage({
 
   const cookieStore = await cookies();
   const token = cookieStore.get("payload-token")?.value;
-  const me = await getMe(token ? `payload-token=${token}` : undefined);
+  const cookieHeader = token ? `payload-token=${token}` : undefined;
+  const me = await getMe(cookieHeader);
   if (!me.user) {
     return null;
   }
 
-  const response = await getOrders(me.user.id, page);
+  const response = await getOrders(me.user.id, page, cookieHeader);
 
   return (
     <section className="space-y-4">

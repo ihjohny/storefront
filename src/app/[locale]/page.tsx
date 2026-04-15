@@ -1,11 +1,13 @@
 import Link from "next/link";
 import Image from "next/image";
 import { apiClient } from "@/lib/api/client";
+import { getProducts } from "@/lib/api/products";
 import { getHeader } from "@/lib/api/globals";
 import { features } from "@/lib/config/features";
 import { formatPrice } from "@/lib/utils/format-price";
 import { getMediaUrl } from "@/lib/utils/url";
 import { getProductMedia } from "@/lib/utils/product-media";
+import { getSelectedStoreId } from "@/lib/utils/get-store-id";
 import type { PaginatedResponse } from "@/lib/types/api-response";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { i18nConfig, type Locale } from "@/lib/i18n/config";
@@ -42,13 +44,18 @@ type VendorProfile = {
   logo?: Media | string | null;
 };
 
-async function getFeaturedProducts(locale: Locale): Promise<Product[]> {
+async function getFeaturedProducts(
+  locale: Locale,
+  storeId?: string,
+): Promise<Product[]> {
   try {
-    const response = await apiClient<PaginatedResponse<Product>>(
-      `/products?where[featured][equals]=true&limit=4&locale=${locale}&depth=1`,
-      { next: { revalidate: 60 } as never },
-    );
-    return response.docs ?? [];
+    const response = await getProducts({
+      featured: true,
+      limit: 4,
+      locale,
+      storeId,
+    });
+    return (response.docs as unknown as Product[]) ?? [];
   } catch {
     return [];
   }
@@ -90,9 +97,10 @@ export default async function LocaleHomePage({ params }: LocalePageProps) {
   }
 
   const safeLocale = locale as Locale;
+  const storeId = await getSelectedStoreId();
   const dict = await getDictionary(safeLocale);
   const [featuredProducts, categories, vendors, header] = await Promise.all([
-    getFeaturedProducts(safeLocale),
+    getFeaturedProducts(safeLocale, storeId),
     getRootCategories(safeLocale),
     getTopVendors(),
     getHeader(safeLocale).catch(() => null),
@@ -140,7 +148,7 @@ export default async function LocaleHomePage({ params }: LocalePageProps) {
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {featuredProducts.map((product) => {
-              const firstImage = getProductMedia(product.images ?? undefined)[0];
+              const firstImage = getProductMedia(product.images as Parameters<typeof getProductMedia>[0])[0];
               const mediaUrl = getMediaUrl(firstImage?.url);
               const price = Number(product.basePrice ?? 0);
 

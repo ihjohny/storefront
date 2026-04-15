@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { ApiError } from "@/lib/api/client";
 import { getAddresses, type Address } from "@/lib/api/addresses";
 import { getShippingMethods, type ShippingMethod } from "@/lib/api/shipping";
@@ -22,6 +23,10 @@ type CheckoutStep = "address" | "shipping" | "review";
 
 function toMessage(error: unknown): string {
   if (error instanceof ApiError) {
+    const body = error.body as Record<string, unknown> | null;
+    if (body && typeof body.error === "string") {
+      return body.error;
+    }
     return `Request failed (${error.status}). Please try again.`;
   }
   if (error instanceof Error) {
@@ -59,6 +64,8 @@ function addressToSnapshot(address: Address): AddressSnapshot {
 }
 
 export function CheckoutForm() {
+  const router = useRouter();
+  const params = useParams<{ locale: string }>();
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const guestId = useGuestId();
   const { items, subtotal, refreshCart } = useCart();
@@ -66,6 +73,8 @@ export function CheckoutForm() {
   const [step, setStep] = useState<CheckoutStep>("address");
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  /** After successful payment: cart is cleared before navigation — avoid flashing "cart is empty". */
+  const [checkoutComplete, setCheckoutComplete] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -76,9 +85,10 @@ export function CheckoutForm() {
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
   const [draftedAddress, setDraftedAddress] = useState<AddressFormValues | null>(null);
   const [guestEmail, setGuestEmail] = useState<string>("");
+  const [guestPhone, setGuestPhone] = useState<string>("");
 
   const vendorKeys = useMemo(() => {
-    if (!features.multivendor) {
+    if (!features.multivendor || features.singleStoreCart) {
       return [DEFAULT_VENDOR_KEY];
     }
 
@@ -152,6 +162,7 @@ export function CheckoutForm() {
   async function handleAddressSubmit(values: AddressFormValues) {
     setDraftedAddress(values);
     setGuestEmail(values.guestEmail ?? "");
+    setGuestPhone(values.phone ?? "");
     setErrorMessage(null);
     setStep("shipping");
   }
@@ -213,12 +224,28 @@ export function CheckoutForm() {
           billingAddress,
           shippingMethodIds: selectedShippingMethodIds,
           guestEmail: !isAuthenticated ? guestEmail.trim() : undefined,
+          guestPhone: !isAuthenticated && guestPhone.trim() ? guestPhone.trim() : undefined,
+          simulatePayment: true,
         },
         !isAuthenticated ? guestId ?? undefined : undefined,
       );
 
-      await refreshCart();
-      window.location.href = response.paymentRedirectUrl;
+      setCheckoutComplete(true);
+
+      try {
+        sessionStorage.setItem("bs-checkout-result", JSON.stringify(response));
+      } catch {
+        /* sessionStorage may be unavailable */
+      }
+
+      if (response.paymentRedirectUrl) {
+        window.location.href = response.paymentRedirectUrl;
+      } else {
+        const orderId = response.order?.id;
+        router.push(`/${params.locale}/checkout/success?order=${orderId}`);
+      }
+
+      void refreshCart();
     } catch (error) {
       setErrorMessage(toMessage(error));
     } finally {
@@ -230,6 +257,14 @@ export function CheckoutForm() {
     return (
       <section className="rounded-xl border border-slate-200 p-4 text-sm text-slate-600 dark:border-slate-800 dark:text-slate-300">
         Loading checkout...
+      </section>
+    );
+  }
+
+  if (checkoutComplete) {
+    return (
+      <section className="rounded-xl border border-slate-200 p-6 text-center text-sm text-slate-600 dark:border-slate-800 dark:text-slate-300">
+        Taking you to your order confirmation…
       </section>
     );
   }

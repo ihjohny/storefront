@@ -16,6 +16,7 @@ export async function processCheckout(
 export async function getOrders(
   userId: string,
   page = 1,
+  cookieHeader?: string,
 ): Promise<PaginatedResponse<Order>> {
   const params = new URLSearchParams();
   params.set("where[customer][equals]", userId);
@@ -24,7 +25,9 @@ export async function getOrders(
   params.set("limit", "10");
   params.set("page", String(page));
 
-  return apiClient<PaginatedResponse<Order>>(`/orders?${params.toString()}`);
+  return apiClient<PaginatedResponse<Order>>(`/orders?${params.toString()}`, {
+    headers: cookieHeader ? { Cookie: cookieHeader } : undefined,
+  });
 }
 
 export async function getOrderById(
@@ -34,12 +37,13 @@ export async function getOrderById(
   return apiClient<Order>(`/orders/${orderId}?depth=2`, options);
 }
 
-export async function lookupGuestOrder(
-  orderNumber: string,
-  guestEmail: string,
-): Promise<Order> {
-  return apiClient<Order>("/guest/order-lookup", {
+export async function lookupGuestOrder(params: {
+  orderNumber: string;
+  guestEmail?: string;
+  guestPhone?: string;
+}): Promise<{ order: Order }> {
+  return apiClient<{ order: Order }>("/guest/order-lookup", {
     method: "POST",
-    body: JSON.stringify({ orderNumber, guestEmail }),
+    body: JSON.stringify(params),
   });
 }

@@ -14,6 +14,7 @@ import {
   logout as logoutRequest,
   register as registerRequest,
 } from "@/lib/api/auth";
+import { clearAuthToken, setAuthToken } from "@/lib/api/auth-token";
 import type { User } from "@/lib/types/user";
 
 type RegisterData = {
@@ -43,6 +44,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const me = await getMe();
       setUser(me.user);
+      if (!me.user) {
+        clearAuthToken();
+      }
     } finally {
       setIsLoading(false);
     }
@@ -53,13 +57,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   const login = useCallback(async (identifier: string, password: string) => {
+    clearAuthToken();
     const result = await loginRequest(identifier, password);
     setUser(result.user);
+    if (result.token) {
+      setAuthToken(result.token);
+      // Sync the auth token to a frontend-scoped cookie so Server Components
+      // can forward it to the API backend (cross-origin cookie workaround).
+      await fetch("/api/auth/sync-token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: result.token, exp: result.exp }),
+      }).catch(() => {});
+    }
   }, []);
 
   const logout = useCallback(async () => {
     await logoutRequest();
     setUser(null);
+    clearAuthToken();
+    await fetch("/api/auth/sync-token", { method: "DELETE" }).catch(() => {});
   }, []);
 
   const register = useCallback(async (data: RegisterData) => {

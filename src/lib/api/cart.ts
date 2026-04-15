@@ -35,10 +35,14 @@ export async function getCart(userId?: string, guestId?: string): Promise<Cart |
 export async function createCart(
   items: CartMutationItem[],
   guestId?: string,
+  storeId?: string,
 ): Promise<Cart> {
+  const payload: Record<string, unknown> = { items };
+  if (storeId) payload.store = storeId;
+
   const response = await apiClient<CartDocumentResponse>("/carts", {
     method: "POST",
-    body: JSON.stringify({ items }),
+    body: JSON.stringify(payload),
     guestId,
   });
 
@@ -49,10 +53,14 @@ export async function updateCart(
   cartId: string,
   items: CartMutationItem[],
   guestId?: string,
+  storeId?: string,
 ): Promise<Cart> {
+  const payload: Record<string, unknown> = { items };
+  if (storeId) payload.store = storeId;
+
   const response = await apiClient<CartDocumentResponse>(`/carts/${cartId}`, {
     method: "PATCH",
-    body: JSON.stringify({ items }),
+    body: JSON.stringify(payload),
     guestId,
   });
 

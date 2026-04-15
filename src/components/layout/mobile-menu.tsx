@@ -5,6 +5,7 @@ import { Dialog, DialogPanel, Transition, TransitionChild } from "@headlessui/re
 import { Fragment } from "react";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { SearchBar } from "@/components/layout/search-bar";
+import { StoreSelector } from "@/components/layout/store-selector";
 import { useAuth } from "@/lib/hooks/use-auth";
 
 export type MobileNavItem = {
@@ -84,6 +85,10 @@ export function MobileMenu({
                 ))}
               </nav>
 
+              <div className="py-1">
+                <StoreSelector />
+              </div>
+
               <SearchBar
                 locale={locale}
                 placeholder="Search products"
@@ -97,6 +102,24 @@ export function MobileMenu({
               >
                 Cart ({cartCount})
               </Link>
+
+              <Link
+                href={`/${locale}/track-order`}
+                onClick={onClose}
+                className="rounded-md px-2 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-900"
+              >
+                Track Order
+              </Link>
+
+              {isAuthenticated && (
+                <Link
+                  href={`/${locale}/account/orders`}
+                  onClick={onClose}
+                  className="rounded-md px-2 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-900"
+                >
+                  My Orders
+                </Link>
+              )}
 
               <div className="pt-2">
                 <LocaleSwitcher locale={locale} dataTestId="locale-switcher-menu" />

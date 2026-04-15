@@ -36,12 +36,33 @@ export function OrderDetail({ order, locale, isMultivendor }: OrderDetailProps) 
         </p>
       </header>
 
+      {order.buyerSnapshot &&
+      (order.buyerSnapshot.email || order.buyerSnapshot.name || order.buyerSnapshot.phone) ? (
+        <section className="rounded-xl border border-slate-200 p-4 text-sm dark:border-slate-800">
+          <h2 className="text-lg font-semibold">Contact at time of order</h2>
+          <div className="mt-2 space-y-1 text-slate-600 dark:text-slate-300">
+            {order.buyerSnapshot.name ? <p>{order.buyerSnapshot.name}</p> : null}
+            {order.buyerSnapshot.email ? <p>{order.buyerSnapshot.email}</p> : null}
+            {order.buyerSnapshot.phone ? <p>{order.buyerSnapshot.phone}</p> : null}
+          </div>
+        </section>
+      ) : null}
+
       <section className="space-y-3 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
         <h2 className="text-lg font-semibold">Items</h2>
-        {order.items.map((item) => (
-          <div key={item.id} className="flex items-start justify-between gap-3 text-sm">
+        {(order.items ?? []).map((item, index) => (
+          <div
+            key={
+              item.id ||
+              `${order.orderNumber}-line-${index}-${String(item.productName ?? "")}-${item.variantName ?? ""}`
+            }
+            className="flex items-start justify-between gap-3 text-sm"
+          >
             <div>
-              <p className="font-medium">{item.productName}</p>
+              <p className="font-medium">{item.productName ?? "Item"}</p>
+              {isMultivendor && item.vendorNameSnapshot ? (
+                <p className="text-xs text-slate-500 dark:text-slate-400">{item.vendorNameSnapshot}</p>
+              ) : null}
               <p className="text-slate-600 dark:text-slate-300">
                 Qty {item.quantity}
                 {item.variantName ? ` - ${item.variantName}` : ""}
@@ -60,6 +81,10 @@ export function OrderDetail({ order, locale, isMultivendor }: OrderDetailProps) 
               key={subOrder.id}
               className="space-y-3 rounded-xl border border-slate-200 p-4 dark:border-slate-800"
             >
+              <p className="text-sm text-slate-600 dark:text-slate-300">
+                {subOrder.tenantNameSnapshot?.trim() ||
+                  (typeof subOrder.tenant === "object" ? subOrder.tenant.name : "Vendor")}
+              </p>
               <div className="flex flex-wrap items-center gap-2">
                 <p className="font-medium">Sub-order #{subOrder.subOrderNumber}</p>
                 <Badge variant={statusVariant(subOrder.status as OrderStatus)}>

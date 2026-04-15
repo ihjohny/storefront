@@ -3,6 +3,8 @@ export const features = {
   guestCheckout: process.env.NEXT_PUBLIC_GUEST_CHECKOUT_ENABLED !== "false",
   socialLogin: process.env.NEXT_PUBLIC_SOCIAL_LOGIN_ENABLED !== "false",
   reviews: process.env.NEXT_PUBLIC_REVIEWS_ENABLED !== "false",
+  multiStore: process.env.NEXT_PUBLIC_MULTI_STORE_ENABLED === "true",
+  singleStoreCart: process.env.NEXT_PUBLIC_SINGLE_STORE_CART === "true",
   i18n: {
     locales: (process.env.NEXT_PUBLIC_SUPPORTED_LOCALES || "en,bn")
       .split(",")
