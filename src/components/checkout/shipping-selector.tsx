@@ -29,7 +29,7 @@ export function ShippingSelector({
       {vendorKeys.map((vendorKey, index) => (
         <div
           key={vendorKey}
-          className="space-y-2 rounded-xl border border-slate-200 p-4 dark:border-slate-800"
+          className="space-y-2 rounded-xl border border-border p-4"
         >
           <h3 className="text-sm font-semibold">
             {vendorKeys.length > 1 ? `Vendor ${index + 1} shipping` : "Shipping method"}
@@ -38,7 +38,7 @@ export function ShippingSelector({
             {methods.map((method) => (
               <label
                 key={`${vendorKey}-${method.id}`}
-                className="flex cursor-pointer items-start gap-3 rounded-md border border-slate-200 p-3 text-sm dark:border-slate-800"
+                className="flex cursor-pointer items-start gap-3 rounded-md border border-border p-3 text-sm"
               >
                 <input
                   type="radio"
@@ -49,7 +49,7 @@ export function ShippingSelector({
                 />
                 <span className="flex-1">
                   <span className="block font-medium">{method.name}</span>
-                  <span className="block text-slate-600 dark:text-slate-300">
+                  <span className="block text-muted-foreground">
                     {method.description || "Standard delivery"}
                   </span>
                 </span>
@@ -64,7 +64,7 @@ export function ShippingSelector({
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex w-full items-center justify-center rounded-md border border-slate-300 px-4 py-2 text-sm transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-900"
+          className="inline-flex w-full items-center justify-center rounded-md border border-border px-4 py-2 text-sm transition hover:bg-muted"
         >
           Back
         </button>
@@ -72,7 +72,7 @@ export function ShippingSelector({
           type="button"
           onClick={onContinue}
           disabled={!allSelected}
-          className="inline-flex w-full items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
+          className="inline-flex w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
         >
           Continue to Review
         </button>

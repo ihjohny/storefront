@@ -12,24 +12,24 @@ type ProductCardProps = {
   locale: string;
 };
 
-function getVendorName(tenant: Product["tenant"]) {
+function getVendor(tenant: Product["tenant"]) {
   if (!tenant || typeof tenant === "string") {
     return null;
   }
-  return tenant.name;
+  return tenant;
 }
 
 export function ProductCard({ product, locale }: ProductCardProps) {
   const media = getProductMedia(product.images);
   const firstImage = media[0];
   const imageUrl = getMediaUrl(firstImage?.url);
-  const vendorName = getVendorName(product.tenant);
+  const vendor = getVendor(product.tenant);
   const productHref = `/${locale}/products/${product.slug}`;
 
   return (
-    <article className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
+    <article className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
       <Link href={productHref} className="block">
-        <div className="relative aspect-4/3 bg-slate-100 dark:bg-slate-900">
+        <div className="relative aspect-4/3 bg-muted">
           {imageUrl ? (
             <Image
               src={imageUrl}
@@ -42,22 +42,25 @@ export function ProductCard({ product, locale }: ProductCardProps) {
         </div>
       </Link>
       <div className="space-y-3 p-4">
-        {features.multivendor && vendorName ? (
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            {vendorName}
-          </p>
+        {features.multivendor && vendor?.slug ? (
+          <Link
+            href={`/${locale}/store/${vendor.slug}`}
+            className="inline-flex text-xs font-medium uppercase tracking-wide text-muted-foreground underline-offset-4 hover:underline"
+          >
+            by {vendor.name}
+          </Link>
         ) : null}
         <Link href={productHref} className="block">
-          <h3 className="line-clamp-2 text-sm font-medium text-slate-900 hover:underline dark:text-slate-100 sm:text-base">
+          <h3 className="line-clamp-2 text-sm font-medium text-foreground hover:underline sm:text-base">
             {product.name}
           </h3>
         </Link>
         <div className="flex items-center gap-2">
-          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+          <p className="text-sm font-semibold text-foreground">
             {formatPrice(product.basePrice, product.currency)}
           </p>
           {typeof product.compareAtPrice === "number" ? (
-            <p className="text-xs text-slate-500 line-through dark:text-slate-400 sm:text-sm">
+            <p className="text-xs text-muted-foreground line-through sm:text-sm">
               {formatPrice(product.compareAtPrice, product.currency)}
             </p>
           ) : null}

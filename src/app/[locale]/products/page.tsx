@@ -68,7 +68,7 @@ export default async function ProductsPage({
     <main className="mx-auto w-full max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
       <header className="space-y-2">
         <h1 className="text-2xl font-semibold sm:text-3xl">Products</h1>
-        <p className="text-sm text-slate-600 dark:text-slate-300">
+        <p className="text-sm text-muted-foreground">
           Browse published products with category, sort, and price filters.
         </p>
       </header>

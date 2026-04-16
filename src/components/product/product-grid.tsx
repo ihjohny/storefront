@@ -9,7 +9,7 @@ type ProductGridProps = {
 export function ProductGrid({ products, locale }: ProductGridProps) {
   if (products.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">
+      <div className="rounded-xl border border-dashed border-border bg-muted/30 p-8 text-center text-sm text-muted-foreground">
         No products found for your current filters.
       </div>
     );

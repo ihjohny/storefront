@@ -101,7 +101,7 @@ export function StoreSelector() {
   if (!features.multiStore) return null;
   if (isLoading) {
     return (
-      <div className="inline-flex h-8 w-44 max-w-full animate-pulse items-center rounded-md bg-slate-100 dark:bg-slate-800" />
+      <div className="inline-flex h-8 w-44 max-w-full animate-pulse items-center rounded-md bg-muted" />
     );
   }
 
@@ -119,7 +119,7 @@ export function StoreSelector() {
             </label>
             <select
               id="bs-geo-country"
-              className="max-w-[9rem] rounded-md border border-slate-300 bg-white py-1 pl-2 pr-6 text-xs dark:border-slate-600 dark:bg-slate-900"
+              className="max-w-36 rounded-md border border-input bg-background py-1 pl-2 pr-6 text-xs text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-ring/50"
               value={serviceArea.selectedCountryId ?? ""}
               onChange={(e) => {
                 const v = e.target.value;
@@ -142,7 +142,7 @@ export function StoreSelector() {
             </label>
             <select
               id="bs-geo-sub"
-              className="max-w-[10rem] rounded-md border border-slate-300 bg-white py-1 pl-2 pr-6 text-xs dark:border-slate-600 dark:bg-slate-900"
+              className="max-w-40 rounded-md border border-input bg-background py-1 pl-2 pr-6 text-xs text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-ring/50"
               value={serviceArea.selectedSubdivisionId ?? ""}
               onChange={(e) => {
                 const v = e.target.value;
@@ -167,7 +167,7 @@ export function StoreSelector() {
                 </label>
                 <select
                   id="bs-geo-loc"
-                  className="max-w-[10rem] rounded-md border border-slate-300 bg-white py-1 pl-2 pr-6 text-xs dark:border-slate-600 dark:bg-slate-900"
+                  className="max-w-40 rounded-md border border-input bg-background py-1 pl-2 pr-6 text-xs text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-ring/50"
                   value={serviceArea.selectedLocalityId ?? ""}
                   onChange={(e) => {
                     const v = e.target.value;
@@ -205,7 +205,7 @@ export function StoreSelector() {
         )}
 
         {stores.length === 0 && serviceArea && (
-          <p className="text-xs text-slate-600 dark:text-slate-400">
+          <p className="text-xs text-muted-foreground">
             {serviceArea.emptyReason === "no_public_stores_for_area" &&
               "No stores serve this selection yet. Try another region or locality."}
             {serviceArea.emptyReason === "unserved_area" && policy?.tier !== "unserved" && (
@@ -217,10 +217,10 @@ export function StoreSelector() {
         {stores.length > 0 && (
           <Listbox value={selectedStore?.id ?? ""} onChange={handleStorePick}>
             <div className="relative shrink-0">
-              <ListboxButton className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-1 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 dark:focus:ring-slate-500 sm:text-sm">
+              <ListboxButton className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground shadow-sm transition hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring/60 sm:text-sm">
                 <svg
                   viewBox="0 0 20 20"
-                  className="h-4 w-4 shrink-0 text-slate-500 dark:text-slate-400"
+                  className="h-4 w-4 shrink-0 text-muted-foreground"
                   fill="none"
                   aria-hidden="true"
                 >
@@ -237,7 +237,7 @@ export function StoreSelector() {
                 </span>
                 <svg
                   viewBox="0 0 20 20"
-                  className="h-3.5 w-3.5 shrink-0 text-slate-400"
+                  className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
                   fill="none"
                   aria-hidden="true"
                 >
@@ -257,18 +257,18 @@ export function StoreSelector() {
                 leaveFrom="opacity-100"
                 leaveTo="opacity-0"
               >
-                <ListboxOptions className="absolute right-0 z-50 mt-1 max-h-60 w-64 overflow-auto rounded-md border border-slate-200 bg-white py-1 text-sm shadow-lg outline-none dark:border-slate-700 dark:bg-slate-900">
+                <ListboxOptions className="absolute right-0 z-50 mt-1 max-h-60 w-64 overflow-auto rounded-md border border-border bg-card py-1 text-sm text-foreground shadow-lg outline-none">
                   {stores.map((store) => (
                     <ListboxOption
                       key={store.id}
                       value={store.id}
-                      className="cursor-pointer select-none px-3 py-2 transition data-focus:bg-slate-100 data-selected:font-medium dark:data-focus:bg-slate-800"
+                      className="cursor-pointer select-none px-3 py-2 transition data-focus:bg-muted data-selected:font-medium"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <div className="min-w-0">
                           <p className="truncate font-medium">{store.name}</p>
                           {store.address?.city && (
-                            <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                            <p className="truncate text-xs text-muted-foreground">
                               {[store.address.city, store.address.state]
                                 .filter(Boolean)
                                 .join(", ")}
@@ -278,7 +278,7 @@ export function StoreSelector() {
                         {store.id === selectedStore?.id && (
                           <svg
                             viewBox="0 0 20 20"
-                            className="h-4 w-4 shrink-0 text-slate-900 dark:text-white"
+                            className="h-4 w-4 shrink-0 text-primary"
                             fill="none"
                             aria-hidden="true"
                           >
@@ -293,7 +293,7 @@ export function StoreSelector() {
                         )}
                       </div>
                       {store.storeDetails?.operatingHours && (
-                        <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+                        <p className="mt-0.5 text-xs text-muted-foreground">
                           {store.storeDetails.operatingHours}
                         </p>
                       )}
@@ -309,11 +309,11 @@ export function StoreSelector() {
       <Dialog open={pendingChange !== null} onClose={cancelChange} className="relative z-110">
         <div className="fixed inset-0 bg-black/50" />
         <div className="fixed inset-0 flex items-center justify-center p-4">
-          <DialogPanel className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl dark:bg-slate-900">
-            <DialogTitle className="text-base font-semibold text-slate-900 dark:text-white">
+          <DialogPanel className="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-xl">
+            <DialogTitle className="text-base font-semibold text-foreground">
               {pendingChange?.kind === "store" ? "Change Store?" : "Change delivery area?"}
             </DialogTitle>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+            <p className="mt-2 text-sm text-muted-foreground">
               {pendingChange?.kind === "store"
                 ? "Switching to a different store will clear your current cart"
                 : "Changing your delivery area will clear your current cart"}{" "}
@@ -323,14 +323,14 @@ export function StoreSelector() {
               <button
                 type="button"
                 onClick={cancelChange}
-                className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm font-medium transition hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
+                className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm font-medium transition hover:bg-muted"
               >
                 Keep Current
               </button>
               <button
                 type="button"
                 onClick={() => void confirmChange()}
-                className="flex-1 rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
+                className="flex-1 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
               >
                 {pendingChange?.kind === "store" ? "Change Store" : "Change area"}
               </button>

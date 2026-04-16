@@ -262,6 +262,7 @@ export function CheckoutForm() {
         !isAuthenticated ? guestId ?? undefined : undefined,
       );
 
+      /* Commit before cart context clears (refreshCart) so we never render the empty-cart branch */
       flushSync(() => {
         setCheckoutComplete(true);
       });
@@ -291,7 +292,7 @@ export function CheckoutForm() {
 
   if (isLoadingData) {
     return (
-      <section className="rounded-xl border border-slate-200 p-4 text-sm text-slate-600 dark:border-slate-800 dark:text-slate-300">
+      <section className="rounded-xl border border-border p-4 text-sm text-muted-foreground">
         Loading checkout...
       </section>
     );
@@ -299,7 +300,7 @@ export function CheckoutForm() {
 
   if (checkoutComplete) {
     return (
-      <section className="rounded-xl border border-slate-200 p-6 text-center text-sm text-slate-600 dark:border-slate-800 dark:text-slate-300">
+      <section className="rounded-xl border border-border p-6 text-center text-sm text-muted-foreground">
         Taking you to your order confirmation…
       </section>
     );
@@ -307,7 +308,7 @@ export function CheckoutForm() {
 
   if (items.length === 0 || !cartId) {
     return (
-      <section className="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">
+      <section className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
         Your cart is empty. Add products before checkout.
       </section>
     );
@@ -321,35 +322,35 @@ export function CheckoutForm() {
 
   return (
     <section className="space-y-5">
-      <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-        <span className={step === "address" ? "font-semibold text-slate-900 dark:text-slate-100" : ""}>
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <span className={step === "address" ? "font-semibold text-foreground" : ""}>
           Address
         </span>
         <span>•</span>
-        <span className={step === "shipping" ? "font-semibold text-slate-900 dark:text-slate-100" : ""}>
+        <span className={step === "shipping" ? "font-semibold text-foreground" : ""}>
           Shipping
         </span>
         <span>•</span>
-        <span className={step === "review" ? "font-semibold text-slate-900 dark:text-slate-100" : ""}>
+        <span className={step === "review" ? "font-semibold text-foreground" : ""}>
           Review
         </span>
       </div>
 
       {errorMessage ? (
-        <p className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300">
+        <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {errorMessage}
         </p>
       ) : null}
 
       {step === "address" ? (
         showSavedAddressPicker ? (
-          <section className="space-y-4 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+          <section className="space-y-4 rounded-xl border border-border p-4">
             <h3 className="text-lg font-semibold">Select Address</h3>
             <div className="space-y-2">
               {addresses.map((address) => (
                 <label
                   key={address.id}
-                  className="flex cursor-pointer items-start gap-3 rounded-md border border-slate-200 p-3 text-sm dark:border-slate-800"
+                  className="flex cursor-pointer items-start gap-3 rounded-md border border-border p-3 text-sm"
                 >
                   <input
                     type="radio"
@@ -360,7 +361,7 @@ export function CheckoutForm() {
                   />
                   <span>
                     <span className="block font-medium">{address.label}</span>
-                    <span className="block text-slate-600 dark:text-slate-300">
+                    <span className="block text-muted-foreground">
                       {address.firstName} {address.lastName}, {address.street1}, {address.city}
                     </span>
                   </span>
@@ -371,21 +372,21 @@ export function CheckoutForm() {
               <button
                 type="button"
                 onClick={continueWithSavedAddress}
-                className="inline-flex w-full items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
+                className="inline-flex w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
               >
                 Continue to Shipping
               </button>
               <button
                 type="button"
                 onClick={() => setUseSavedAddress(false)}
-                className="inline-flex w-full items-center justify-center rounded-md border border-slate-300 px-4 py-2 text-sm transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-900"
+                className="inline-flex w-full items-center justify-center rounded-md border border-border px-4 py-2 text-sm transition hover:bg-muted"
               >
                 Use New Address
               </button>
             </div>
           </section>
         ) : (
-          <section className="space-y-3 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+          <section className="space-y-3 rounded-xl border border-border p-4">
             <h3 className="text-lg font-semibold">
               {isAuthenticated ? "Add Address" : "Guest Checkout Address"}
             </h3>

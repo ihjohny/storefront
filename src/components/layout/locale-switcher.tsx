@@ -11,7 +11,10 @@ type LocaleSwitcherProps = {
 
 const SUPPORTED_LOCALES = ["en", "bn"] as const;
 
-export function LocaleSwitcher({ locale, dataTestId = "locale-switcher" }: LocaleSwitcherProps) {
+export function LocaleSwitcher({
+  locale,
+  dataTestId = "locale-switcher",
+}: LocaleSwitcherProps) {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -38,13 +41,13 @@ export function LocaleSwitcher({ locale, dataTestId = "locale-switcher" }: Local
   }
 
   return (
-    <label className="inline-flex items-center gap-2 text-xs sm:text-sm">
-      <span className="text-slate-500 dark:text-slate-400">Locale</span>
+    <label className="inline-flex items-center gap-1.5 text-xs text-muted-foreground sm:text-sm">
+      <span>Locale</span>
       <select
         data-testid={dataTestId}
         value={currentLocale}
         onChange={(event) => onLocaleChange(event.target.value)}
-        className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs uppercase shadow-sm outline-none ring-0 transition focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 sm:text-sm"
+        className="max-w-36 rounded-md border border-border bg-card py-1 pl-2 pr-6 text-xs font-medium uppercase text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-ring sm:text-sm"
         aria-label="Switch locale"
       >
         <option value="en">EN</option>

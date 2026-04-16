@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Dialog, DialogPanel, Transition, TransitionChild } from "@headlessui/react";
 import { Fragment } from "react";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
+import { ThemeSwitcher } from "@/components/layout/theme-switcher";
 import { SearchBar } from "@/components/layout/search-bar";
 import { StoreSelector } from "@/components/layout/store-selector";
 import { useAuth } from "@/lib/hooks/use-auth";
@@ -60,13 +61,13 @@ export function MobileMenu({
             leaveFrom="translate-x-0"
             leaveTo="translate-x-full"
           >
-            <DialogPanel className="flex h-full w-full max-w-xs flex-col gap-4 bg-white p-4 shadow-xl dark:bg-slate-950">
+            <DialogPanel className="flex h-full w-full max-w-xs flex-col gap-4 bg-card p-4 shadow-xl">
               <div className="flex items-center justify-between">
                 <p className="font-semibold">Menu</p>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-700"
+                  className="rounded-md border border-border px-2 py-1 text-sm"
                 >
                   Close
                 </button>
@@ -78,7 +79,7 @@ export function MobileMenu({
                     key={`${item.href}-${item.label}`}
                     href={item.href}
                     onClick={onClose}
-                    className="rounded-md px-2 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-900"
+                    className="rounded-md px-2 py-2 text-sm hover:bg-muted"
                   >
                     {item.label}
                   </Link>
@@ -98,7 +99,7 @@ export function MobileMenu({
               <Link
                 href={`/${locale}/cart`}
                 onClick={onClose}
-                className="rounded-md px-2 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-900"
+                className="rounded-md px-2 py-2 text-sm hover:bg-muted"
               >
                 Cart ({cartCount})
               </Link>
@@ -106,7 +107,7 @@ export function MobileMenu({
               <Link
                 href={`/${locale}/track-order`}
                 onClick={onClose}
-                className="rounded-md px-2 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-900"
+                className="rounded-md px-2 py-2 text-sm hover:bg-muted"
               >
                 Track Order
               </Link>
@@ -115,30 +116,31 @@ export function MobileMenu({
                 <Link
                   href={`/${locale}/account/orders`}
                   onClick={onClose}
-                  className="rounded-md px-2 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-900"
+                  className="rounded-md px-2 py-2 text-sm hover:bg-muted"
                 >
                   My Orders
                 </Link>
               )}
 
-              <div className="pt-2">
+              <div className="flex flex-col gap-2 pt-2">
+                <ThemeSwitcher idPrefix="menu" />
                 <LocaleSwitcher locale={locale} dataTestId="locale-switcher-menu" />
               </div>
 
-              <div className="mt-auto flex flex-col gap-2 border-t border-slate-200 pt-4 dark:border-slate-800">
+              <div className="mt-auto flex flex-col gap-2 border-t border-border pt-4">
                 {isAuthenticated ? (
                   <>
                     <Link
                       href={`/${locale}/account`}
                       onClick={onClose}
-                      className="rounded-md border border-slate-300 px-3 py-2 text-center text-sm dark:border-slate-700"
+                      className="rounded-md border border-border px-3 py-2 text-center text-sm"
                     >
                       Account
                     </Link>
                     <button
                       type="button"
                       onClick={handleLogout}
-                      className="rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-700"
+                      className="rounded-md border border-border px-3 py-2 text-sm"
                     >
                       Logout
                     </button>
@@ -148,14 +150,14 @@ export function MobileMenu({
                     <Link
                       href={`/${locale}/auth/login`}
                       onClick={onClose}
-                      className="rounded-md border border-slate-300 px-3 py-2 text-center text-sm dark:border-slate-700"
+                      className="rounded-md border border-border px-3 py-2 text-center text-sm"
                     >
                       Login
                     </Link>
                     <Link
                       href={`/${locale}/auth/register`}
                       onClick={onClose}
-                      className="rounded-md bg-slate-900 px-3 py-2 text-center text-sm text-white dark:bg-slate-100 dark:text-slate-900"
+                      className="rounded-md bg-primary px-3 py-2 text-center text-sm text-primary-foreground"
                     >
                       Register
                     </Link>

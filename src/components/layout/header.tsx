@@ -101,9 +101,9 @@ export async function Header({ locale }: HeaderProps) {
   navItems = withoutToolbarCartLink(navItems, locale);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95">
+    <header className="sticky top-0 z-30 border-b border-border/80 bg-background/95 backdrop-blur">
       {announcementText ? (
-        <div className="border-b border-slate-200 bg-slate-50 px-4 py-2 text-center text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+        <div className="border-b border-border bg-muted px-4 py-2 text-center text-xs text-foreground">
           {announcementText}
         </div>
       ) : null}

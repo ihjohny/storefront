@@ -46,12 +46,12 @@ export function CheckoutSuccessContent({ fallbackOrderId }: { fallbackOrderId?: 
     return (
       <main className="mx-auto w-full max-w-4xl space-y-4 px-4 py-10 text-center sm:px-6 lg:px-8">
         <h1 className="text-2xl font-semibold">Payment successful</h1>
-        <p className="text-sm text-slate-600 dark:text-slate-300">
+        <p className="text-sm text-muted-foreground">
           No order details available. If you placed an order, you can track it using your order number.
         </p>
         <Link
           href={`/${locale}/track-order`}
-          className="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
+          className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
         >
           Track Your Order
         </Link>
@@ -67,30 +67,29 @@ export function CheckoutSuccessContent({ fallbackOrderId }: { fallbackOrderId?: 
   return (
     <main className="mx-auto w-full max-w-4xl space-y-6 px-4 py-10 sm:px-6 lg:px-8">
       <header className="space-y-2 text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
-          <svg className="h-7 w-7 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/15">
+          <svg className="h-7 w-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
           </svg>
         </div>
         <h1 className="text-2xl font-semibold sm:text-3xl">Order Placed Successfully!</h1>
-        <p className="text-sm text-slate-600 dark:text-slate-300">
+        <p className="text-sm text-muted-foreground">
           Thank you for your purchase.
         </p>
       </header>
 
-      {/* Order Number - Prominent */}
       {orderNumber && (
-        <section className="rounded-xl border-2 border-emerald-200 bg-emerald-50 p-5 text-center dark:border-emerald-800 dark:bg-emerald-950/20">
-          <p className="mb-1 text-xs font-medium uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+        <section className="rounded-xl border-2 border-primary/30 bg-primary/10 p-5 text-center">
+          <p className="mb-1 text-xs font-medium uppercase tracking-wider text-primary">
             Order Number
           </p>
-          <p className="text-2xl font-bold tracking-wide text-emerald-800 dark:text-emerald-300 sm:text-3xl">
+          <p className="text-2xl font-bold tracking-wide text-foreground sm:text-3xl">
             {orderNumber}
           </p>
           <button
             type="button"
             onClick={copyOrderNumber}
-            className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-emerald-300 bg-white px-3 py-1.5 text-xs font-medium text-emerald-700 transition hover:bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 dark:hover:bg-emerald-900/60"
+            className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-muted"
           >
             {copied ? (
               <>
@@ -108,39 +107,37 @@ export function CheckoutSuccessContent({ fallbackOrderId }: { fallbackOrderId?: 
               </>
             )}
           </button>
-          <p className="mt-3 text-xs text-emerald-600 dark:text-emerald-500">
+          <p className="mt-3 text-xs text-muted-foreground">
             Save this order number. You can use it to track your order or contact our support team.
           </p>
         </section>
       )}
 
-      {/* Order Items */}
       {items.length > 0 && (
-        <section className="space-y-3 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+        <section className="space-y-3 rounded-xl border border-border p-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             Order Summary
           </h2>
           {items.map((item, idx) => (
             <div key={idx} className="flex items-center justify-between gap-3 text-sm">
-              <span className="text-slate-700 dark:text-slate-300">
+              <span className="text-foreground">
                 {item.productName}
-                {item.variantName ? ` — ${item.variantName}` : ""}
-                {" "}
-                <span className="text-slate-500">x {item.quantity}</span>
+                {item.variantName ? ` — ${item.variantName}` : ""}{" "}
+                <span className="text-muted-foreground">x {item.quantity}</span>
               </span>
               <span className="font-medium">{formatPrice(item.totalPrice, currency)}</span>
             </div>
           ))}
 
           {order?.subtotal != null && (
-            <div className="flex items-center justify-between border-t border-slate-200 pt-2 text-sm dark:border-slate-800">
-              <span className="text-slate-500">Subtotal</span>
+            <div className="flex items-center justify-between border-t border-border pt-2 text-sm">
+              <span className="text-muted-foreground">Subtotal</span>
               <span>{formatPrice(order.subtotal, currency)}</span>
             </div>
           )}
 
           {order?.grandTotal != null && (
-            <div className="flex items-center justify-between border-t border-slate-200 pt-2 text-sm font-semibold dark:border-slate-800">
+            <div className="flex items-center justify-between border-t border-border pt-2 text-sm font-semibold">
               <span>Total</span>
               <span>{formatPrice(order.grandTotal, currency)}</span>
             </div>
@@ -148,46 +145,55 @@ export function CheckoutSuccessContent({ fallbackOrderId }: { fallbackOrderId?: 
         </section>
       )}
 
-      {/* Shipping Address */}
       {address && (
-        <section className="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+        <section className="rounded-xl border border-border p-4">
+          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             Shipping Address
           </h2>
-          <p className="text-sm text-slate-700 dark:text-slate-300">
+          <p className="text-sm text-foreground">
             {address.firstName} {address.lastName}
             <br />
             {address.street1}
-            {address.street2 ? <><br />{address.street2}</> : null}
+            {address.street2 ? (
+              <>
+                <br />
+                {address.street2}
+              </>
+            ) : null}
             <br />
-            {address.city}{address.state ? `, ${address.state}` : ""} {address.postalCode}
+            {address.city}
+            {address.state ? `, ${address.state}` : ""} {address.postalCode}
             <br />
             {address.country}
-            {address.phone ? <><br />{address.phone}</> : null}
+            {address.phone ? (
+              <>
+                <br />
+                {address.phone}
+              </>
+            ) : null}
           </p>
         </section>
       )}
 
-      {/* Actions */}
       <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
         {isAuthenticated && orderId ? (
           <Link
             href={`/${locale}/order/${orderId}`}
-            className="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
           >
             View Order
           </Link>
         ) : (
           <Link
             href={`/${locale}/track-order`}
-            className="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
           >
             Track Your Order
           </Link>
         )}
         <Link
           href={`/${locale}/products`}
-          className="inline-flex items-center justify-center rounded-md border border-slate-300 px-4 py-2 text-sm transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-900"
+          className="inline-flex items-center justify-center rounded-md border border-border px-4 py-2 text-sm transition hover:bg-muted"
         >
           Continue Shopping
         </Link>

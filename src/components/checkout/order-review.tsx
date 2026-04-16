@@ -25,7 +25,7 @@ export function OrderReview({
   const grandTotal = subtotal + shippingTotal;
 
   return (
-    <section className="space-y-4 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+    <section className="space-y-4 rounded-xl border border-border p-4">
       <h3 className="text-lg font-semibold">Review Order</h3>
 
       <div className="space-y-2">
@@ -36,7 +36,7 @@ export function OrderReview({
           >
             <div>
               <p className="font-medium">{item.product.name}</p>
-              <p className="text-slate-600 dark:text-slate-300">
+              <p className="text-muted-foreground">
                 Qty {item.quantity}
                 {item.variant ? ` - ${item.variant.name}` : ""}
               </p>
@@ -46,13 +46,13 @@ export function OrderReview({
         ))}
       </div>
 
-      <div className="space-y-1 border-t border-slate-200 pt-3 text-sm dark:border-slate-800">
+      <div className="space-y-1 border-t border-border pt-3 text-sm">
         <div className="flex items-center justify-between">
-          <span className="text-slate-600 dark:text-slate-300">Subtotal</span>
+          <span className="text-muted-foreground">Subtotal</span>
           <span>{formatPrice(subtotal)}</span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-slate-600 dark:text-slate-300">Shipping</span>
+          <span className="text-muted-foreground">Shipping</span>
           <span>{formatPrice(shippingTotal)}</span>
         </div>
         <div className="flex items-center justify-between text-base font-semibold">

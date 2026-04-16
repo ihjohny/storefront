@@ -21,6 +21,7 @@ const addressSchema = z.object({
   postalCode: z.string().min(1, "Postal code is required"),
   country: z.string().min(2, "Country is required").max(2, "Use ISO country code"),
   phone: z.string().optional(),
+  /** Empty string is common from inputs; treat as “no email” for schema checks */
   guestEmail: emailOrEmpty,
 });
 
@@ -134,14 +135,14 @@ export function AddressForm({
       {isSubmitted && hasErrors ? (
         <p
           role="alert"
-          className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-100"
+          className="rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground"
         >
           Please review the highlighted fields. Street address is required; guest checkout also
           requires a valid email.
         </p>
       ) : null}
       {regionLocked ? (
-        <p className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
+        <p className="rounded-md border border-border bg-muted/80 px-3 py-2 text-xs text-muted-foreground">
           {cityLocked
             ? "Country, region, and city/area match your delivery selection. Enter street and postal code below."
             : "Country and region match your delivery selection. Enter your local area, street, and postal code below."}
@@ -154,10 +155,10 @@ export function AddressForm({
           <input
             {...form.register("guestEmail")}
             type="email"
-            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
           />
           {errors.guestEmail ? (
-            <span className="text-xs text-rose-600">{errors.guestEmail.message}</span>
+            <span className="text-xs text-destructive">{errors.guestEmail.message}</span>
           ) : null}
         </label>
       ) : null}
@@ -167,16 +168,16 @@ export function AddressForm({
           <span className="text-sm font-medium">Label</span>
           <input
             {...form.register("label")}
-            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
           />
-          {errors.label ? <span className="text-xs text-rose-600">{errors.label.message}</span> : null}
+          {errors.label ? <span className="text-xs text-destructive">{errors.label.message}</span> : null}
         </label>
 
         <label className="block space-y-1">
           <span className="text-sm font-medium">Phone</span>
           <input
             {...form.register("phone")}
-            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
           />
         </label>
       </div>
@@ -186,10 +187,10 @@ export function AddressForm({
           <span className="text-sm font-medium">First name</span>
           <input
             {...form.register("firstName")}
-            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
           />
           {errors.firstName ? (
-            <span className="text-xs text-rose-600">{errors.firstName.message}</span>
+            <span className="text-xs text-destructive">{errors.firstName.message}</span>
           ) : null}
         </label>
 
@@ -197,10 +198,10 @@ export function AddressForm({
           <span className="text-sm font-medium">Last name</span>
           <input
             {...form.register("lastName")}
-            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
           />
           {errors.lastName ? (
-            <span className="text-xs text-rose-600">{errors.lastName.message}</span>
+            <span className="text-xs text-destructive">{errors.lastName.message}</span>
           ) : null}
         </label>
       </div>
@@ -209,16 +210,16 @@ export function AddressForm({
         <span className="text-sm font-medium">Street 1</span>
         <input
           {...form.register("street1")}
-          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
         />
-        {errors.street1 ? <span className="text-xs text-rose-600">{errors.street1.message}</span> : null}
+        {errors.street1 ? <span className="text-xs text-destructive">{errors.street1.message}</span> : null}
       </label>
 
       <label className="block space-y-1">
         <span className="text-sm font-medium">Street 2</span>
         <input
           {...form.register("street2")}
-          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
         />
       </label>
 
@@ -232,9 +233,9 @@ export function AddressForm({
             {...form.register("city")}
             readOnly={cityLocked}
             aria-readonly={cityLocked}
-            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 read-only:pointer-events-none read-only:bg-slate-100 dark:read-only:bg-slate-900"
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground read-only:pointer-events-none read-only:bg-muted"
           />
-          {errors.city ? <span className="text-xs text-rose-600">{errors.city.message}</span> : null}
+          {errors.city ? <span className="text-xs text-destructive">{errors.city.message}</span> : null}
         </label>
 
         <label className="block space-y-1">
@@ -243,7 +244,7 @@ export function AddressForm({
             {...form.register("state")}
             readOnly={regionLocked}
             aria-readonly={regionLocked}
-            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 read-only:pointer-events-none read-only:bg-slate-100 dark:read-only:bg-slate-900"
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground read-only:pointer-events-none read-only:bg-muted"
           />
         </label>
       </div>
@@ -253,10 +254,10 @@ export function AddressForm({
           <span className="text-sm font-medium">Postal code</span>
           <input
             {...form.register("postalCode")}
-            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
           />
           {errors.postalCode ? (
-            <span className="text-xs text-rose-600">{errors.postalCode.message}</span>
+            <span className="text-xs text-destructive">{errors.postalCode.message}</span>
           ) : null}
         </label>
 
@@ -267,10 +268,10 @@ export function AddressForm({
             maxLength={2}
             readOnly={regionLocked}
             aria-readonly={regionLocked}
-            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm uppercase dark:border-slate-700 dark:bg-slate-950 read-only:pointer-events-none read-only:bg-slate-100 dark:read-only:bg-slate-900"
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm uppercase text-foreground read-only:pointer-events-none read-only:bg-muted"
           />
           {errors.country ? (
-            <span className="text-xs text-rose-600">{errors.country.message}</span>
+            <span className="text-xs text-destructive">{errors.country.message}</span>
           ) : null}
         </label>
       </div>
@@ -278,7 +279,7 @@ export function AddressForm({
       <button
         type="submit"
         disabled={isSubmitting}
-        className="inline-flex w-full items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
+        className="inline-flex w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:opacity-60"
       >
         {isSubmitting ? "Saving..." : submitLabel}
       </button>
