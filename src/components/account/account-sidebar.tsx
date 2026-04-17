@@ -18,7 +18,7 @@ export function AccountSidebar({ locale }: AccountSidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="rounded-xl border border-slate-200 p-3 dark:border-slate-800">
+    <aside className="rounded-xl border border-border bg-card p-3 shadow-sm">
       <nav className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-1">
         {navItems.map((item) => {
           const href = `/${locale}/${item.href}`;
@@ -27,10 +27,10 @@ export function AccountSidebar({ locale }: AccountSidebarProps) {
             <Link
               key={item.href}
               href={href}
-              className={`rounded-md px-3 py-2 text-sm transition ${
+              className={`rounded-md px-3 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 isActive
-                  ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
-                  : "hover:bg-slate-100 dark:hover:bg-slate-900"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-foreground hover:bg-muted"
               }`}
             >
               {item.label}

@@ -13,6 +13,20 @@
 /*
   Tailwind maps semantic utilities (bg-primary, text-muted-foreground, …) to these vars.
 */
+/* Match autofill to themed inputs (avoids black/yellow stripes across fields). */
+@layer base {
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  textarea:-webkit-autofill:hover,
+  textarea:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--card-foreground);
+    box-shadow: 0 0 0 1000px var(--card) inset;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

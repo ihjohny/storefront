@@ -27,7 +27,7 @@ export default async function AccountLayout({ children, params }: AccountLayoutP
   return (
     <div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[240px_1fr] lg:px-8">
       <div className="space-y-3">
-        <p className="text-sm text-slate-600 dark:text-slate-300">Hello, {greetingName}</p>
+        <p className="text-sm text-muted-foreground">Hello, {greetingName}</p>
         <AccountSidebar locale={locale} />
       </div>
       <main>{children}</main>

@@ -13,5 +13,6 @@ export function formatPrice(amount: number, currency: Currency = "USD"): string 
     currency,
     minimumFractionDigits: config.decimals,
     maximumFractionDigits: config.decimals,
+    ...(config.locale === "bn-BD" ? { numberingSystem: "latn" as const } : {}),
   }).format(amount);
 }

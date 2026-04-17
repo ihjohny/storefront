@@ -1,21 +1,46 @@
 "use client";
 
 import { useState } from "react";
+import {
+  authErrorClass,
+  authFieldClass,
+  authLabelClass,
+  authPrimaryButtonClass,
+} from "@/components/auth/auth-form-classes";
 import { forgotPassword } from "@/lib/api/auth";
+import {
+  getAuthRequiredIdentifier,
+  getForgotPasswordFieldProps,
+  getForgotPasswordSubmitLabel,
+  isValidForgotPasswordInput,
+} from "@/lib/config/auth-identifier";
+
+const SUCCESS_MESSAGE =
+  "If an account exists for that identifier, you will receive password reset instructions shortly.";
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [message, setMessage] = useState<string | null>(null);
+  const [fieldError, setFieldError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const field = getForgotPasswordFieldProps();
+  const submitLabel = getForgotPasswordSubmitLabel();
+  const mode = getAuthRequiredIdentifier();
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setFieldError(null);
+    setMessage(null);
+    const validation = isValidForgotPasswordInput(identifier);
+    if (!validation.ok) {
+      setFieldError(validation.message);
+      return;
+    }
     setIsSubmitting(true);
     try {
-      await forgotPassword(email);
-      setMessage(
-        "If an account exists with this email, you will receive a password reset link.",
-      );
+      await forgotPassword(identifier);
+      setMessage(SUCCESS_MESSAGE);
     } finally {
       setIsSubmitting(false);
     }
@@ -23,27 +48,37 @@ export default function ForgotPasswordPage() {
 
   return (
     <main className="mx-auto w-full max-w-md space-y-5 px-4 py-10 sm:px-6">
-      <h1 className="text-2xl font-semibold">Forgot Password</h1>
+      <h1 className="text-2xl font-semibold text-foreground">Forgot Password</h1>
       <form onSubmit={onSubmit} className="space-y-4">
         <label className="block space-y-1">
-          <span className="text-sm font-medium">Email</span>
+          <span className={authLabelClass}>{field.label}</span>
           <input
-            type="email"
+            data-testid="forgot-password-identifier"
+            type={field.inputType}
             required
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+            autoComplete={field.autoComplete}
+            name={mode === "either" ? "identifier" : mode === "email" ? "email" : "tel"}
+            placeholder={field.placeholder}
+            value={identifier}
+            onChange={(event) => {
+              setIdentifier(event.target.value);
+              setFieldError(null);
+            }}
+            className={authFieldClass}
           />
         </label>
+        {fieldError ? <p className={authErrorClass}>{fieldError}</p> : null}
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
+          className={authPrimaryButtonClass}
         >
-          {isSubmitting ? "Sending..." : "Send Reset Link"}
+          {isSubmitting ? "Sending…" : submitLabel}
         </button>
       </form>
-      {message ? <p className="text-sm text-slate-600 dark:text-slate-300">{message}</p> : null}
+      {message ? (
+        <p className="text-sm text-muted-foreground">{message}</p>
+      ) : null}
     </main>
   );
 }

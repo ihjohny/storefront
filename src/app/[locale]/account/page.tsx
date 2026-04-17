@@ -26,8 +26,8 @@ export default async function AccountDashboardPage({ params }: AccountDashboardP
   return (
     <section className="space-y-6">
       <header className="space-y-1">
-        <h1 className="text-2xl font-semibold sm:text-3xl">Account Dashboard</h1>
-        <p className="text-sm text-slate-600 dark:text-slate-300">
+        <h1 className="text-2xl font-semibold text-foreground sm:text-3xl">Account Dashboard</h1>
+        <p className="text-sm text-muted-foreground">
           {me.user.email} - Member since {formatDate(me.user.createdAt, locale)}
         </p>
       </header>
@@ -35,26 +35,26 @@ export default async function AccountDashboardPage({ params }: AccountDashboardP
       <div className="flex flex-wrap gap-2">
         <Link
           href={`/${locale}/account/orders`}
-          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-700"
+          className="rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground transition hover:bg-muted"
         >
           View All Orders
         </Link>
         <Link
           href={`/${locale}/account/addresses`}
-          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-700"
+          className="rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground transition hover:bg-muted"
         >
           Manage Addresses
         </Link>
         <Link
           href={`/${locale}/account/settings`}
-          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-700"
+          className="rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground transition hover:bg-muted"
         >
           Edit Profile
         </Link>
       </div>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Recent Orders</h2>
+        <h2 className="text-lg font-semibold text-foreground">Recent Orders</h2>
         <OrderList orders={recentOrders} locale={locale} />
       </section>
     </section>

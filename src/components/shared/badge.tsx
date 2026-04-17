@@ -10,9 +10,9 @@ type BadgeProps = {
 
 const variantClassMap: Record<BadgeVariant, string> = {
   default:
-    "border-slate-300 bg-slate-100 text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200",
+    "border-border bg-muted text-muted-foreground",
   success:
-    "border-emerald-300 bg-emerald-100 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200",
+    "border-primary/40 bg-primary/10 text-primary dark:border-primary/50 dark:bg-primary/15 dark:text-primary",
   warning:
     "border-amber-300 bg-amber-100 text-amber-800 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-200",
   danger:

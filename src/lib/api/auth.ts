@@ -1,4 +1,5 @@
 import { apiClient } from "./client";
+import { toForgotPasswordPayload } from "@/lib/config/auth-identifier";
 import type { LoginResponse, MeResponse, User } from "../types/user";
 
 type RegisterPayload = {
@@ -66,10 +67,11 @@ export async function sendVerification(
   });
 }
 
-export async function forgotPassword(email: string): Promise<void> {
+/** Password reset request; `identifier` is email and/or phone per NEXT_PUBLIC_AUTH_REQUIRED_IDENTIFIER. */
+export async function forgotPassword(identifier: string): Promise<void> {
   await apiClient("/users/forgot-password", {
     method: "POST",
-    body: JSON.stringify({ email }),
+    body: JSON.stringify(toForgotPasswordPayload(identifier)),
   });
 }
 

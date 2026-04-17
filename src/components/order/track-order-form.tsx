@@ -49,9 +49,12 @@ export function TrackOrderForm() {
 
   return (
     <div className="space-y-6">
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-slate-200 p-5 dark:border-slate-800">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-4 rounded-xl border border-border bg-card p-5"
+      >
         <div>
-          <label htmlFor="orderNumber" className="mb-1 block text-sm font-medium">
+          <label htmlFor="orderNumber" className="mb-1 block text-sm font-medium text-foreground">
             Order Number
           </label>
           <input
@@ -60,7 +63,7 @@ export function TrackOrderForm() {
             value={orderNumber}
             onChange={(e) => setOrderNumber(e.target.value)}
             placeholder="ORD-20260410-XXXX"
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-slate-500 focus:ring-1 focus:ring-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:focus:border-slate-400 dark:focus:ring-slate-400"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring"
           />
         </div>
 
@@ -68,28 +71,34 @@ export function TrackOrderForm() {
           <div className="mb-2 flex gap-3">
             <button
               type="button"
-              onClick={() => { setMode("email"); setIdentifier(""); }}
-              className={`rounded-md px-3 py-1 text-xs font-medium transition ${
+              onClick={() => {
+                setMode("email");
+                setIdentifier("");
+              }}
+              className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${
                 mode === "email"
-                  ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
               }`}
             >
               Email
             </button>
             <button
               type="button"
-              onClick={() => { setMode("phone"); setIdentifier(""); }}
-              className={`rounded-md px-3 py-1 text-xs font-medium transition ${
+              onClick={() => {
+                setMode("phone");
+                setIdentifier("");
+              }}
+              className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${
                 mode === "phone"
-                  ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
               }`}
             >
               Phone
             </button>
           </div>
-          <label htmlFor="identifier" className="mb-1 block text-sm font-medium">
+          <label htmlFor="identifier" className="mb-1 block text-sm font-medium text-foreground">
             {mode === "email" ? "Email Address" : "Phone Number"}
           </label>
           <input
@@ -98,12 +107,12 @@ export function TrackOrderForm() {
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
             placeholder={mode === "email" ? "you@example.com" : "+880XXXXXXXXXX"}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-slate-500 focus:ring-1 focus:ring-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:focus:border-slate-400 dark:focus:ring-slate-400"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring"
           />
         </div>
 
         {error && (
-          <p className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300">
+          <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {error}
           </p>
         )}
@@ -111,7 +120,7 @@ export function TrackOrderForm() {
         <button
           type="submit"
           disabled={isLoading}
-          className="inline-flex w-full items-center justify-center rounded-md bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-700 disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
+          className="inline-flex w-full items-center justify-center rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
         >
           {isLoading ? "Looking up..." : "Track Order"}
         </button>
@@ -126,47 +135,47 @@ function OrderDetails({ order }: { order: Order }) {
   const currency = order.currency ?? "USD";
 
   return (
-    <div className="space-y-4 rounded-xl border border-slate-200 p-5 dark:border-slate-800">
+    <div className="space-y-4 rounded-xl border border-border bg-card p-5">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Order {order.orderNumber}</h2>
         <OrderStatusBadge status={order.status} />
       </div>
 
       {order.placedAt && (
-        <p className="text-xs text-slate-500 dark:text-slate-400">
+        <p className="text-xs text-muted-foreground">
           Placed on {new Date(order.placedAt).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}
         </p>
       )}
 
       <section className="space-y-2">
-        <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400">Items</h3>
+        <h3 className="text-sm font-medium text-muted-foreground">Items</h3>
         {order.items.map((item) => (
           <div key={item.id} className="flex items-center justify-between text-sm">
-            <span className="text-slate-700 dark:text-slate-300">
+            <span className="text-foreground">
               {item.productName}
               {item.variantName ? ` — ${item.variantName}` : ""}
               {" "}
-              <span className="text-slate-500">x {item.quantity}</span>
+              <span className="text-muted-foreground">x {item.quantity}</span>
             </span>
             <span className="font-medium">{formatPrice(item.totalPrice, currency)}</span>
           </div>
         ))}
       </section>
 
-      <div className="space-y-1 border-t border-slate-200 pt-3 dark:border-slate-800">
+      <div className="space-y-1 border-t border-border pt-3">
         <div className="flex justify-between text-sm">
-          <span className="text-slate-500">Subtotal</span>
+          <span className="text-muted-foreground">Subtotal</span>
           <span>{formatPrice(order.subtotal, currency)}</span>
         </div>
         {order.shippingTotal > 0 && (
           <div className="flex justify-between text-sm">
-            <span className="text-slate-500">Shipping</span>
+            <span className="text-muted-foreground">Shipping</span>
             <span>{formatPrice(order.shippingTotal, currency)}</span>
           </div>
         )}
         {order.discountTotal > 0 && (
           <div className="flex justify-between text-sm">
-            <span className="text-slate-500">Discount</span>
+            <span className="text-muted-foreground">Discount</span>
             <span>-{formatPrice(order.discountTotal, currency)}</span>
           </div>
         )}
@@ -177,9 +186,9 @@ function OrderDetails({ order }: { order: Order }) {
       </div>
 
       {order.shippingAddress && (
-        <section className="border-t border-slate-200 pt-3 dark:border-slate-800">
-          <h3 className="mb-1 text-sm font-medium text-slate-500 dark:text-slate-400">Shipping Address</h3>
-          <p className="text-sm text-slate-700 dark:text-slate-300">
+        <section className="border-t border-border pt-3">
+          <h3 className="mb-1 text-sm font-medium text-muted-foreground">Shipping Address</h3>
+          <p className="text-sm text-foreground">
             {order.shippingAddress.firstName} {order.shippingAddress.lastName}
             <br />
             {order.shippingAddress.street1}

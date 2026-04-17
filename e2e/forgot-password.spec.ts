@@ -16,12 +16,14 @@ test.describe("forgot password (API stubbed)", () => {
     });
   });
 
-  test("submitting email shows generic success copy", async ({ page }) => {
+  test("submitting identifier shows generic success copy", async ({ page }) => {
     await page.goto("/en/auth/forgot-password");
-    await page.getByLabel("Email").fill("customer@example.com");
-    await page.getByRole("button", { name: "Send Reset Link" }).click();
+    await page.getByTestId("forgot-password-identifier").fill("customer@example.com");
+    await page.getByRole("button", { name: "Send reset instructions" }).click();
     await expect(
-      page.getByText("If an account exists with this email, you will receive a password reset link."),
+      page.getByText(
+        "If an account exists for that identifier, you will receive password reset instructions shortly.",
+      ),
     ).toBeVisible();
   });
 });
