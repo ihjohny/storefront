@@ -12,7 +12,7 @@ export function LoadingSkeleton({
       {Array.from({ length: lines }).map((_, index) => (
         <div
           key={`skeleton-line-${index}`}
-          className={`animate-pulse rounded-md bg-slate-200 dark:bg-slate-800 ${className}`}
+          className={`animate-pulse rounded-md bg-muted ${className}`}
         />
       ))}
     </div>

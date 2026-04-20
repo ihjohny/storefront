@@ -10,6 +10,8 @@ import {
   type ReactNode,
 } from "react";
 import {
+  applyCoupon as patchCartCoupon,
+  clearCartCoupon,
   createCart,
   getCart,
   removeCartDocument,
@@ -25,6 +27,8 @@ export type CartContextType = {
   items: CartItem[];
   itemCount: number;
   subtotal: number;
+  discountTotal: number;
+  appliedCouponCode: string | null;
   isLoading: boolean;
   addItem: (productId: string, variantId?: string, quantity?: number) => Promise<void>;
   updateQuantity: (
@@ -35,6 +39,8 @@ export type CartContextType = {
   removeItem: (productId: string, variantId: string | null) => Promise<void>;
   clearCart: () => Promise<void>;
   refreshCart: () => Promise<void>;
+  applyCouponCode: (code: string) => Promise<void>;
+  removeCoupon: () => Promise<void>;
 };
 
 type CartMutationItem = {
@@ -104,6 +110,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     typeof cart?.subtotal === "number"
       ? cart.subtotal
       : items.reduce((total, item) => total + item.quantity * item.unitPrice, 0);
+
+  const discountTotal =
+    typeof cart?.discountTotal === "number" ? Math.max(0, cart.discountTotal) : 0;
+
+  const appliedCouponCode = cart?.couponCode?.trim() ? cart.couponCode.trim() : null;
 
   const activeUserId = user?.id ?? null;
   const activeGuestId = !activeUserId ? guestId ?? null : null;
@@ -287,25 +298,62 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [activeGuestId, cart?.id, storeId]);
 
+  const applyCouponCode = useCallback(
+    async (code: string) => {
+      if (!cart?.id) {
+        return;
+      }
+      setIsLoading(true);
+      try {
+        const next = await patchCartCoupon(cart.id, code.trim(), activeGuestId ?? undefined);
+        setCart(next);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [cart?.id, activeGuestId],
+  );
+
+  const removeCoupon = useCallback(async () => {
+    if (!cart?.id) {
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const next = await clearCartCoupon(cart.id, activeGuestId ?? undefined);
+      setCart(next);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [cart?.id, activeGuestId]);
+
   const value = useMemo<CartContextType>(
     () => ({
       items,
       itemCount,
       subtotal,
+      discountTotal,
+      appliedCouponCode,
       isLoading,
       addItem,
       updateQuantity,
       removeItem,
       clearCart,
       refreshCart,
+      applyCouponCode,
+      removeCoupon,
     }),
     [
       addItem,
+      appliedCouponCode,
+      applyCouponCode,
       clearCart,
+      discountTotal,
       isLoading,
       itemCount,
       items,
       refreshCart,
+      removeCoupon,
       removeItem,
       subtotal,
       updateQuantity,

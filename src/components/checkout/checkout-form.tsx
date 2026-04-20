@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { flushSync } from "react-dom";
 import { useRouter, useParams } from "next/navigation";
-import { ApiError } from "@/lib/api/client";
+import { getApiErrorMessage } from "@/lib/api/client";
 import { getAddresses, type Address } from "@/lib/api/addresses";
 import { getShippingMethods, type ShippingMethod } from "@/lib/api/shipping";
 import { processCheckout } from "@/lib/api/orders";
@@ -26,20 +26,6 @@ import { PaymentForm } from "@/components/checkout/payment-form";
 const DEFAULT_VENDOR_KEY = "default";
 
 type CheckoutStep = "address" | "shipping" | "review";
-
-function toMessage(error: unknown): string {
-  if (error instanceof ApiError) {
-    const body = error.body as Record<string, unknown> | null;
-    if (body && typeof body.error === "string") {
-      return body.error;
-    }
-    return `Request failed (${error.status}). Please try again.`;
-  }
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return "Something went wrong. Please try again.";
-}
 
 function toAddressSnapshot(values: AddressFormValues): AddressSnapshot {
   return {
@@ -74,7 +60,7 @@ export function CheckoutForm() {
   const params = useParams<{ locale: string }>();
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const guestId = useGuestId();
-  const { items, subtotal, refreshCart } = useCart();
+  const { items, subtotal, discountTotal, refreshCart } = useCart();
   const { serviceArea, canShopCurrentArea } = useStore();
 
   const serviceAreaReadonly: ServiceAreaReadonlyFields | undefined = useMemo(() => {
@@ -173,7 +159,7 @@ export function CheckoutForm() {
         setSelectedAddressId(userAddresses[0].id);
       }
     } catch (error) {
-      setErrorMessage(toMessage(error));
+      setErrorMessage(getApiErrorMessage(error));
     } finally {
       setIsLoadingData(false);
     }
@@ -284,7 +270,7 @@ export function CheckoutForm() {
         void refreshCart();
       });
     } catch (error) {
-      setErrorMessage(toMessage(error));
+      setErrorMessage(getApiErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
@@ -419,6 +405,7 @@ export function CheckoutForm() {
           <OrderReview
             items={items}
             subtotal={subtotal}
+            discountTotal={discountTotal}
             selectedMethodIds={selectedShippingMethodIds}
             shippingMethods={shippingMethods}
           />

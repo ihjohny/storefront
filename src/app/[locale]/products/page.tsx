@@ -1,11 +1,15 @@
 import { notFound } from "next/navigation";
+import { ApiError } from "@/lib/api/client";
 import { getProducts } from "@/lib/api/products";
 import { getCategories } from "@/lib/api/categories";
 import { getSelectedStoreId } from "@/lib/utils/get-store-id";
+import { emptyProductListingResponse } from "@/lib/utils/empty-product-listing";
 import { i18nConfig, type Locale } from "@/lib/i18n/config";
 import { ProductGrid } from "@/components/product/product-grid";
 import { ProductFilters } from "@/components/product/product-filters";
 import { Pagination } from "@/components/shared/pagination";
+import type { Category } from "@/lib/types/category";
+import type { ProductsResponse } from "@/lib/types/product";
 
 export const dynamic = "force-dynamic";
 
@@ -50,10 +54,27 @@ export default async function ProductsPage({
     storeId,
   };
 
-  const [productsResponse, categories] = await Promise.all([
-    getProducts(filters),
-    getCategories(locale),
-  ]);
+  let productsResponse: ProductsResponse = emptyProductListingResponse(page);
+  let categories: Category[] = [];
+  let catalogError: string | null = null;
+
+  try {
+    const [products, cats] = await Promise.all([
+      getProducts(filters),
+      getCategories(locale),
+    ]);
+    productsResponse = products;
+    categories = cats;
+  } catch (err) {
+    if (err instanceof ApiError) {
+      catalogError =
+        err.status >= 500
+          ? "The product catalog is temporarily unavailable. Please try again in a few moments."
+          : "We couldn’t load products right now. Refresh the page or try again shortly.";
+    } else {
+      catalogError = "We couldn’t load products. Check your connection and try again.";
+    }
+  }
 
   const paginationQuery = {
     category: filters.category,
@@ -72,6 +93,15 @@ export default async function ProductsPage({
           Browse published products with category, sort, and price filters.
         </p>
       </header>
+
+      {catalogError ? (
+        <div
+          className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm text-foreground"
+          role="alert"
+        >
+          {catalogError}
+        </div>
+      ) : null}
 
       <section className="grid gap-6 lg:grid-cols-[280px_1fr]">
         <div className="order-2 space-y-5 lg:order-2">

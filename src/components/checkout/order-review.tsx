@@ -7,6 +7,7 @@ import { formatPrice } from "@/lib/utils/format-price";
 type OrderReviewProps = {
   items: CartItem[];
   subtotal: number;
+  discountTotal?: number;
   selectedMethodIds: string[];
   shippingMethods: ShippingMethod[];
 };
@@ -14,6 +15,7 @@ type OrderReviewProps = {
 export function OrderReview({
   items,
   subtotal,
+  discountTotal = 0,
   selectedMethodIds,
   shippingMethods,
 }: OrderReviewProps) {
@@ -22,7 +24,8 @@ export function OrderReview({
     return total + (method?.rate ?? 0);
   }, 0);
 
-  const grandTotal = subtotal + shippingTotal;
+  const afterDiscount = Math.max(0, subtotal - discountTotal);
+  const grandTotal = afterDiscount + shippingTotal;
 
   return (
     <section className="space-y-4 rounded-xl border border-border p-4">
@@ -51,6 +54,12 @@ export function OrderReview({
           <span className="text-muted-foreground">Subtotal</span>
           <span>{formatPrice(subtotal)}</span>
         </div>
+        {discountTotal > 0 ? (
+          <div className="flex items-center justify-between text-primary">
+            <span>Discount</span>
+            <span>−{formatPrice(discountTotal)}</span>
+          </div>
+        ) : null}
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Shipping</span>
           <span>{formatPrice(shippingTotal)}</span>

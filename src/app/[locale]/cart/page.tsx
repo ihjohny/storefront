@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { use, useState } from "react";
+import { use } from "react";
 import { features } from "@/lib/config/features";
 import type { CartItem as CartItemType } from "@/lib/types/cart";
 import { useCart } from "@/lib/hooks/use-cart";
@@ -18,8 +18,17 @@ function itemKey(item: CartItemType) {
 }
 
 export default function CartPage({ params }: CartPageProps) {
-  const { items, subtotal, isLoading, updateQuantity, removeItem } = useCart();
-  const [couponCode, setCouponCode] = useState("");
+  const {
+    items,
+    subtotal,
+    discountTotal,
+    appliedCouponCode,
+    isLoading,
+    updateQuantity,
+    removeItem,
+    applyCouponCode,
+    removeCoupon,
+  } = useCart();
   const { locale } = use(params);
   const resolvedLocale = locale || "en";
 
@@ -87,8 +96,11 @@ export default function CartPage({ params }: CartPageProps) {
         <CartSummary
           locale={resolvedLocale}
           subtotal={subtotal}
-          couponCode={couponCode}
-          onCouponCodeChange={setCouponCode}
+          discountTotal={discountTotal}
+          appliedCouponCode={appliedCouponCode}
+          applyCouponCode={applyCouponCode}
+          removeCoupon={removeCoupon}
+          isLoading={isLoading}
         />
       </section>
     </main>

@@ -104,3 +104,13 @@ export async function applyCoupon(
 
   return response.doc;
 }
+
+export async function clearCartCoupon(cartId: string, guestId?: string): Promise<Cart> {
+  const response = await apiClient<CartDocumentResponse>(`/carts/${cartId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ couponCode: "" }),
+    guestId,
+  });
+
+  return response.doc;
+}
