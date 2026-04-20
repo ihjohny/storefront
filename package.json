@@ -23,6 +23,8 @@
     "sync:api-types": "openapi-typescript ${BACKEND_URL:-http://localhost:3000}/api/openapi-all.json -o src/lib/types/api.generated.ts"
   },
   "dependencies": {
+    "@payloadcms/richtext-lexical": "3.77.0",
+    "lexical": "0.35.0",
     "@headlessui/react": "^2.2.10",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-dialog": "^1.1.15",

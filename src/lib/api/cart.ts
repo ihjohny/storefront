@@ -83,6 +83,9 @@ export async function removeCartDocument(
   try {
     await deleteCart(cartId, guestId);
   } catch (e) {
+    if (e instanceof ApiError && e.status === 404) {
+      return;
+    }
     if (e instanceof ApiError && (e.status === 403 || e.status === 401)) {
       await updateCart(cartId, [], guestId, storeId);
       return;
