@@ -1,9 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { features } from "@/lib/config/features";
-import { formatPrice } from "@/lib/utils/format-price";
+import { PriceDisplay } from "@/components/shared/price-display";
+import { SaleBadge } from "@/components/product/sale-badge";
 import { getMediaUrl } from "@/lib/utils/url";
 import { getProductMedia } from "@/lib/utils/product-media";
+import { resolveSalePresentation } from "@/lib/utils/sale-presentation";
 import type { Product } from "@/lib/types/product";
 import { AddToCartButton } from "@/components/product/add-to-cart-button";
 
@@ -25,6 +27,11 @@ export function ProductCard({ product, locale }: ProductCardProps) {
   const imageUrl = getMediaUrl(firstImage?.url);
   const vendor = getVendor(product.tenant);
   const productHref = `/${locale}/products/${product.slug}`;
+  const salePresentation = resolveSalePresentation({
+    sellingPrice: product.basePrice,
+    compareAtPrice: product.compareAtPrice,
+    productSaleDisplayMode: product.saleDisplayMode,
+  });
 
   return (
     <article className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
@@ -39,6 +46,9 @@ export function ProductCard({ product, locale }: ProductCardProps) {
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             />
           ) : null}
+          <div className="pointer-events-none absolute left-2 top-2 z-10">
+            <SaleBadge presentation={salePresentation} currency={product.currency} />
+          </div>
         </div>
       </Link>
       <div className="space-y-3 p-4">
@@ -55,16 +65,12 @@ export function ProductCard({ product, locale }: ProductCardProps) {
             {product.name}
           </h3>
         </Link>
-        <div className="flex items-center gap-2">
-          <p className="text-sm font-semibold text-foreground">
-            {formatPrice(product.basePrice, product.currency)}
-          </p>
-          {typeof product.compareAtPrice === "number" ? (
-            <p className="text-xs text-muted-foreground line-through sm:text-sm">
-              {formatPrice(product.compareAtPrice, product.currency)}
-            </p>
-          ) : null}
-        </div>
+        <PriceDisplay
+          price={product.basePrice}
+          compareAtPrice={product.compareAtPrice}
+          currency={product.currency}
+          productSaleDisplayMode={product.saleDisplayMode}
+        />
         <AddToCartButton productId={product.id} quantity={1} />
       </div>
     </article>

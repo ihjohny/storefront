@@ -1,9 +1,14 @@
 import { ProductGallery } from "@/components/product/product-gallery";
+import { ProductDetailVariantLayout } from "@/components/product/product-detail-variant-layout";
+import { ProductDetailHeading } from "@/components/product/product-detail-heading";
+import { ProductDetailNarrative } from "@/components/product/product-detail-narrative";
 import { ProductVariants } from "@/components/product/product-variants";
 import { AddToCartButton } from "@/components/product/add-to-cart-button";
 import { ProductReviews } from "@/components/product/product-reviews";
-import { formatPrice } from "@/lib/utils/format-price";
+import { SaleBadge } from "@/components/product/sale-badge";
+import { PriceDisplay } from "@/components/shared/price-display";
 import { getProductMedia } from "@/lib/utils/product-media";
+import { resolveSalePresentation } from "@/lib/utils/sale-presentation";
 import type { Product, ProductVariant } from "@/lib/types/product";
 
 type ProductDetailProps = {
@@ -13,40 +18,76 @@ type ProductDetailProps = {
 };
 
 export function ProductDetail({ product, variants, locale }: ProductDetailProps) {
-  const hasVariants = product.hasVariants && variants.length > 0;
   const galleryImages = getProductMedia(product.images);
+  /** Product is configured for variants and we loaded at least one SKU */
+  const showVariantPdp = Boolean(product.hasVariants && variants.length > 0);
+
+  const salePresentation = resolveSalePresentation({
+    sellingPrice: product.basePrice,
+    compareAtPrice: product.compareAtPrice,
+    productSaleDisplayMode: product.saleDisplayMode,
+  });
+
+  const galleryOverlay =
+    !showVariantPdp && salePresentation.isOnSale ? (
+      <SaleBadge
+        presentation={salePresentation}
+        currency={product.currency}
+        size="prominent"
+      />
+    ) : undefined;
 
   return (
-    <section className="grid gap-8 lg:grid-cols-2">
-      <ProductGallery images={galleryImages} fallbackAlt={product.name} />
-      <div className="space-y-5">
-        <div className="space-y-2">
-          <h1 className="text-2xl font-semibold sm:text-3xl">{product.name}</h1>
-          {product.shortDescription ? (
-            <p className="text-sm text-slate-600 dark:text-slate-300 sm:text-base">
-              {product.shortDescription}
-            </p>
-          ) : null}
-        </div>
-
-        {!hasVariants ? (
-          <div className="space-y-3 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
-            <p className="text-lg font-semibold">
-              {formatPrice(product.basePrice, product.currency)}
-            </p>
-            <AddToCartButton productId={product.id} quantity={1} />
-          </div>
-        ) : (
-          <ProductVariants
-            productId={product.id}
+    <section className="space-y-12">
+      <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-10">
+        {showVariantPdp ? (
+          <ProductDetailVariantLayout
+            product={product}
             variants={variants}
-            currency={product.currency}
-            basePrice={product.basePrice}
+            galleryImages={galleryImages}
           />
-        )}
+        ) : (
+          <>
+            <ProductGallery images={galleryImages} fallbackAlt={product.name} overlay={galleryOverlay} />
+            <div className="flex min-h-0 flex-col gap-5">
+              <ProductDetailHeading product={product} />
 
-        <ProductReviews productId={product.id} locale={locale} />
+              {product.hasVariants ? (
+                <ProductVariants
+                  productId={product.id}
+                  variants={variants}
+                  currency={product.currency}
+                  basePrice={product.basePrice}
+                  productCompareAtPrice={product.compareAtPrice}
+                  productSaleDisplayMode={product.saleDisplayMode}
+                />
+              ) : (
+                <div className="space-y-4 rounded-xl border border-border bg-card p-4 shadow-sm">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <PriceDisplay
+                      price={product.basePrice}
+                      compareAtPrice={product.compareAtPrice}
+                      currency={product.currency}
+                      size="large"
+                      productSaleDisplayMode={product.saleDisplayMode}
+                    />
+                    <SaleBadge
+                      presentation={salePresentation}
+                      currency={product.currency}
+                      size="prominent"
+                    />
+                  </div>
+                  <AddToCartButton productId={product.id} quantity={1} />
+                </div>
+              )}
+
+              <ProductDetailNarrative product={product} />
+            </div>
+          </>
+        )}
       </div>
+
+      <ProductReviews productId={product.id} locale={locale} />
     </section>
   );
 }

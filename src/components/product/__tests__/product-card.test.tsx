@@ -45,7 +45,7 @@ describe("ProductCard", () => {
 
     render(<ProductCard product={baseProduct as never} locale="en" />);
 
-    expect(screen.getByText("Vendor One")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /vendor one/i })).toBeInTheDocument();
   });
 
   it("hides vendor badge when multivendor is disabled", async () => {
@@ -56,6 +56,6 @@ describe("ProductCard", () => {
 
     render(<ProductCard product={baseProduct as never} locale="en" />);
 
-    expect(screen.queryByText("Vendor One")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /vendor one/i })).not.toBeInTheDocument();
   });
 });

@@ -1,5 +1,6 @@
 import type { PaginatedResponse } from "./api-response";
 import type { Category } from "./category";
+import type { SaleDisplayMode, VariantSaleDisplayMode } from "@/lib/utils/sale-presentation";
 
 export interface Media {
   id: string;
@@ -25,6 +26,8 @@ export interface Product {
   images: Media[];
   basePrice: number;
   compareAtPrice: number | null;
+  /** Admin-controlled sale UI; defaults to strike_through in UI if omitted (legacy API). */
+  saleDisplayMode?: SaleDisplayMode;
   costPrice?: number | null;
   currency: string;
   hasVariants: boolean;
@@ -46,6 +49,8 @@ export interface ProductVariant {
   sku: string;
   price: number;
   compareAtPrice: number | null;
+  /** Override product sale display; inherit uses product setting. */
+  saleDisplayMode?: VariantSaleDisplayMode;
   options: Array<{ name: string; value: string }>;
   image: Media | null;
   isActive: boolean;

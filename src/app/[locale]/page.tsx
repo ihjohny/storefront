@@ -4,9 +4,12 @@ import { apiClient } from "@/lib/api/client";
 import { getProducts } from "@/lib/api/products";
 import { getHeader } from "@/lib/api/globals";
 import { features } from "@/lib/config/features";
-import { formatPrice } from "@/lib/utils/format-price";
+import { PriceDisplay } from "@/components/shared/price-display";
+import { SaleBadge } from "@/components/product/sale-badge";
 import { getMediaUrl } from "@/lib/utils/url";
 import { getProductMedia } from "@/lib/utils/product-media";
+import { resolveSalePresentation } from "@/lib/utils/sale-presentation";
+import type { SaleDisplayMode } from "@/lib/utils/sale-presentation";
 import { getSelectedStoreId } from "@/lib/utils/get-store-id";
 import type { PaginatedResponse } from "@/lib/types/api-response";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
@@ -27,6 +30,9 @@ type Product = {
   name: string;
   slug: string;
   basePrice?: number;
+  compareAtPrice?: number | null;
+  currency?: string;
+  saleDisplayMode?: SaleDisplayMode;
   images?: Array<Media | string> | null;
 };
 
@@ -151,6 +157,12 @@ export default async function LocaleHomePage({ params }: LocalePageProps) {
               const firstImage = getProductMedia(product.images as Parameters<typeof getProductMedia>[0])[0];
               const mediaUrl = getMediaUrl(firstImage?.url);
               const price = Number(product.basePrice ?? 0);
+              const currency = product.currency ?? "USD";
+              const salePresentation = resolveSalePresentation({
+                sellingPrice: price,
+                compareAtPrice: product.compareAtPrice ?? null,
+                productSaleDisplayMode: product.saleDisplayMode,
+              });
 
               return (
                 <Link
@@ -173,9 +185,12 @@ export default async function LocaleHomePage({ params }: LocalePageProps) {
                     <h3 className="line-clamp-2 text-sm font-medium sm:text-base">
                       {product.name}
                     </h3>
-                    <p className="text-sm text-slate-600 dark:text-slate-300">
-                      {formatPrice(price)}
-                    </p>
+                    <PriceDisplay
+                      price={price}
+                      compareAtPrice={product.compareAtPrice ?? null}
+                      currency={currency}
+                      productSaleDisplayMode={product.saleDisplayMode}
+                    />
                   </div>
                 </Link>
               );
