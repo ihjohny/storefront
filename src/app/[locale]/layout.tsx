@@ -34,7 +34,7 @@ export default async function LocaleLayout({
           <StoreGate>
             <div className="flex min-h-screen flex-col">
               <Header locale={locale} />
-              <main className="flex-1">{children}</main>
+              <main className="min-w-0 flex-1">{children}</main>
               <Footer locale={locale} />
               <CartDrawer locale={locale} />
             </div>

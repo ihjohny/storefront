@@ -56,91 +56,93 @@ export function StoreDeliveryPicker({
       : "max-w-[min(100%,12rem)] truncate sm:max-w-40";
 
   return (
-    <div className="flex w-full max-w-full flex-col gap-3 lg:flex-row lg:items-end lg:justify-between lg:gap-4">
+    <div className="flex w-full max-w-full flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
       <div className="flex min-w-0 w-full flex-1 flex-col gap-2">
         {serviceArea && (
-          <div
-            className={
-              hasLocalities
-                ? "grid w-full grid-cols-1 gap-2 min-[400px]:grid-cols-2 xl:grid-cols-3"
-                : "grid w-full grid-cols-1 gap-2 min-[400px]:grid-cols-2"
-            }
-          >
-            <label className="sr-only" htmlFor={countryFieldId}>
-              Country
-            </label>
-            <select
-              id={countryFieldId}
-              className={geoSelectClass}
-              value={serviceArea.selectedCountryId ?? ""}
-              onChange={(e) => {
-                const v = e.target.value;
-                if (v === (serviceArea.selectedCountryId ?? "")) return;
-                onCountryChange(v);
-              }}
+          <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
+            <div
+              className={
+                hasLocalities
+                  ? "grid min-w-0 flex-1 grid-cols-1 gap-2 min-[400px]:grid-cols-2 xl:grid-cols-3"
+                  : "grid min-w-0 flex-1 grid-cols-1 gap-2 min-[400px]:grid-cols-2"
+              }
             >
-              {serviceArea.countries.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-            <label className="sr-only" htmlFor={subFieldId}>
-              Region
-            </label>
-            <select
-              id={subFieldId}
-              className={geoSelectClass}
-              value={serviceArea.selectedSubdivisionId ?? ""}
-              onChange={(e) => {
-                const v = e.target.value;
-                if (v === (serviceArea.selectedSubdivisionId ?? "")) return;
-                onSubdivisionChange(v);
-              }}
-            >
-              {serviceArea.subdivisions.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-            {hasLocalities && (
-              <>
-                <label className="sr-only" htmlFor={locFieldId}>
-                  Locality
-                </label>
-                <select
-                  id={locFieldId}
-                  className={`${geoSelectClass} min-[400px]:col-span-2 xl:col-span-1`}
-                  value={serviceArea.selectedLocalityId ?? ""}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    const next = v === "" ? null : v;
-                    const cur = serviceArea.selectedLocalityId ?? null;
-                    if (next === cur) return;
-                    onLocalityChange(next);
-                  }}
-                >
-                  <option value="">All areas in region</option>
-                  {serviceArea.localities.map((l) => (
-                    <option key={l.id} value={l.id}>
-                      {l.name}
-                    </option>
-                  ))}
-                </select>
-              </>
-            )}
-          </div>
-        )}
+              <label className="sr-only" htmlFor={countryFieldId}>
+                Country
+              </label>
+              <select
+                id={countryFieldId}
+                className={geoSelectClass}
+                value={serviceArea.selectedCountryId ?? ""}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v === (serviceArea.selectedCountryId ?? "")) return;
+                  onCountryChange(v);
+                }}
+              >
+                {serviceArea.countries.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              <label className="sr-only" htmlFor={subFieldId}>
+                Region
+              </label>
+              <select
+                id={subFieldId}
+                className={geoSelectClass}
+                value={serviceArea.selectedSubdivisionId ?? ""}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v === (serviceArea.selectedSubdivisionId ?? "")) return;
+                  onSubdivisionChange(v);
+                }}
+              >
+                {serviceArea.subdivisions.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+              {hasLocalities && (
+                <>
+                  <label className="sr-only" htmlFor={locFieldId}>
+                    Locality
+                  </label>
+                  <select
+                    id={locFieldId}
+                    className={`${geoSelectClass} min-[400px]:col-span-2 xl:col-span-1`}
+                    value={serviceArea.selectedLocalityId ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      const next = v === "" ? null : v;
+                      const cur = serviceArea.selectedLocalityId ?? null;
+                      if (next === cur) return;
+                      onLocalityChange(next);
+                    }}
+                  >
+                    <option value="">All areas in region</option>
+                    {serviceArea.localities.map((l) => (
+                      <option key={l.id} value={l.id}>
+                        {l.name}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              )}
+            </div>
 
-        {policy && policy.tier !== "standard" && (
-          <div className="flex flex-wrap items-center gap-2">
-            <DeliveryPolicyPopover
-              tier={policy.tier}
-              extendedFeeNote={policy.extendedFeeNote}
-              extendedLeadTimeNote={policy.extendedLeadTimeNote}
-              unservedMsg={policy.unservedCustomerMessage}
-            />
+            {policy && policy.tier !== "standard" && (
+              <div className="flex shrink-0 items-center sm:self-center">
+                <DeliveryPolicyPopover
+                  tier={policy.tier}
+                  extendedFeeNote={policy.extendedFeeNote}
+                  extendedLeadTimeNote={policy.extendedLeadTimeNote}
+                  unservedMsg={policy.unservedCustomerMessage}
+                />
+              </div>
+            )}
           </div>
         )}
 

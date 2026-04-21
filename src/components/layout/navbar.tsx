@@ -15,10 +15,15 @@ import { useCart } from "@/lib/hooks/use-cart";
 export type NavItem = {
   label: string;
   href: string;
+  /** CMS: default true. When false, hidden from horizontal nav (md+). */
+  showInDesktopNav?: boolean;
+  /** CMS: default true. When false, hidden from mobile slide-out menu. */
+  showInMobileDrawer?: boolean;
 };
 
 type NavbarProps = {
   locale: string;
+  /** Primary links from CMS: horizontal bar (md+) vs mobile drawer per row flags. */
   navItems: NavItem[];
 };
 
@@ -28,7 +33,14 @@ export function Navbar({ locale, navItems }: NavbarProps) {
   const { isAuthenticated, logout } = useAuth();
   const { itemCount } = useCart();
 
-  const safeItems = useMemo(() => navItems.slice(0, 8), [navItems]);
+  const desktopNavItems = useMemo(
+    () => navItems.filter((i) => i.showInDesktopNav !== false).slice(0, 8),
+    [navItems],
+  );
+  const drawerNavItems = useMemo(
+    () => navItems.filter((i) => i.showInMobileDrawer !== false).slice(0, 8),
+    [navItems],
+  );
   const cartCountLabel = itemCount > 99 ? "99+" : String(itemCount);
 
   return (
@@ -45,13 +57,13 @@ export function Navbar({ locale, navItems }: NavbarProps) {
 
         <nav
           aria-label="Primary navigation"
-          className="hidden min-w-0 items-center gap-3 text-sm md:flex"
+          className="hidden min-w-0 flex-1 flex-wrap items-center justify-center gap-x-2 gap-y-1.5 text-sm md:flex xl:flex-nowrap xl:overflow-x-auto xl:overflow-y-hidden xl:px-1 [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5"
         >
-          {safeItems.map((item) => (
+          {desktopNavItems.map((item) => (
             <Link
               key={`${item.href}-${item.label}`}
               href={item.href}
-              className="rounded-md px-2 py-1 transition hover:bg-muted"
+              className="shrink-0 whitespace-nowrap rounded-md px-2 py-1 transition hover:bg-muted"
             >
               {item.label}
             </Link>
@@ -358,7 +370,7 @@ export function Navbar({ locale, navItems }: NavbarProps) {
         locale={locale}
         isOpen={isMobileOpen}
         onClose={() => setIsMobileOpen(false)}
-        navItems={safeItems}
+        navItems={drawerNavItems}
         cartCount={itemCount}
       />
     </>

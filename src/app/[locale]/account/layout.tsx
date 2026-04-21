@@ -25,12 +25,14 @@ export default async function AccountLayout({ children, params }: AccountLayoutP
   const greetingName = me.user.displayName || me.user.email || "Customer";
 
   return (
-    <div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[240px_1fr] lg:px-8">
-      <div className="space-y-3">
-        <p className="text-sm text-muted-foreground">Hello, {greetingName}</p>
-        <AccountSidebar locale={locale} />
+    <div className="mx-auto grid min-w-0 w-full max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,200px)_minmax(0,1fr)] lg:gap-8 lg:px-8 lg:py-6 xl:grid-cols-[minmax(0,220px)_minmax(0,1fr)]">
+      <div className="min-w-0 space-y-2 lg:space-y-2">
+        <p className="text-xs text-muted-foreground lg:text-[13px]">Hello, {greetingName}</p>
+        <div className="-mx-4 min-w-0 w-auto max-w-none sm:-mx-6 lg:mx-0 lg:w-full">
+          <AccountSidebar locale={locale} />
+        </div>
       </div>
-      <main>{children}</main>
+      <main className="min-w-0">{children}</main>
     </div>
   );
 }

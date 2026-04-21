@@ -52,7 +52,7 @@ export function DeliveryPolicyPopover({
       <Popover.Trigger asChild>
         <button
           type="button"
-          className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+          className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
             isUnserved
               ? "border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-950/50 dark:text-red-100"
               : "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100"

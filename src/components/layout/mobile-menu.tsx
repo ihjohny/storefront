@@ -79,7 +79,7 @@ export function MobileMenu({
                     key={`${item.href}-${item.label}`}
                     href={item.href}
                     onClick={onClose}
-                    className="rounded-md px-2 py-2 text-sm hover:bg-muted"
+                    className="break-words rounded-md px-2 py-2 text-sm hover:bg-muted"
                   >
                     {item.label}
                   </Link>

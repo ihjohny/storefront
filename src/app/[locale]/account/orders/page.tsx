@@ -33,7 +33,7 @@ export default async function AccountOrdersPage({
 
   return (
     <section className="space-y-4">
-      <h1 className="text-2xl font-semibold sm:text-3xl">Order History</h1>
+      <h1 className="text-2xl font-semibold text-foreground sm:text-3xl">Order History</h1>
       <OrderList orders={response.docs} locale={locale} />
       <Pagination
         currentPage={response.page}
