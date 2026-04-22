@@ -9,15 +9,26 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { createCart, deleteCart, getCart, updateCart } from "@/lib/api/cart";
+import {
+  applyCoupon as patchCartCoupon,
+  clearCartCoupon,
+  createCart,
+  getCart,
+  removeCartDocument,
+  updateCart,
+} from "@/lib/api/cart";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useGuestId } from "@/lib/hooks/use-guest-id";
+import { features } from "@/lib/config/features";
+import { useStore } from "@/lib/hooks/use-store";
 import type { Cart, CartItem } from "@/lib/types/cart";
 
 export type CartContextType = {
   items: CartItem[];
   itemCount: number;
   subtotal: number;
+  discountTotal: number;
+  appliedCouponCode: string | null;
   isLoading: boolean;
   addItem: (productId: string, variantId?: string, quantity?: number) => Promise<void>;
   updateQuantity: (
@@ -28,6 +39,8 @@ export type CartContextType = {
   removeItem: (productId: string, variantId: string | null) => Promise<void>;
   clearCart: () => Promise<void>;
   refreshCart: () => Promise<void>;
+  applyCouponCode: (code: string) => Promise<void>;
+  removeCoupon: () => Promise<void>;
 };
 
 type CartMutationItem = {
@@ -83,16 +96,25 @@ function mergeMutationItems(
 export function CartProvider({ children }: { children: ReactNode }) {
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const guestId = useGuestId();
+  const { commerceStore } = useStore();
+  const storeId =
+    features.multiStore && commerceStore?.id ? commerceStore.id : undefined;
   const [cart, setCart] = useState<Cart | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const mergedForUserRef = useRef<string | null>(null);
 
   const items = useMemo(() => cart?.items ?? [], [cart]);
   const itemCount = items.reduce((total, item) => total + item.quantity, 0);
+
   const subtotal =
     typeof cart?.subtotal === "number"
       ? cart.subtotal
       : items.reduce((total, item) => total + item.quantity * item.unitPrice, 0);
+
+  const discountTotal =
+    typeof cart?.discountTotal === "number" ? Math.max(0, cart.discountTotal) : 0;
+
+  const appliedCouponCode = cart?.couponCode?.trim() ? cart.couponCode.trim() : null;
 
   const activeUserId = user?.id ?? null;
   const activeGuestId = !activeUserId ? guestId ?? null : null;
@@ -152,19 +174,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
       if (mergedItems.length > 0) {
         if (userCart) {
-          await updateCart(userCart.id, mergedItems, undefined);
+          await updateCart(userCart.id, mergedItems, undefined, storeId);
         } else {
-          await createCart(mergedItems, undefined);
+          await createCart(mergedItems, undefined, storeId);
         }
       }
 
-      await deleteCart(guestCart.id, guestId);
+      await removeCartDocument(guestCart.id, guestId, storeId);
       mergedForUserRef.current = activeUserId;
       await refreshCart();
     } finally {
       setIsLoading(false);
     }
-  }, [activeUserId, guestId, refreshCart]);
+  }, [activeUserId, guestId, refreshCart, storeId]);
 
   useEffect(() => {
     if (isAuthLoading || !isAuthenticated || !activeUserId) {
@@ -179,20 +201,23 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (!activeUserId && !activeGuestId) {
         return;
       }
+      if (features.multiStore && !storeId && nextItems.length > 0) {
+        return;
+      }
 
       setIsLoading(true);
       try {
         if (nextItems.length === 0) {
           if (cart?.id) {
-            await deleteCart(cart.id, activeGuestId ?? undefined);
+            await removeCartDocument(cart.id, activeGuestId ?? undefined, storeId);
           }
           setCart(null);
           return;
         }
 
         const savedCart = cart?.id
-          ? await updateCart(cart.id, nextItems, activeGuestId ?? undefined)
-          : await createCart(nextItems, activeGuestId ?? undefined);
+          ? await updateCart(cart.id, nextItems, activeGuestId ?? undefined, storeId)
+          : await createCart(nextItems, activeGuestId ?? undefined, storeId);
 
         setCart(savedCart);
         await refreshCart();
@@ -200,11 +225,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [activeGuestId, activeUserId, cart?.id, refreshCart],
+    [activeGuestId, activeUserId, cart?.id, refreshCart, storeId],
   );
 
   const addItem = useCallback(
     async (productId: string, variantId?: string, quantity = 1) => {
+      if (features.multiStore && !storeId) {
+        return;
+      }
       const safeQuantity = Math.max(1, quantity);
       const nextItems = toMutationItems(items);
       const key = cartItemKey(productId, variantId ?? null);
@@ -227,7 +255,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
       await persistItems(nextItems);
     },
-    [items, persistItems],
+    [items, persistItems, storeId],
   );
 
   const updateQuantity = useCallback(
@@ -262,33 +290,70 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     try {
       if (cart?.id) {
-        await deleteCart(cart.id, activeGuestId ?? undefined);
+        await removeCartDocument(cart.id, activeGuestId ?? undefined, storeId);
       }
       setCart(null);
     } finally {
       setIsLoading(false);
     }
-  }, [activeGuestId, cart?.id]);
+  }, [activeGuestId, cart?.id, storeId]);
+
+  const applyCouponCode = useCallback(
+    async (code: string) => {
+      if (!cart?.id) {
+        return;
+      }
+      setIsLoading(true);
+      try {
+        const next = await patchCartCoupon(cart.id, code.trim(), activeGuestId ?? undefined);
+        setCart(next);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [cart?.id, activeGuestId],
+  );
+
+  const removeCoupon = useCallback(async () => {
+    if (!cart?.id) {
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const next = await clearCartCoupon(cart.id, activeGuestId ?? undefined);
+      setCart(next);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [cart?.id, activeGuestId]);
 
   const value = useMemo<CartContextType>(
     () => ({
       items,
       itemCount,
       subtotal,
+      discountTotal,
+      appliedCouponCode,
       isLoading,
       addItem,
       updateQuantity,
       removeItem,
       clearCart,
       refreshCart,
+      applyCouponCode,
+      removeCoupon,
     }),
     [
       addItem,
+      appliedCouponCode,
+      applyCouponCode,
       clearCart,
+      discountTotal,
       isLoading,
       itemCount,
       items,
       refreshCart,
+      removeCoupon,
       removeItem,
       subtotal,
       updateQuantity,

@@ -40,7 +40,7 @@ export function Pagination({
         <Link
           href={buildHref(pathname, query, currentPage - 1)}
           scroll={false}
-          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-900"
+          className="rounded-md border border-border bg-background px-3 py-1.5 text-sm transition hover:bg-muted"
         >
           Previous
         </Link>
@@ -53,8 +53,8 @@ export function Pagination({
           aria-current={currentPage === page ? "page" : undefined}
           className={`rounded-md px-3 py-1.5 text-sm ${
             currentPage === page
-              ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
-              : "border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-900"
+              ? "bg-primary font-medium text-primary-foreground"
+              : "border border-border bg-background hover:bg-muted"
           }`}
         >
           {page}
@@ -64,7 +64,7 @@ export function Pagination({
         <Link
           href={buildHref(pathname, query, currentPage + 1)}
           scroll={false}
-          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-900"
+          className="rounded-md border border-border bg-background px-3 py-1.5 text-sm transition hover:bg-muted"
         >
           Next
         </Link>

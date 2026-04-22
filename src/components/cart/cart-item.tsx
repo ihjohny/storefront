@@ -29,16 +29,20 @@ export function CartItem({
     (rawProductImage && typeof rawProductImage === "object" && "image" in rawProductImage
       ? rawProductImage.image
       : rawProductImage);
-  const imageUrl = getMediaUrl(
-    image && typeof image === "object" && "url" in image ? image.url : null,
-  );
+  const rawMediaUrl =
+    image && typeof image === "object" && "url" in image && typeof (image as { url: unknown }).url === "string"
+      ? (image as { url: string }).url
+      : null;
+  const imageUrl = getMediaUrl(rawMediaUrl);
   const imageAlt =
-    image && typeof image === "object" && "alt" in image ? image.alt : item.product.name;
+    image && typeof image === "object" && "alt" in image && typeof (image as { alt: unknown }).alt === "string"
+      ? (image as { alt: string }).alt
+      : item.product.name;
   const lineTotal = item.unitPrice * item.quantity;
 
   return (
-    <article className="grid grid-cols-[88px_1fr] gap-3 rounded-xl border border-slate-200 p-3 dark:border-slate-800 sm:grid-cols-[112px_1fr] sm:gap-4 sm:p-4">
-      <div className="relative aspect-square overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-900">
+    <article className="grid grid-cols-[88px_1fr] gap-3 rounded-xl border border-border bg-card p-3 sm:grid-cols-[112px_1fr] sm:gap-4 sm:p-4">
+      <div className="relative aspect-square overflow-hidden rounded-lg bg-muted">
         {imageUrl ? (
           <Image
             src={imageUrl}
@@ -59,17 +63,17 @@ export function CartItem({
             {item.product.name}
           </Link>
           {item.variant ? (
-            <p className="text-xs text-slate-600 dark:text-slate-300 sm:text-sm">
+            <p className="text-xs text-muted-foreground sm:text-sm">
               {item.variant.name}
             </p>
           ) : null}
-          <p className="text-sm text-slate-700 dark:text-slate-200 sm:text-base">
+          <p className="text-sm text-foreground sm:text-base">
             {formatPrice(lineTotal)}
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex items-center rounded-md border border-slate-300 dark:border-slate-700">
+          <div className="inline-flex items-center rounded-md border border-border bg-background">
             <button
               type="button"
               onClick={onDecrease}
@@ -95,7 +99,7 @@ export function CartItem({
             type="button"
             onClick={onRemove}
             disabled={isLoading}
-            className="rounded-md border border-slate-300 px-3 py-1.5 text-xs hover:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:hover:bg-slate-900 sm:text-sm"
+            className="rounded-md border border-border bg-background px-3 py-1.5 text-xs hover:bg-muted disabled:opacity-50 sm:text-sm"
           >
             Remove
           </button>

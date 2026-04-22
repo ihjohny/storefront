@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import Image from "next/image";
 import { getMediaUrl } from "@/lib/utils/url";
 import type { Media } from "@/lib/types/product";
@@ -8,9 +8,11 @@ import type { Media } from "@/lib/types/product";
 type ProductGalleryProps = {
   images: Media[];
   fallbackAlt: string;
+  /** e.g. sale badge overlay; keep in sync with selected variant in parent when needed */
+  overlay?: ReactNode;
 };
 
-export function ProductGallery({ images, fallbackAlt }: ProductGalleryProps) {
+export function ProductGallery({ images, fallbackAlt, overlay }: ProductGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const safeImages = useMemo(() => images.filter((image) => Boolean(image?.url)), [images]);
   const activeImage = safeImages[activeIndex];
@@ -28,6 +30,11 @@ export function ProductGallery({ images, fallbackAlt }: ProductGalleryProps) {
             sizes="(max-width: 1024px) 100vw, 50vw"
             priority
           />
+        ) : null}
+        {overlay ? (
+          <div className="pointer-events-none absolute left-3 top-3 z-10 max-w-[min(100%,12rem)]">
+            {overlay}
+          </div>
         ) : null}
       </div>
       {safeImages.length > 1 ? (

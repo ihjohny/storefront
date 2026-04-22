@@ -3,6 +3,7 @@ import { getHeader } from "@/lib/api/globals";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import type { Locale } from "@/lib/i18n/config";
 import { Navbar, type NavItem } from "@/components/layout/navbar";
+import { normalizeCmsPathToHref } from "@/lib/utils/normalize-cms-href";
 
 type HeaderProps = {
   locale: string;
@@ -35,6 +36,10 @@ function normalizeNavItems(raw: unknown, locale: string): NavItem[] {
       }
 
       const record = item as Record<string, unknown>;
+      if (record.enabled === false) {
+        return null;
+      }
+
       const label =
         typeof record.label === "string"
           ? record.label
@@ -53,8 +58,12 @@ function normalizeNavItems(raw: unknown, locale: string): NavItem[] {
         return null;
       }
 
-      const normalizedHref = href.startsWith("/") ? href : `/${locale}/${href}`;
-      return { label, href: normalizedHref };
+      return {
+        label,
+        href: normalizeCmsPathToHref(href, locale),
+        showInDesktopNav: record.showInDesktopNav !== false,
+        showInMobileDrawer: record.showInMobileDrawer !== false,
+      };
     })
     .filter((item): item is NavItem => Boolean(item));
 }
@@ -76,16 +85,24 @@ export async function Header({ locale }: HeaderProps) {
   try {
     const response = await getHeader(locale);
     const data = response as Record<string, unknown>;
-    const fromApi = normalizeNavItems(data.navItems, locale);
+    const navRaw = data.navLinks ?? data.navItems;
+    const fromApi = normalizeNavItems(navRaw, locale);
+    const cmsNavHasRows = Array.isArray(navRaw) && navRaw.length > 0;
 
-    if (fromApi.length > 0) {
+    if (cmsNavHasRows) {
+      navItems = fromApi;
+    } else if (fromApi.length > 0) {
       navItems = fromApi;
     }
 
     const announcement = data.announcementBar as Record<string, unknown> | undefined;
     const enabled = announcement?.enabled === true;
     const text =
-      typeof announcement?.text === "string" ? announcement.text : undefined;
+      typeof announcement?.message === "string"
+        ? announcement.message
+        : typeof announcement?.text === "string"
+          ? announcement.text
+          : undefined;
 
     if (enabled && text) {
       announcementText = text;
@@ -101,9 +118,9 @@ export async function Header({ locale }: HeaderProps) {
   navItems = withoutToolbarCartLink(navItems, locale);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95">
+    <header className="sticky top-0 z-30 border-b border-border/80 bg-background/95 backdrop-blur">
       {announcementText ? (
-        <div className="border-b border-slate-200 bg-slate-50 px-4 py-2 text-center text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+        <div className="border-b border-border bg-muted px-4 py-2 text-center text-xs text-foreground">
           {announcementText}
         </div>
       ) : null}

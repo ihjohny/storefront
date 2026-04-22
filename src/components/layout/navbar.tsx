@@ -4,18 +4,26 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
+import { ThemeSwitcher } from "@/components/layout/theme-switcher";
 import { SearchBar } from "@/components/layout/search-bar";
+import { StoreSelector } from "@/components/layout/store-selector";
 import { MobileMenu } from "@/components/layout/mobile-menu";
+import { features } from "@/lib/config/features";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useCart } from "@/lib/hooks/use-cart";
 
 export type NavItem = {
   label: string;
   href: string;
+  /** CMS: default true. When false, hidden from horizontal nav (md+). */
+  showInDesktopNav?: boolean;
+  /** CMS: default true. When false, hidden from mobile slide-out menu. */
+  showInMobileDrawer?: boolean;
 };
 
 type NavbarProps = {
   locale: string;
+  /** Primary links from CMS: horizontal bar (md+) vs mobile drawer per row flags. */
   navItems: NavItem[];
 };
 
@@ -25,26 +33,37 @@ export function Navbar({ locale, navItems }: NavbarProps) {
   const { isAuthenticated, logout } = useAuth();
   const { itemCount } = useCart();
 
-  const safeItems = useMemo(() => navItems.slice(0, 8), [navItems]);
+  const desktopNavItems = useMemo(
+    () => navItems.filter((i) => i.showInDesktopNav !== false).slice(0, 8),
+    [navItems],
+  );
+  const drawerNavItems = useMemo(
+    () => navItems.filter((i) => i.showInMobileDrawer !== false).slice(0, 8),
+    [navItems],
+  );
   const cartCountLabel = itemCount > 99 ? "99+" : String(itemCount);
 
   return (
     <>
       <div className="relative">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
-        <Link href={`/${locale}`} className="text-base font-semibold tracking-tight">
-          BS Commerce
-        </Link>
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-2 px-4 py-3 sm:gap-3 sm:px-6 lg:px-8">
+        <div className="flex w-full min-w-0 flex-wrap items-center justify-between gap-3">
+          <Link
+            href={`/${locale}`}
+            className="shrink-0 text-base font-semibold tracking-tight"
+          >
+            BS Commerce
+          </Link>
 
         <nav
           aria-label="Primary navigation"
-          className="hidden items-center gap-3 text-sm md:flex"
+          className="hidden min-w-0 flex-1 flex-wrap items-center justify-center gap-x-2 gap-y-1.5 text-sm md:flex xl:flex-nowrap xl:overflow-x-auto xl:overflow-y-hidden xl:px-1 [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5"
         >
-          {safeItems.map((item) => (
+          {desktopNavItems.map((item) => (
             <Link
               key={`${item.href}-${item.label}`}
               href={item.href}
-              className="rounded-md px-2 py-1 transition hover:bg-slate-100 dark:hover:bg-slate-900"
+              className="shrink-0 whitespace-nowrap rounded-md px-2 py-1 transition hover:bg-muted"
             >
               {item.label}
             </Link>
@@ -56,24 +75,31 @@ export function Navbar({ locale, navItems }: NavbarProps) {
             <SearchBar locale={locale} />
           </div>
           <LocaleSwitcher locale={locale} dataTestId="locale-switcher-header" />
+          <ThemeSwitcher idPrefix="header" />
           <Link
             href={`/${locale}/cart`}
-            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-700"
+            className="rounded-md border border-border px-3 py-1.5 text-sm"
           >
             Cart ({itemCount})
+          </Link>
+          <Link
+            href={`/${locale}/track-order`}
+            className="rounded-md border border-border px-3 py-1.5 text-sm"
+          >
+            Track Order
           </Link>
           {isAuthenticated ? (
             <>
               <Link
                 href={`/${locale}/account`}
-                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-700"
+                className="rounded-md border border-border px-3 py-1.5 text-sm"
               >
                 Account
               </Link>
               <button
                 type="button"
                 onClick={() => void logout()}
-                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-700"
+                className="rounded-md border border-border px-3 py-1.5 text-sm"
               >
                 Logout
               </button>
@@ -82,13 +108,13 @@ export function Navbar({ locale, navItems }: NavbarProps) {
             <>
               <Link
                 href={`/${locale}/auth/login`}
-                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-700"
+                className="rounded-md border border-border px-3 py-1.5 text-sm"
               >
                 Login
               </Link>
               <Link
                 href={`/${locale}/auth/register`}
-                className="rounded-md bg-slate-900 px-3 py-1.5 text-sm text-white dark:bg-slate-100 dark:text-slate-900"
+                className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground"
               >
                 Register
               </Link>
@@ -100,7 +126,7 @@ export function Navbar({ locale, navItems }: NavbarProps) {
           <button
             type="button"
             onClick={() => setIsSearchExpanded((prev) => !prev)}
-            className="inline-flex h-9 min-w-28 items-center gap-2 rounded-md border border-slate-300 px-2.5 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400"
+            className="inline-flex h-9 min-w-28 items-center gap-2 rounded-md border border-border px-2.5 text-sm text-muted-foreground"
             aria-expanded={isSearchExpanded}
             aria-label="Toggle search panel"
             title="Search"
@@ -118,7 +144,7 @@ export function Navbar({ locale, navItems }: NavbarProps) {
 
           <Link
             href={`/${locale}/cart`}
-            className="relative inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 dark:border-slate-700"
+            className="relative inline-flex h-9 w-9 items-center justify-center rounded-md border border-border"
             aria-label={`Cart with ${itemCount} items`}
             title="Cart"
           >
@@ -131,14 +157,14 @@ export function Navbar({ locale, navItems }: NavbarProps) {
                 strokeLinejoin="round"
               />
             </svg>
-            <span className="absolute -right-1 -top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-slate-900 px-1 text-[10px] font-medium leading-4 text-white dark:bg-slate-100 dark:text-slate-900">
+            <span className="absolute -right-1 -top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-medium leading-4 text-primary-foreground">
               {cartCountLabel}
             </span>
           </Link>
 
           <Menu as="div" className="relative">
             <MenuButton
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 dark:border-slate-700"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border"
               aria-label="Profile options"
               title={isAuthenticated ? "Account options" : "Sign in options"}
             >
@@ -151,22 +177,30 @@ export function Navbar({ locale, navItems }: NavbarProps) {
                 />
               </svg>
             </MenuButton>
-            <MenuItems className="absolute right-0 z-40 mt-2 w-44 rounded-md border border-slate-200 bg-white p-1 text-sm shadow-lg outline-none dark:border-slate-700 dark:bg-slate-900">
+            <MenuItems className="absolute right-0 z-40 mt-2 w-44 rounded-md border border-border bg-card p-1 text-sm shadow-lg outline-none">
               {isAuthenticated ? (
                 <>
                   <MenuItem>
                     <Link
                       href={`/${locale}/account`}
-                      className="block rounded px-2 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      className="block rounded px-2 py-1.5 hover:bg-muted"
                     >
                       Account
+                    </Link>
+                  </MenuItem>
+                  <MenuItem>
+                    <Link
+                      href={`/${locale}/account/orders`}
+                      className="block rounded px-2 py-1.5 hover:bg-muted"
+                    >
+                      My Orders
                     </Link>
                   </MenuItem>
                   <MenuItem>
                     <button
                       type="button"
                       onClick={() => void logout()}
-                      className="block w-full rounded px-2 py-1.5 text-left hover:bg-slate-100 dark:hover:bg-slate-800"
+                      className="block w-full rounded px-2 py-1.5 text-left hover:bg-muted"
                     >
                       Logout
                     </button>
@@ -177,7 +211,7 @@ export function Navbar({ locale, navItems }: NavbarProps) {
                   <MenuItem>
                     <Link
                       href={`/${locale}/auth/login`}
-                      className="block rounded px-2 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      className="block rounded px-2 py-1.5 hover:bg-muted"
                     >
                       Login
                     </Link>
@@ -185,15 +219,28 @@ export function Navbar({ locale, navItems }: NavbarProps) {
                   <MenuItem>
                     <Link
                       href={`/${locale}/auth/register`}
-                      className="block rounded px-2 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      className="block rounded px-2 py-1.5 hover:bg-muted"
                     >
                       Register
                     </Link>
                   </MenuItem>
                 </>
               )}
-              <div className="mt-1 border-t border-slate-200 px-2 py-2 dark:border-slate-700">
-                <LocaleSwitcher locale={locale} dataTestId="locale-switcher-header-compact" />
+              <div className="mt-1 border-t border-border pt-1">
+                <MenuItem>
+                  <Link
+                    href={`/${locale}/track-order`}
+                    className="block rounded px-2 py-1.5 hover:bg-muted"
+                  >
+                    Track Order
+                  </Link>
+                </MenuItem>
+              </div>
+              <div className="mt-1 border-t border-border px-2 py-2">
+                <div className="flex flex-col gap-2">
+                  <ThemeSwitcher idPrefix="header-compact" />
+                  <LocaleSwitcher locale={locale} dataTestId="locale-switcher-header-compact" />
+                </div>
               </div>
             </MenuItems>
           </Menu>
@@ -203,7 +250,7 @@ export function Navbar({ locale, navItems }: NavbarProps) {
           <button
             type="button"
             onClick={() => setIsSearchExpanded((prev) => !prev)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 dark:border-slate-700"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border"
             aria-expanded={isSearchExpanded}
             aria-label="Toggle search panel"
             title="Search"
@@ -220,7 +267,7 @@ export function Navbar({ locale, navItems }: NavbarProps) {
 
           <Link
             href={`/${locale}/cart`}
-            className="relative inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 dark:border-slate-700"
+            className="relative inline-flex h-9 w-9 items-center justify-center rounded-md border border-border"
             aria-label={`Cart with ${itemCount} items`}
             title="Cart"
           >
@@ -233,14 +280,14 @@ export function Navbar({ locale, navItems }: NavbarProps) {
                 strokeLinejoin="round"
               />
             </svg>
-            <span className="absolute -right-1 -top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-slate-900 px-1 text-[10px] font-medium leading-4 text-white dark:bg-slate-100 dark:text-slate-900">
+            <span className="absolute -right-1 -top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-medium leading-4 text-primary-foreground">
               {cartCountLabel}
             </span>
           </Link>
 
           <button
             type="button"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 dark:border-slate-700"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border"
             onClick={() => setIsMobileOpen(true)}
             aria-label="Open navigation menu"
             title="Menu"
@@ -258,18 +305,24 @@ export function Navbar({ locale, navItems }: NavbarProps) {
 
         <button
           type="button"
-          className="hidden rounded-md border border-slate-300 px-3 py-1.5 text-sm md:hidden dark:border-slate-700"
+          className="hidden rounded-md border border-border px-3 py-1.5 text-sm md:hidden"
           onClick={() => setIsMobileOpen(true)}
           aria-label="Open navigation menu"
         >
           Menu
         </button>
         </div>
+        {features.multiStore ? (
+          <div className="min-w-0 border-t border-border/60 pt-2 sm:pt-3">
+            <StoreSelector />
+          </div>
+        ) : null}
+        </div>
 
         {isSearchExpanded ? (
           <div className="absolute inset-x-0 top-full z-40 md:hidden">
             <div className="mx-auto w-full max-w-7xl px-4 pt-2 sm:px-6 lg:px-8">
-              <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+              <div className="rounded-lg border border-border bg-card p-3 shadow-lg">
                 <div className="flex items-center gap-2">
                   <SearchBar
                     locale={locale}
@@ -279,7 +332,7 @@ export function Navbar({ locale, navItems }: NavbarProps) {
                   <button
                     type="button"
                     onClick={() => setIsSearchExpanded(false)}
-                    className="rounded-md border border-slate-300 px-2 py-2 text-xs dark:border-slate-700"
+                    className="rounded-md border border-border px-2 py-2 text-xs"
                   >
                     Close
                   </button>
@@ -292,7 +345,7 @@ export function Navbar({ locale, navItems }: NavbarProps) {
         {isSearchExpanded ? (
           <div className="absolute inset-x-0 top-full z-40 hidden md:block xl:hidden">
             <div className="mx-auto w-full max-w-7xl px-4 pt-2 sm:px-6 lg:px-8">
-              <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+              <div className="rounded-lg border border-border bg-card p-3 shadow-lg">
                 <div className="flex items-center gap-2">
                   <SearchBar
                     locale={locale}
@@ -302,7 +355,7 @@ export function Navbar({ locale, navItems }: NavbarProps) {
                   <button
                     type="button"
                     onClick={() => setIsSearchExpanded(false)}
-                    className="rounded-md border border-slate-300 px-2 py-2 text-xs dark:border-slate-700"
+                    className="rounded-md border border-border px-2 py-2 text-xs"
                   >
                     Close
                   </button>
@@ -317,7 +370,7 @@ export function Navbar({ locale, navItems }: NavbarProps) {
         locale={locale}
         isOpen={isMobileOpen}
         onClose={() => setIsMobileOpen(false)}
-        navItems={safeItems}
+        navItems={drawerNavItems}
         cartCount={itemCount}
       />
     </>

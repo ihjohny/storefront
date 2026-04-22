@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getCategoryBySlug } from "@/lib/api/categories";
 import { getProducts } from "@/lib/api/products";
 import { getMediaUrl } from "@/lib/utils/url";
+import { getSelectedStoreId } from "@/lib/utils/get-store-id";
 import { i18nConfig, type Locale } from "@/lib/i18n/config";
 import { ProductGrid } from "@/components/product/product-grid";
 import { Pagination } from "@/components/shared/pagination";
@@ -42,6 +43,7 @@ export default async function CategoryPage({
   }
 
   const query = await searchParams;
+  const storeId = await getSelectedStoreId();
   const page = Math.max(1, toNumber(firstParam(query.page)) ?? 1);
   const sort = firstParam(query.sort) ?? "-createdAt";
 
@@ -50,6 +52,7 @@ export default async function CategoryPage({
     locale,
     sort,
     page,
+    storeId,
   });
 
   const categoryImageUrl =

@@ -8,6 +8,13 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { features } from "@/lib/config/features";
 import { useAuth } from "@/lib/hooks/use-auth";
+import {
+  authErrorClass,
+  authFieldClass,
+  authInlineLinkClass,
+  authLabelClass,
+  authPrimaryButtonClass,
+} from "@/components/auth/auth-form-classes";
 import { SocialLoginButtons } from "@/components/auth/social-login-buttons";
 
 const registerSchema = z
@@ -59,49 +66,51 @@ export function RegisterForm({ locale }: RegisterFormProps) {
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
       <label className="block space-y-1">
-        <span className="text-sm font-medium">Email</span>
+        <span className={authLabelClass}>Email</span>
         <input
           type="email"
+          autoComplete="email"
           {...form.register("email")}
-          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+          className={authFieldClass}
         />
       </label>
       <label className="block space-y-1">
-        <span className="text-sm font-medium">Phone</span>
+        <span className={authLabelClass}>Phone</span>
         <input
+          type="tel"
+          autoComplete="tel"
           {...form.register("phone")}
-          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+          className={authFieldClass}
         />
       </label>
       <label className="block space-y-1">
-        <span className="text-sm font-medium">Password</span>
+        <span className={authLabelClass}>Password</span>
         <input
           type="password"
+          autoComplete="new-password"
           {...form.register("password")}
-          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+          className={authFieldClass}
         />
       </label>
       <label className="block space-y-1">
-        <span className="text-sm font-medium">Confirm Password</span>
+        <span className={authLabelClass}>Confirm Password</span>
         <input
           type="password"
+          autoComplete="new-password"
           {...form.register("confirmPassword")}
-          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+          className={authFieldClass}
         />
       </label>
 
-      {error ? <p className="text-sm text-rose-600 dark:text-rose-300">{error}</p> : null}
+      {error ? <p className={authErrorClass}>{error}</p> : null}
 
-      <button
-        type="submit"
-        className="w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
-      >
+      <button type="submit" className={authPrimaryButtonClass}>
         Register
       </button>
 
-      <p className="text-sm">
+      <p className="text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link href={`/${locale}/auth/login`} className="underline">
+        <Link href={`/${locale}/auth/login`} className={authInlineLinkClass}>
           Login
         </Link>
       </p>

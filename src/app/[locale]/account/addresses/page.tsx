@@ -34,7 +34,7 @@ export default function AccountAddressesPage() {
 
   return (
     <section className="space-y-4">
-      <h1 className="text-2xl font-semibold sm:text-3xl">Addresses</h1>
+      <h1 className="text-2xl font-semibold text-foreground sm:text-3xl">Addresses</h1>
       {isLoading ? (
         <p className="text-sm text-slate-600 dark:text-slate-300">Loading addresses...</p>
       ) : addresses.length === 0 ? (

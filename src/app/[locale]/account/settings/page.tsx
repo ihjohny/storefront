@@ -16,8 +16,15 @@ export default function AccountSettingsPage() {
   }
 
   return (
-    <section className="space-y-4">
-      <h1 className="text-2xl font-semibold sm:text-3xl">Profile Settings</h1>
+    <section className="space-y-8">
+      <header className="space-y-1">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+          Account settings
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Manage your profile, preferences, and password.
+        </p>
+      </header>
       <ProfileForm user={user} onSaved={onSaved} />
     </section>
   );

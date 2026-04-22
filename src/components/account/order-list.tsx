@@ -34,21 +34,21 @@ export function OrderList({ orders, locale }: OrderListProps) {
       {orders.map((order) => (
         <article
           key={order.id}
-          className="space-y-2 rounded-xl border border-slate-200 p-4 dark:border-slate-800"
+          className="space-y-2 rounded-xl border border-border bg-card p-4 shadow-sm"
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <Link
               href={`/${locale}/order/${order.id}`}
-              className="text-sm font-semibold hover:underline sm:text-base"
+              className="text-sm font-semibold text-foreground hover:text-primary hover:underline sm:text-base"
             >
               #{order.orderNumber}
             </Link>
             <Badge variant={statusVariant(order.status)}>{order.status}</Badge>
           </div>
-          <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-slate-600 dark:text-slate-300">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
             <span>{formatDate(order.placedAt, locale)}</span>
             <span>{order.items.length} items</span>
-            <span className="font-medium text-slate-900 dark:text-slate-100">
+            <span className="font-medium text-foreground tabular-nums">
               {formatPrice(order.grandTotal, order.currency)}
             </span>
           </div>

@@ -1,7 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { ApiError } from "@/lib/api/client";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { flushSync } from "react-dom";
+import { useRouter, useParams } from "next/navigation";
+import { getApiErrorMessage } from "@/lib/api/client";
 import { getAddresses, type Address } from "@/lib/api/addresses";
 import { getShippingMethods, type ShippingMethod } from "@/lib/api/shipping";
 import { processCheckout } from "@/lib/api/orders";
@@ -11,7 +13,16 @@ import { features } from "@/lib/config/features";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useGuestId } from "@/lib/hooks/use-guest-id";
 import { useCart } from "@/lib/hooks/use-cart";
-import { AddressForm, type AddressFormValues } from "@/components/checkout/address-form";
+import { useStore } from "@/lib/hooks/use-store";
+import {
+  readGeocodedAddressFormPartial,
+  type GeocodedAddressFormPartial,
+} from "@/lib/geolocation/geocoded-delivery-storage";
+import {
+  AddressForm,
+  type AddressFormValues,
+  type ServiceAreaReadonlyFields,
+} from "@/components/checkout/address-form";
 import { ShippingSelector } from "@/components/checkout/shipping-selector";
 import { OrderReview } from "@/components/checkout/order-review";
 import { PaymentForm } from "@/components/checkout/payment-form";
@@ -19,16 +30,6 @@ import { PaymentForm } from "@/components/checkout/payment-form";
 const DEFAULT_VENDOR_KEY = "default";
 
 type CheckoutStep = "address" | "shipping" | "review";
-
-function toMessage(error: unknown): string {
-  if (error instanceof ApiError) {
-    return `Request failed (${error.status}). Please try again.`;
-  }
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return "Something went wrong. Please try again.";
-}
 
 function toAddressSnapshot(values: AddressFormValues): AddressSnapshot {
   return {
@@ -59,13 +60,43 @@ function addressToSnapshot(address: Address): AddressSnapshot {
 }
 
 export function CheckoutForm() {
+  const router = useRouter();
+  const params = useParams<{ locale: string }>();
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const guestId = useGuestId();
-  const { items, subtotal, refreshCart } = useCart();
+  const { items, subtotal, discountTotal, refreshCart } = useCart();
+  const { serviceArea, canShopCurrentArea } = useStore();
+
+  const serviceAreaReadonly: ServiceAreaReadonlyFields | undefined = useMemo(() => {
+    if (!features.serviceAreaStoreSelection || !features.geography) return undefined;
+    if (!serviceArea || !canShopCurrentArea) return undefined;
+    const c = serviceArea.countries.find((x) => x.id === serviceArea.selectedCountryId);
+    const sub = serviceArea.subdivisions.find((x) => x.id === serviceArea.selectedSubdivisionId);
+    if (!c || !sub) return undefined;
+    const loc = serviceArea.selectedLocalityId
+      ? serviceArea.localities.find((l) => l.id === serviceArea.selectedLocalityId)
+      : null;
+    return {
+      countryIso: c.isoCode.slice(0, 2).toUpperCase(),
+      region: sub.name,
+      localityName: loc?.name ?? null,
+    };
+  }, [serviceArea, canShopCurrentArea]);
+
+  const requireServiceAreaAlignedAddress =
+    Boolean(serviceAreaReadonly) && canShopCurrentArea;
+
+  useEffect(() => {
+    if (requireServiceAreaAlignedAddress) {
+      setUseSavedAddress(false);
+    }
+  }, [requireServiceAreaAlignedAddress]);
 
   const [step, setStep] = useState<CheckoutStep>("address");
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  /** After successful payment: cart is cleared before navigation — avoid flashing "cart is empty". */
+  const [checkoutComplete, setCheckoutComplete] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -75,10 +106,13 @@ export function CheckoutForm() {
   const [useSavedAddress, setUseSavedAddress] = useState(true);
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
   const [draftedAddress, setDraftedAddress] = useState<AddressFormValues | null>(null);
+  const [geocodePrefill, setGeocodePrefill] = useState<GeocodedAddressFormPartial | null>(null);
+  const [addressFormKey, setAddressFormKey] = useState(0);
   const [guestEmail, setGuestEmail] = useState<string>("");
+  const [guestPhone, setGuestPhone] = useState<string>("");
 
   const vendorKeys = useMemo(() => {
-    if (!features.multivendor) {
+    if (!features.multivendor || features.singleStoreCart) {
       return [DEFAULT_VENDOR_KEY];
     }
 
@@ -131,7 +165,7 @@ export function CheckoutForm() {
         setSelectedAddressId(userAddresses[0].id);
       }
     } catch (error) {
-      setErrorMessage(toMessage(error));
+      setErrorMessage(getApiErrorMessage(error));
     } finally {
       setIsLoadingData(false);
     }
@@ -140,6 +174,16 @@ export function CheckoutForm() {
   useEffect(() => {
     void loadData();
   }, [loadData]);
+
+  useLayoutEffect(() => {
+    if (isLoadingData) return;
+    setGeocodePrefill(readGeocodedAddressFormPartial());
+    setAddressFormKey((k) => k + 1);
+  }, [isLoadingData]);
+
+  const addressMergedDefaults = useMemo((): Partial<AddressFormValues> => {
+    return { ...geocodePrefill, ...(draftedAddress ?? {}) };
+  }, [geocodePrefill, draftedAddress]);
 
   const selectedShippingMethodIds = useMemo(
     () =>
@@ -152,6 +196,7 @@ export function CheckoutForm() {
   async function handleAddressSubmit(values: AddressFormValues) {
     setDraftedAddress(values);
     setGuestEmail(values.guestEmail ?? "");
+    setGuestPhone(values.phone ?? "");
     setErrorMessage(null);
     setStep("shipping");
   }
@@ -213,14 +258,35 @@ export function CheckoutForm() {
           billingAddress,
           shippingMethodIds: selectedShippingMethodIds,
           guestEmail: !isAuthenticated ? guestEmail.trim() : undefined,
+          guestPhone: !isAuthenticated && guestPhone.trim() ? guestPhone.trim() : undefined,
+          simulatePayment: true,
         },
         !isAuthenticated ? guestId ?? undefined : undefined,
       );
 
-      await refreshCart();
-      window.location.href = response.paymentRedirectUrl;
+      /* Commit before cart context clears (refreshCart) so we never render the empty-cart branch */
+      flushSync(() => {
+        setCheckoutComplete(true);
+      });
+
+      try {
+        sessionStorage.setItem("bs-checkout-result", JSON.stringify(response));
+      } catch {
+        /* sessionStorage may be unavailable */
+      }
+
+      if (response.paymentRedirectUrl) {
+        window.location.href = response.paymentRedirectUrl;
+      } else {
+        const orderId = response.order?.id;
+        router.push(`/${params.locale}/checkout/success?order=${orderId}`);
+      }
+
+      queueMicrotask(() => {
+        void refreshCart();
+      });
     } catch (error) {
-      setErrorMessage(toMessage(error));
+      setErrorMessage(getApiErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
@@ -228,53 +294,65 @@ export function CheckoutForm() {
 
   if (isLoadingData) {
     return (
-      <section className="rounded-xl border border-slate-200 p-4 text-sm text-slate-600 dark:border-slate-800 dark:text-slate-300">
+      <section className="rounded-xl border border-border p-4 text-sm text-muted-foreground">
         Loading checkout...
+      </section>
+    );
+  }
+
+  if (checkoutComplete) {
+    return (
+      <section className="rounded-xl border border-border p-6 text-center text-sm text-muted-foreground">
+        Taking you to your order confirmation…
       </section>
     );
   }
 
   if (items.length === 0 || !cartId) {
     return (
-      <section className="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">
+      <section className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
         Your cart is empty. Add products before checkout.
       </section>
     );
   }
 
-  const showSavedAddressPicker = isAuthenticated && addresses.length > 0 && useSavedAddress;
+  const showSavedAddressPicker =
+    isAuthenticated &&
+    addresses.length > 0 &&
+    useSavedAddress &&
+    !requireServiceAreaAlignedAddress;
 
   return (
     <section className="space-y-5">
-      <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-        <span className={step === "address" ? "font-semibold text-slate-900 dark:text-slate-100" : ""}>
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <span className={step === "address" ? "font-semibold text-foreground" : ""}>
           Address
         </span>
         <span>•</span>
-        <span className={step === "shipping" ? "font-semibold text-slate-900 dark:text-slate-100" : ""}>
+        <span className={step === "shipping" ? "font-semibold text-foreground" : ""}>
           Shipping
         </span>
         <span>•</span>
-        <span className={step === "review" ? "font-semibold text-slate-900 dark:text-slate-100" : ""}>
+        <span className={step === "review" ? "font-semibold text-foreground" : ""}>
           Review
         </span>
       </div>
 
       {errorMessage ? (
-        <p className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300">
+        <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {errorMessage}
         </p>
       ) : null}
 
       {step === "address" ? (
         showSavedAddressPicker ? (
-          <section className="space-y-4 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+          <section className="space-y-4 rounded-xl border border-border p-4">
             <h3 className="text-lg font-semibold">Select Address</h3>
             <div className="space-y-2">
               {addresses.map((address) => (
                 <label
                   key={address.id}
-                  className="flex cursor-pointer items-start gap-3 rounded-md border border-slate-200 p-3 text-sm dark:border-slate-800"
+                  className="flex cursor-pointer items-start gap-3 rounded-md border border-border p-3 text-sm"
                 >
                   <input
                     type="radio"
@@ -285,7 +363,7 @@ export function CheckoutForm() {
                   />
                   <span>
                     <span className="block font-medium">{address.label}</span>
-                    <span className="block text-slate-600 dark:text-slate-300">
+                    <span className="block text-muted-foreground">
                       {address.firstName} {address.lastName}, {address.street1}, {address.city}
                     </span>
                   </span>
@@ -296,27 +374,29 @@ export function CheckoutForm() {
               <button
                 type="button"
                 onClick={continueWithSavedAddress}
-                className="inline-flex w-full items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
+                className="inline-flex w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
               >
                 Continue to Shipping
               </button>
               <button
                 type="button"
                 onClick={() => setUseSavedAddress(false)}
-                className="inline-flex w-full items-center justify-center rounded-md border border-slate-300 px-4 py-2 text-sm transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-900"
+                className="inline-flex w-full items-center justify-center rounded-md border border-border px-4 py-2 text-sm transition hover:bg-muted"
               >
                 Use New Address
               </button>
             </div>
           </section>
         ) : (
-          <section className="space-y-3 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+          <section className="space-y-3 rounded-xl border border-border p-4">
             <h3 className="text-lg font-semibold">
               {isAuthenticated ? "Add Address" : "Guest Checkout Address"}
             </h3>
             <AddressForm
+              key={`${addressFormKey}-${draftedAddress ? "draft" : "new"}`}
               requireGuestEmail={!isAuthenticated && features.guestCheckout}
-              defaultValues={draftedAddress ?? undefined}
+              defaultValues={addressMergedDefaults}
+              serviceAreaReadonly={serviceAreaReadonly}
               isSubmitting={isSubmitting}
               onSubmit={handleAddressSubmit}
             />
@@ -342,6 +422,7 @@ export function CheckoutForm() {
           <OrderReview
             items={items}
             subtotal={subtotal}
+            discountTotal={discountTotal}
             selectedMethodIds={selectedShippingMethodIds}
             shippingMethods={shippingMethods}
           />

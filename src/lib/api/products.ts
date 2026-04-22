@@ -14,11 +14,16 @@ type ProductFilters = {
   page?: number;
   limit?: number;
   locale?: string;
+  storeId?: string;
 };
 
 export async function getProducts(
   filters: ProductFilters = {},
 ): Promise<ProductsResponse> {
+  if (filters.storeId) {
+    return getStoreProducts(filters);
+  }
+
   const params = new URLSearchParams();
   params.set("limit", String(filters.limit ?? ITEMS_PER_PAGE));
   params.set("page", String(filters.page ?? 1));
@@ -51,6 +56,29 @@ export async function getProducts(
   return apiClient<ProductsResponse>(`/products?${params.toString()}`, {
     cache: "no-store",
   } as RequestInit);
+}
+
+async function getStoreProducts(
+  filters: ProductFilters,
+): Promise<ProductsResponse> {
+  const params = new URLSearchParams();
+  params.set("store", filters.storeId!);
+  params.set("limit", String(filters.limit ?? ITEMS_PER_PAGE));
+  params.set("page", String(filters.page ?? 1));
+
+  if (filters.locale) params.set("locale", filters.locale);
+  if (filters.sort) params.set("sort", filters.sort);
+  if (filters.category) params.set("category", filters.category);
+  if (filters.search) params.set("search", filters.search);
+  if (typeof filters.minPrice === "number") params.set("minPrice", String(filters.minPrice));
+  if (typeof filters.maxPrice === "number") params.set("maxPrice", String(filters.maxPrice));
+  if (filters.tenant) params.set("tenant", filters.tenant);
+  if (filters.featured) params.set("featured", "true");
+
+  return apiClient<ProductsResponse>(
+    `/storefront/store-products?${params.toString()}`,
+    { cache: "no-store" } as RequestInit,
+  );
 }
 
 export async function getProductBySlug(

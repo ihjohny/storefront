@@ -23,13 +23,13 @@ export default async function CategoriesPage({ params }: CategoriesPageProps) {
     <main className="mx-auto w-full max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
       <header className="space-y-2">
         <h1 className="text-2xl font-semibold sm:text-3xl">Categories</h1>
-        <p className="text-sm text-slate-600 dark:text-slate-300 sm:text-base">
+        <p className="text-sm text-muted-foreground sm:text-base">
           Browse top-level product categories.
         </p>
       </header>
 
       {categories.length === 0 ? (
-        <section className="rounded-xl border border-dashed border-slate-300 p-6 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">
+        <section className="rounded-xl border border-dashed border-border p-6 text-sm text-muted-foreground">
           No categories available right now.
         </section>
       ) : (
@@ -38,9 +38,9 @@ export default async function CategoriesPage({ params }: CategoriesPageProps) {
             <Link
               key={category.id}
               href={`/${locale}/categories/${category.slug}`}
-              className="overflow-hidden rounded-xl border border-slate-200 bg-white transition hover:shadow-sm dark:border-slate-800 dark:bg-slate-950"
+              className="overflow-hidden rounded-xl border border-border bg-card transition hover:shadow-sm"
             >
-              <div className="relative aspect-3/2 bg-slate-100 dark:bg-slate-900">
+              <div className="relative aspect-3/2 bg-muted">
                 {category.image ? (
                   <Image
                     src={getMediaUrl(category.image.url) ?? ""}
@@ -52,8 +52,10 @@ export default async function CategoriesPage({ params }: CategoriesPageProps) {
                 ) : null}
               </div>
               <div className="p-4">
-                <h2 className="text-base font-semibold sm:text-lg">{category.name}</h2>
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                <h2 className="text-base font-semibold text-card-foreground sm:text-lg">
+                  {category.name}
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
                   Explore products in this category.
                 </p>
               </div>

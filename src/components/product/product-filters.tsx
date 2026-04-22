@@ -15,6 +15,9 @@ const SORT_OPTIONS = [
   { value: "name", label: "Name: A-Z" },
 ] as const;
 
+const panelClass =
+  "space-y-4 rounded-xl border border-border bg-card/95 p-4 shadow-sm backdrop-blur lg:space-y-4 lg:rounded-xl lg:border lg:border-border lg:bg-card/90 lg:p-4 lg:shadow-sm";
+
 export function ProductFilters({ categories }: ProductFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -106,18 +109,21 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
 
   const showMobilePanel = isOpen;
 
+  const inputClass =
+    "w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-ring/60";
+
   return (
     <aside
       ref={asideRef}
       className={
         showMobilePanel
-          ? "space-y-4 rounded-xl border border-slate-200 bg-white/90 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/90 lg:space-y-4 lg:rounded-xl lg:border lg:border-slate-200 lg:bg-white/70 lg:p-4 lg:shadow-sm lg:backdrop-blur lg:dark:border-slate-800 lg:dark:bg-slate-950/60"
-          : "h-0 overflow-visible border-0 p-0 lg:h-auto lg:space-y-4 lg:rounded-xl lg:border lg:border-slate-200 lg:bg-white/70 lg:p-4 lg:shadow-sm lg:backdrop-blur lg:dark:border-slate-800 lg:dark:bg-slate-950/60"
+          ? panelClass
+          : "h-0 overflow-visible border-0 p-0 lg:h-auto lg:space-y-4 lg:rounded-xl lg:border lg:border-border lg:bg-card/90 lg:p-4 lg:shadow-sm lg:backdrop-blur"
       }
     >
       <div className={`${showMobilePanel ? "flex" : "hidden"} items-center lg:flex`}>
         <div className="inline-flex items-center gap-2">
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 dark:border-slate-700">
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-background">
             <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" aria-hidden="true">
               <path
                 d="M3 5h14M6 10h8M8 15h4"
@@ -129,7 +135,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
           </span>
           <p className="text-sm font-semibold">Filters</p>
           {activeFilterCount ? (
-            <span className="rounded-full bg-slate-900 px-2 py-0.5 text-xs font-medium text-white dark:bg-slate-100 dark:text-slate-900">
+            <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">
               {activeFilterCount}
             </span>
           ) : null}
@@ -143,7 +149,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
           </label>
           <select
             id="sort"
-            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+            className={inputClass}
             value={selectedSort}
             onChange={(event) => updateParam("sort", event.target.value)}
           >
@@ -167,7 +173,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
                 onChange={(event) => setMinPrice(event.target.value)}
                 inputMode="decimal"
                 placeholder="0"
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+                className={inputClass}
               />
             </div>
             <div className="space-y-1">
@@ -180,7 +186,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
                 onChange={(event) => setMaxPrice(event.target.value)}
                 inputMode="decimal"
                 placeholder="1000"
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+                className={inputClass}
               />
             </div>
           </div>
@@ -189,21 +195,21 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
               type="checkbox"
               checked={featuredOnly}
               onChange={(event) => updateParam("featured", event.target.checked ? "1" : null)}
-              className="h-4 w-4 rounded border-slate-300 dark:border-slate-700"
+              className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
             />
             Featured only
           </label>
           <div className="flex gap-2">
             <button
               type="submit"
-              className="flex-1 rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
+              className="flex-1 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
             >
               Apply
             </button>
             <button
               type="button"
               onClick={clearFilters}
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-900"
+              className="rounded-md border border-border bg-background px-3 py-2 text-sm transition hover:bg-muted"
             >
               Reset
             </button>
@@ -215,8 +221,10 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
           <div className="flex flex-col gap-1">
             <button
               type="button"
-              className={`rounded-md px-2 py-1 text-left text-sm hover:bg-slate-100 dark:hover:bg-slate-900 ${
-                !selectedCategory ? "bg-slate-100 dark:bg-slate-900" : ""
+              className={`rounded-md px-2 py-1 text-left text-sm transition hover:bg-muted ${
+                !selectedCategory
+                  ? "bg-primary/15 font-medium text-foreground ring-1 ring-inset ring-border"
+                  : "text-foreground"
               }`}
               onClick={() => updateParam("category", null)}
             >
@@ -226,8 +234,10 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
               <button
                 key={category.id}
                 type="button"
-                className={`rounded-md px-2 py-1 text-left text-sm hover:bg-slate-100 dark:hover:bg-slate-900 ${
-                  selectedCategory === category.id ? "bg-slate-100 dark:bg-slate-900" : ""
+                className={`rounded-md px-2 py-1 text-left text-sm transition hover:bg-muted ${
+                  selectedCategory === category.id
+                    ? "bg-primary/15 font-medium text-foreground ring-1 ring-inset ring-border"
+                    : "text-foreground"
                 }`}
                 onClick={() => updateParam("category", category.id)}
               >
@@ -242,7 +252,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
         <button
           type="button"
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-16 right-4 z-30 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-white/90 text-slate-900 shadow-lg backdrop-blur dark:border-slate-700 dark:bg-slate-950/85 dark:text-slate-100 lg:hidden"
+          className="fixed bottom-16 right-4 z-30 inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card/95 text-foreground shadow-lg backdrop-blur lg:hidden"
           aria-label="Scroll to top"
           title="Top"
         >
@@ -261,7 +271,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
       <button
         type="button"
         onClick={toggleFiltersFromFab}
-        className="fixed bottom-4 right-4 z-30 inline-flex items-center gap-2 rounded-full border border-slate-300 bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-lg dark:border-slate-700 dark:bg-slate-100 dark:text-slate-900 lg:hidden"
+        className="fixed bottom-4 right-4 z-30 inline-flex items-center gap-2 rounded-full border border-border bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-lg lg:hidden"
         aria-expanded={isOpen}
       >
         <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" aria-hidden="true">

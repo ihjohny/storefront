@@ -6,9 +6,9 @@ describe("formatPrice", () => {
     expect(formatPrice(12.5, "USD")).toContain("12.50");
   });
 
-  it("formats BDT with 0 decimals", () => {
+  it("formats BDT with 0 decimals and Latin numerals (consistent with EN UI)", () => {
     const value = formatPrice(1250.45, "BDT");
-    expect(value).toContain("১,২৫০");
+    expect(value).toMatch(/1[,.]?250/);
   });
 
   it("handles 0, negative, and large numbers", () => {

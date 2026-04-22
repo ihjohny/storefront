@@ -1,3 +1,5 @@
+import { getAuthToken } from "./auth-token";
+
 type ApiClientOptions = RequestInit & {
   locale?: string;
   guestId?: string;
@@ -60,6 +62,40 @@ export class ApiError extends Error {
   }
 }
 
+/** Parses JSON error bodies from `/api/*` (Payload + custom endpoints). */
+export function getApiErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    const body = error.body;
+    if (body && typeof body === "object" && body !== null) {
+      const b = body as Record<string, unknown>;
+      if (typeof b.error === "string" && b.error.trim()) {
+        return b.error;
+      }
+      if (typeof b.message === "string" && b.message.trim()) {
+        return b.message;
+      }
+      const errors = b.errors;
+      if (Array.isArray(errors) && errors.length > 0) {
+        const first = errors[0];
+        if (first && typeof first === "object" && first !== null) {
+          const m = (first as { message?: unknown }).message;
+          if (typeof m === "string" && m.trim()) {
+            return m;
+          }
+        }
+      }
+    }
+    if (typeof body === "string" && body.trim()) {
+      return body;
+    }
+    return `Request failed (${error.status}). Please try again.`;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return "Something went wrong. Please try again.";
+}
+
 export async function apiClient<T>(
   endpoint: string,
   options: ApiClientOptions = {},
@@ -78,6 +114,16 @@ export async function apiClient<T>(
 
   if (guestId) {
     requestHeaders.set("X-Guest-Id", guestId);
+  }
+
+  if (
+    typeof window !== "undefined" &&
+    !requestHeaders.has("Authorization")
+  ) {
+    const bearer = getAuthToken();
+    if (bearer) {
+      requestHeaders.set("Authorization", `Bearer ${bearer}`);
+    }
   }
 
   const response = await fetch(toApiUrl(endpoint), {

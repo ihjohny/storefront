@@ -1,4 +1,4 @@
-import { apiClient } from "./client";
+import { apiClient, ApiError } from "./client";
 import type { Cart } from "../types/cart";
 import type { PaginatedResponse } from "../types/api-response";
 
@@ -35,10 +35,14 @@ export async function getCart(userId?: string, guestId?: string): Promise<Cart |
 export async function createCart(
   items: CartMutationItem[],
   guestId?: string,
+  storeId?: string,
 ): Promise<Cart> {
+  const payload: Record<string, unknown> = { items };
+  if (storeId) payload.store = storeId;
+
   const response = await apiClient<CartDocumentResponse>("/carts", {
     method: "POST",
-    body: JSON.stringify({ items }),
+    body: JSON.stringify(payload),
     guestId,
   });
 
@@ -49,10 +53,14 @@ export async function updateCart(
   cartId: string,
   items: CartMutationItem[],
   guestId?: string,
+  storeId?: string,
 ): Promise<Cart> {
+  const payload: Record<string, unknown> = { items };
+  if (storeId) payload.store = storeId;
+
   const response = await apiClient<CartDocumentResponse>(`/carts/${cartId}`, {
     method: "PATCH",
-    body: JSON.stringify({ items }),
+    body: JSON.stringify(payload),
     guestId,
   });
 
@@ -66,6 +74,26 @@ export async function deleteCart(cartId: string, guestId?: string): Promise<void
   });
 }
 
+/** DELETE preferred; PATCH empty `items` when DELETE is not allowed (e.g. some guest/session edge cases). */
+export async function removeCartDocument(
+  cartId: string,
+  guestId: string | undefined,
+  storeId: string | undefined,
+): Promise<void> {
+  try {
+    await deleteCart(cartId, guestId);
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 404) {
+      return;
+    }
+    if (e instanceof ApiError && (e.status === 403 || e.status === 401)) {
+      await updateCart(cartId, [], guestId, storeId);
+      return;
+    }
+    throw e;
+  }
+}
+
 export async function applyCoupon(
   cartId: string,
   couponCode: string,
@@ -74,6 +102,16 @@ export async function applyCoupon(
   const response = await apiClient<CartDocumentResponse>(`/carts/${cartId}`, {
     method: "PATCH",
     body: JSON.stringify({ couponCode }),
+    guestId,
+  });
+
+  return response.doc;
+}
+
+export async function clearCartCoupon(cartId: string, guestId?: string): Promise<Cart> {
+  const response = await apiClient<CartDocumentResponse>(`/carts/${cartId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ couponCode: "" }),
     guestId,
   });
 

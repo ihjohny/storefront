@@ -2,7 +2,10 @@
 
 import { useMemo, useState } from "react";
 import type { ProductVariant } from "@/lib/types/product";
-import { formatPrice } from "@/lib/utils/format-price";
+import type { SaleDisplayMode } from "@/lib/utils/sale-presentation";
+import { resolveSalePresentation } from "@/lib/utils/sale-presentation";
+import { PriceDisplay } from "@/components/shared/price-display";
+import { SaleBadge } from "@/components/product/sale-badge";
 import { AddToCartButton } from "@/components/product/add-to-cart-button";
 
 type ProductVariantsProps = {
@@ -10,6 +13,9 @@ type ProductVariantsProps = {
   variants: ProductVariant[];
   currency: string;
   basePrice: number;
+  /** Product-level compare-at when there are no variants in the list (fallback) */
+  productCompareAtPrice?: number | null;
+  productSaleDisplayMode?: SaleDisplayMode | null;
 };
 
 type VariantOptionMap = Record<string, string>;
@@ -26,6 +32,8 @@ export function ProductVariants({
   variants,
   currency,
   basePrice,
+  productCompareAtPrice = null,
+  productSaleDisplayMode,
 }: ProductVariantsProps) {
   const optionNames = useMemo(
     () =>
@@ -53,22 +61,51 @@ export function ProductVariants({
   );
 
   const price = selectedVariant?.price ?? basePrice;
+  const compareAt = selectedVariant?.compareAtPrice ?? productCompareAtPrice ?? null;
+
+  const salePresentation = useMemo(
+    () =>
+      resolveSalePresentation({
+        sellingPrice: price,
+        compareAtPrice: compareAt,
+        productSaleDisplayMode,
+        variantSaleDisplayMode: selectedVariant?.saleDisplayMode,
+      }),
+    [price, compareAt, productSaleDisplayMode, selectedVariant?.saleDisplayMode],
+  );
 
   if (variants.length === 0) {
     return (
-      <div className="space-y-3 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
-        <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
-          No variants available.
-        </p>
-        <p className="text-lg font-semibold">{formatPrice(basePrice, currency)}</p>
+      <div className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-sm">
+        <p className="text-sm font-medium text-muted-foreground">No variants available.</p>
+        <div className="flex flex-wrap items-center gap-3">
+          <PriceDisplay
+            price={basePrice}
+            compareAtPrice={productCompareAtPrice}
+            currency={currency}
+            size="large"
+            productSaleDisplayMode={productSaleDisplayMode}
+          />
+          <SaleBadge presentation={salePresentation} currency={currency} size="prominent" />
+        </div>
         <AddToCartButton productId={productId} quantity={1} />
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
-      <p className="text-lg font-semibold">{formatPrice(price, currency)}</p>
+    <div className="space-y-4 rounded-xl border border-border bg-card p-4 shadow-sm">
+      <div className="flex flex-wrap items-center gap-3">
+        <PriceDisplay
+          price={price}
+          compareAtPrice={compareAt}
+          currency={currency}
+          size="large"
+          productSaleDisplayMode={productSaleDisplayMode}
+          variantSaleDisplayMode={selectedVariant?.saleDisplayMode}
+        />
+        <SaleBadge presentation={salePresentation} currency={currency} size="prominent" />
+      </div>
       {optionNames.map((name) => {
         const values = Array.from(
           new Set(
@@ -79,13 +116,13 @@ export function ProductVariants({
         );
         return (
           <label key={name} className="block space-y-1">
-            <span className="text-sm font-medium">{name}</span>
+            <span className="text-sm font-medium text-foreground">{name}</span>
             <select
               value={selectedOptions[name] ?? values[0] ?? ""}
               onChange={(event) =>
                 setSelectedOptions((prev) => ({ ...prev, [name]: event.target.value }))
               }
-              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+              className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-card-foreground shadow-sm outline-none transition focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring"
             >
               {values.map((value) => (
                 <option key={`${name}-${value}`} value={value}>
