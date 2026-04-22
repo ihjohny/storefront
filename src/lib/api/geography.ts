@@ -9,6 +9,7 @@ import type {
 type ListResponse<T> = { docs: T[] };
 
 export type GeoFetchOptions = {
+  /** Only list subdivisions/localities backed by public store service areas */
   onlyWithPublicStoreCoverage?: boolean;
 };
 

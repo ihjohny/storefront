@@ -14,18 +14,35 @@ export const features = {
   socialLogin: process.env.NEXT_PUBLIC_SOCIAL_LOGIN_ENABLED !== "false",
   reviews: process.env.NEXT_PUBLIC_REVIEWS_ENABLED !== "false",
   multiStore: process.env.NEXT_PUBLIC_MULTI_STORE_ENABLED === "true",
-  /** Backend must set GEOGRAPHY_ENABLED=true. Uses subdivisions/localities + delivery-context API. */
-  geography:
-    process.env.NEXT_PUBLIC_GEOGRAPHY_ENABLED === "true",
-  /** When true, store list comes from delivery-context after area selection (requires geography + multiStore). */
+  geography: process.env.NEXT_PUBLIC_GEOGRAPHY_ENABLED === "true",
   serviceAreaStoreSelection:
     process.env.NEXT_PUBLIC_MULTI_STORE_ENABLED === "true" &&
     process.env.NEXT_PUBLIC_GEOGRAPHY_ENABLED === "true",
   singleStoreCart: process.env.NEXT_PUBLIC_SINGLE_STORE_CART === "true",
+  /**
+   * Region/locality dropdowns: which service tiers are listed.
+   * - served_only — standard (green) only
+   * - served_and_extended — standard + extended (green + gray); hides unserved (red)
+   * - all — no filtering (admin/debug)
+   */
   geoLocationTierFilter: parseGeoLocationTierFilter(
     process.env.NEXT_PUBLIC_GEO_LOCATION_TIER_FILTER,
   ),
+  /**
+   * When true (default), region/locality API lists only areas served by at least one active public
+   * stock location. Set to "false" to show all active geography (e.g. admin preview).
+   */
   geoListOnlyServedAreas: process.env.NEXT_PUBLIC_GEO_LIST_ONLY_SERVED !== "false",
+  /**
+   * When true, first visit (no saved service area) auto-picks first country, Dhaka/Chattogram-style
+   * default subdivision, and a store — legacy demo behavior.
+   * When false (default), user must select country + region, or use “Use my location”, before
+   * any store is bound for checkout.
+   */
+  autoSelectDefaultServiceArea:
+    process.env.NEXT_PUBLIC_AUTO_SELECT_DEFAULT_SERVICE_AREA === "true",
+  /** “Use my location” + reverse geocode for service area prefill (geocoder is configured per deploy). */
+  geolocationPrefill: process.env.NEXT_PUBLIC_GEOLOCATION_PREFILL === "true",
   i18n: {
     locales: (process.env.NEXT_PUBLIC_SUPPORTED_LOCALES || "en,bn")
       .split(",")

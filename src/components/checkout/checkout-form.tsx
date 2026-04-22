@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { flushSync } from "react-dom";
 import { useRouter, useParams } from "next/navigation";
 import { getApiErrorMessage } from "@/lib/api/client";
@@ -14,6 +14,10 @@ import { useAuth } from "@/lib/hooks/use-auth";
 import { useGuestId } from "@/lib/hooks/use-guest-id";
 import { useCart } from "@/lib/hooks/use-cart";
 import { useStore } from "@/lib/hooks/use-store";
+import {
+  readGeocodedAddressFormPartial,
+  type GeocodedAddressFormPartial,
+} from "@/lib/geolocation/geocoded-delivery-storage";
 import {
   AddressForm,
   type AddressFormValues,
@@ -102,6 +106,8 @@ export function CheckoutForm() {
   const [useSavedAddress, setUseSavedAddress] = useState(true);
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
   const [draftedAddress, setDraftedAddress] = useState<AddressFormValues | null>(null);
+  const [geocodePrefill, setGeocodePrefill] = useState<GeocodedAddressFormPartial | null>(null);
+  const [addressFormKey, setAddressFormKey] = useState(0);
   const [guestEmail, setGuestEmail] = useState<string>("");
   const [guestPhone, setGuestPhone] = useState<string>("");
 
@@ -168,6 +174,16 @@ export function CheckoutForm() {
   useEffect(() => {
     void loadData();
   }, [loadData]);
+
+  useLayoutEffect(() => {
+    if (isLoadingData) return;
+    setGeocodePrefill(readGeocodedAddressFormPartial());
+    setAddressFormKey((k) => k + 1);
+  }, [isLoadingData]);
+
+  const addressMergedDefaults = useMemo((): Partial<AddressFormValues> => {
+    return { ...geocodePrefill, ...(draftedAddress ?? {}) };
+  }, [geocodePrefill, draftedAddress]);
 
   const selectedShippingMethodIds = useMemo(
     () =>
@@ -377,8 +393,9 @@ export function CheckoutForm() {
               {isAuthenticated ? "Add Address" : "Guest Checkout Address"}
             </h3>
             <AddressForm
+              key={`${addressFormKey}-${draftedAddress ? "draft" : "new"}`}
               requireGuestEmail={!isAuthenticated && features.guestCheckout}
-              defaultValues={draftedAddress ?? undefined}
+              defaultValues={addressMergedDefaults}
               serviceAreaReadonly={serviceAreaReadonly}
               isSubmitting={isSubmitting}
               onSubmit={handleAddressSubmit}

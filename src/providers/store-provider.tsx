@@ -19,6 +19,12 @@ import {
 } from "@/lib/api/geography";
 import { getPublicStores } from "@/lib/api/stores";
 import { isTierSelectable } from "@/lib/config/geo-tier-filter";
+import {
+  bestMatchId,
+  expandLocalityMatchTargets,
+  expandSubdivisionMatchTargets,
+  firstMatchingId,
+} from "@/lib/geolocation/match-area";
 import type {
   DeliveryPolicy,
   GeoLocalityListItem,
@@ -34,7 +40,9 @@ const SERVICE_AREA_KEY = "bs-service-area-v1";
 export type DeliveryContextEmptyReason =
   | "none"
   | "no_public_stores_for_area"
-  | "unserved_area";
+  | "unserved_area"
+  /** User has not yet chosen country/region (or geolocation); no default store. */
+  | "no_area_selected";
 
 export type ServiceAreaSlice = {
   countries: { id: string; name: string; isoCode: string }[];
@@ -54,8 +62,9 @@ export type StoreContextType = {
   stores: Store[];
   selectedStore: Store | null;
   /**
-   * Store for cart, checkout, and catalog when the selected service area is shoppable.
-   * Null when the area is unserved or has no outlets — carts must not use a remembered store id.
+   * Store to use for cart, checkout, and catalog queries when the selected service area is shoppable.
+   * Unlike {@link selectedStore} (which may reflect a remembered choice for UI), this is null when
+   * the area is unserved or has no outlets — so carts cannot attach to a stale store.
    */
   commerceStore: Store | null;
   /** False when multi-store geography is on and the current area cannot be shopped. */
@@ -66,6 +75,15 @@ export type StoreContextType = {
   isLoading: boolean;
   /** Set when NEXT_PUBLIC_GEOGRAPHY_ENABLED and multi-store */
   serviceArea?: ServiceAreaSlice;
+  /**
+   * Match Nominatim-style hints to BD subdivisions/localities and refresh the cart store list.
+   * Only when geography-backed service area is active.
+   */
+  applyGeolocationHints?: (hints: {
+    subdivisionHint: string;
+    localityHint: string;
+    localityHintCandidates?: string[];
+  }) => Promise<{ applied: boolean; reason?: string }>;
 };
 
 export const StoreContext = createContext<StoreContextType | undefined>(
@@ -177,6 +195,38 @@ function filterLocalitiesForUi(locs: GeoLocalityListItem[]): GeoLocalityListItem
   );
 }
 
+/**
+ * Resolves which store to bind for the current delivery context. When several outlets
+ * serve the area and we use the single-store cart gate, we must not auto-pick the first
+ * store — otherwise {@link selectedStore} becomes set, the gate closes, and the user
+ * never gets locality / outlet pickers. Single-outlet and remembered valid ids still resolve.
+ */
+function pickStoreIdAfterAreaContext(mapped: Store[]): {
+  id: string | null;
+  persist: string | null;
+} {
+  const needExplicitPick =
+    features.multiStore && features.singleStoreCart && mapped.length > 1;
+  const persisted = readPersistedStoreId();
+  const matched = persisted
+    ? mapped.find((s) => s.id === persisted)
+    : undefined;
+
+  if (mapped.length === 0) {
+    return { id: null, persist: null };
+  }
+  if (matched) {
+    return { id: matched.id, persist: matched.id };
+  }
+  if (mapped.length === 1) {
+    return { id: mapped[0]!.id, persist: mapped[0]!.id };
+  }
+  if (needExplicitPick) {
+    return { id: null, persist: null };
+  }
+  return { id: mapped[0]!.id, persist: mapped[0]!.id };
+}
+
 export function StoreProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const useGeo =
@@ -271,6 +321,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setCountries(list);
 
         const persistedArea = readPersistedServiceArea();
+        if (!persistedArea && !features.autoSelectDefaultServiceArea) {
+          setSelectedCountryId(null);
+          setSubdivisions([]);
+          setLocalities([]);
+          setSelectedSubdivisionId(null);
+          setSelectedLocalityId(null);
+          setStores([]);
+          setDeliveryPolicy(null);
+          setEmptyReason("no_area_selected");
+          setSelectedStoreId(null);
+          persistStoreId(null);
+          return;
+        }
+
         const countryId =
           persistedArea?.countryId &&
           list.some((c) => c.id === persistedArea.countryId)
@@ -339,21 +403,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setEmptyReason(ctx.emptyReason);
         setStores(mapped);
 
-        const persistedStore = readPersistedStoreId();
-        const storeMatch = mapped.find((s) => s.id === persistedStore);
-        if (storeMatch) {
-          setSelectedStoreId(storeMatch.id);
-          persistStoreId(storeMatch.id);
-        } else if (mapped[0]) {
-          setSelectedStoreId(mapped[0].id);
-          persistStoreId(mapped[0].id);
-        } else if (persistedStore) {
-          setSelectedStoreId(persistedStore);
-          persistStoreId(persistedStore);
-        } else {
-          setSelectedStoreId(null);
-          persistStoreId(null);
-        }
+        const pick = pickStoreIdAfterAreaContext(mapped);
+        setSelectedStoreId(pick.id);
+        persistStoreId(pick.persist);
 
         persistServiceArea({
           countryId,
@@ -371,7 +423,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [useGeo, geoFailed]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- geoFailed retry
+  }, [useGeo, geoFailed, features.autoSelectDefaultServiceArea]);
 
   const refreshContext = useCallback(
     async (
@@ -398,19 +451,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setStores(mapped);
         persistServiceArea({ countryId, subdivisionId: subId, localityId: locId });
 
-        const cur = readPersistedStoreId();
-        const stillValid = cur && mapped.some((s) => s.id === cur);
-        if (stillValid && cur) {
-          setSelectedStoreId(cur);
-        } else if (mapped[0]) {
-          setSelectedStoreId(mapped[0].id);
-          persistStoreId(mapped[0].id);
-        } else if (cur) {
-          setSelectedStoreId(cur);
-        } else {
-          setSelectedStoreId(null);
-          persistStoreId(null);
-        }
+        const pick = pickStoreIdAfterAreaContext(mapped);
+        setSelectedStoreId(pick.id);
+        persistStoreId(pick.persist);
         router.refresh();
       } catch {
         /* ignore */
@@ -432,20 +475,29 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const subsRaw = await fetchGeoSubdivisions(id, geoFetchOpts);
         const subs = filterSubdivisionsForUi(subsRaw);
         setSubdivisions(subs);
-        const first = pickDefaultSubdivisionId(subs);
-        setSelectedSubdivisionId(first);
-        if (first) {
-          const locsRaw = await fetchGeoLocalities(first, geoFetchOpts);
-          setLocalities(filterLocalitiesForUi(locsRaw));
-          await refreshContext(id, first, null);
+        if (features.autoSelectDefaultServiceArea) {
+          const first = pickDefaultSubdivisionId(subs);
+          setSelectedSubdivisionId(first);
+          if (first) {
+            const locsRaw = await fetchGeoLocalities(first, geoFetchOpts);
+            setLocalities(filterLocalitiesForUi(locsRaw));
+            await refreshContext(id, first, null);
+          } else {
+            persistServiceArea(null);
+          }
         } else {
+          setSelectedSubdivisionId(null);
+          setLocalities([]);
+          setStores([]);
+          setDeliveryPolicy(null);
+          setEmptyReason("no_area_selected");
           persistServiceArea(null);
         }
       } catch {
         /* ignore */
       }
     },
-    [refreshContext],
+    [refreshContext, geoFetchOpts],
   );
 
   const setSubdivision = useCallback(
@@ -474,6 +526,63 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       await refreshContext(cid, sid, id);
     },
     [selectedCountryId, selectedSubdivisionId, refreshContext],
+  );
+
+  const applyGeolocationHints = useCallback(
+    async (hints: {
+      subdivisionHint: string;
+      localityHint: string;
+      localityHintCandidates?: string[];
+    }) => {
+      if (!useGeo || geoFailed) {
+        return { applied: false, reason: "geography_unavailable" };
+      }
+      const bd = countries.find((c) => c.isoCode?.toUpperCase() === "BD");
+      if (!bd) {
+        return { applied: false, reason: "no_bd_country" };
+      }
+
+      try {
+        const subsRaw = await fetchGeoSubdivisions(bd.id, geoFetchOpts);
+        const subs = filterSubdivisionsForUi(subsRaw);
+        setSelectedCountryId(bd.id);
+        setSubdivisions(subs);
+
+        const subMatchTargets = expandSubdivisionMatchTargets(subs);
+        const subMatch =
+          hints.subdivisionHint.trim() !== ""
+            ? bestMatchId(hints.subdivisionHint, subMatchTargets)
+            : null;
+        const subId =
+          subMatch ??
+          (features.autoSelectDefaultServiceArea
+            ? pickDefaultSubdivisionId(subs)
+            : null);
+        if (!subId) {
+          return { applied: false, reason: "no_subdivision" };
+        }
+        setSelectedSubdivisionId(subId);
+
+        const locsRaw = await fetchGeoLocalities(subId, geoFetchOpts);
+        const locs = filterLocalitiesForUi(locsRaw);
+        setLocalities(locs);
+
+        const locHints = hints.localityHintCandidates?.length
+          ? hints.localityHintCandidates
+          : [hints.localityHint];
+        const locMatchTargets = expandLocalityMatchTargets(locs);
+        const locId = locHints.some((h) => h.trim() !== "")
+          ? firstMatchingId(locHints, locMatchTargets)
+          : null;
+        setSelectedLocalityId(locId);
+
+        await refreshContext(bd.id, subId, locId);
+        return { applied: true };
+      } catch {
+        return { applied: false, reason: "request_failed" };
+      }
+    },
+    [useGeo, geoFailed, countries, geoFetchOpts, refreshContext, features.autoSelectDefaultServiceArea],
   );
 
   const selectStore = useCallback(
@@ -565,6 +674,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       clearSelection,
       isLoading,
       serviceArea: serviceAreaSlice,
+      applyGeolocationHints:
+        useGeo && !geoFailed ? applyGeolocationHints : undefined,
     }),
     [
       stores,
@@ -575,6 +686,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       clearSelection,
       isLoading,
       serviceAreaSlice,
+      useGeo,
+      geoFailed,
+      applyGeolocationHints,
     ],
   );
 

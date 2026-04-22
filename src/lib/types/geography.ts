@@ -9,6 +9,8 @@ export type GeoCountryListItem = {
 export type GeoSubdivisionListItem = {
   id: string;
   name: string;
+  /** Optional alternate names for geocoding API matching (Payload `geocodeMatchAliases`). */
+  geocodeMatchAliases?: string[];
   code: string | null;
   defaultServiceTier?: string;
 };
@@ -16,6 +18,8 @@ export type GeoSubdivisionListItem = {
 export type GeoLocalityListItem = {
   id: string;
   name: string;
+  /** Optional alternate names for geocoding/address API matching (Payload `geocodeMatchAliases`). */
+  geocodeMatchAliases?: string[];
   code: string | null;
   serviceTier?: string;
 };
