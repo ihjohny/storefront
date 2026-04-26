@@ -20,7 +20,11 @@
     "test:ci": "yarn test:run && yarn test:e2e:smoke",
     "test:ci:core-e2e": "yarn test:run && yarn test:e2e:core",
     "test:all": "yarn test:run && yarn test:e2e",
-    "sync:api-types": "openapi-typescript ${BACKEND_URL:-http://localhost:3000}/api/openapi-all.json -o src/lib/types/api.generated.ts"
+    "sync:api-types": "openapi-typescript ${BACKEND_URL:-http://localhost:3000}/api/openapi-all.json -o src/lib/types/api.generated.ts",
+    "pm2:start": "pm2 start pm2/ecosystem.config.cjs",
+    "pm2:stop": "pm2 delete storefront-sv",
+    "pm2:logs": "pm2 logs storefront-sv",
+    "pm2:flush": "pm2 flush"
   },
   "dependencies": {
     "@payloadcms/richtext-lexical": "3.77.0",
