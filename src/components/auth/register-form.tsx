@@ -2,12 +2,17 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { features } from "@/lib/config/features";
 import { useAuth } from "@/lib/hooks/use-auth";
+import {
+  buildRegisterFormSchema,
+  getRegisterIdentifierFieldLayout,
+  registerFormDefaultValues,
+  type RegisterFormInput,
+} from "@/lib/config/register-form-schema";
 import {
   authErrorClass,
   authFieldClass,
@@ -17,47 +22,37 @@ import {
 } from "@/components/auth/auth-form-classes";
 import { SocialLoginButtons } from "@/components/auth/social-login-buttons";
 
-const registerSchema = z
-  .object({
-    email: z.string().email().optional().or(z.literal("")),
-    phone: z.string().optional().or(z.literal("")),
-    password: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords must match",
-    path: ["confirmPassword"],
-  })
-  .refine((data) => Boolean(data.email || data.phone), {
-    message: "Email or phone is required",
-    path: ["email"],
-  });
+function buildDisplayNameForApi(first: string, last: string) {
+  const t = [first.trim(), last.trim()].filter(Boolean).join(" ");
+  return t || first.trim() || undefined;
+}
 
-type RegisterFormValues = z.infer<typeof registerSchema>;
-
-type RegisterFormProps = {
-  locale: string;
-};
-
-export function RegisterForm({ locale }: RegisterFormProps) {
+export function RegisterForm({ locale }: { locale: string }) {
   const router = useRouter();
-  const { register } = useAuth();
+  const { register: registerUser } = useAuth();
   const [error, setError] = useState<string | null>(null);
 
-  const form = useForm<RegisterFormValues>({
+  const { showEmail, showPhone } = getRegisterIdentifierFieldLayout();
+  const registerSchema = useMemo(() => buildRegisterFormSchema(), []);
+
+  const form = useForm<RegisterFormInput>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { email: "", phone: "", password: "", confirmPassword: "" },
+    defaultValues: registerFormDefaultValues,
   });
 
-  async function onSubmit(values: RegisterFormValues) {
+  async function onSubmit(values: RegisterFormInput) {
     setError(null);
     try {
-      await register({
-        email: values.email || undefined,
-        phone: values.phone || undefined,
+      await registerUser({
+        email: values.email?.trim() || undefined,
+        phone: values.phone?.trim() || undefined,
         password: values.password,
+        firstName: values.firstName.trim(),
+        lastName: values.lastName.trim() || undefined,
+        displayName: buildDisplayNameForApi(values.firstName, values.lastName),
       });
       router.push(`/${locale}/account`);
+      router.refresh();
     } catch {
       setError("Unable to create account. Please check your inputs.");
     }
@@ -66,23 +61,70 @@ export function RegisterForm({ locale }: RegisterFormProps) {
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
       <label className="block space-y-1">
-        <span className={authLabelClass}>Email</span>
+        <span className={authLabelClass}>First name</span>
         <input
-          type="email"
-          autoComplete="email"
-          {...form.register("email")}
+          type="text"
+          autoComplete="given-name"
+          {...form.register("firstName")}
           className={authFieldClass}
         />
+        {form.formState.errors.firstName ? (
+          <span className="text-xs text-destructive">
+            {form.formState.errors.firstName.message}
+          </span>
+        ) : null}
       </label>
       <label className="block space-y-1">
-        <span className={authLabelClass}>Phone</span>
+        <span className={authLabelClass}>
+          Last name <span className="font-normal text-muted-foreground">(optional)</span>
+        </span>
         <input
-          type="tel"
-          autoComplete="tel"
-          {...form.register("phone")}
+          type="text"
+          autoComplete="family-name"
+          {...form.register("lastName")}
           className={authFieldClass}
         />
+        {form.formState.errors.lastName ? (
+          <span className="text-xs text-destructive">
+            {form.formState.errors.lastName.message}
+          </span>
+        ) : null}
       </label>
+
+      {showEmail ? (
+        <label className="block space-y-1">
+          <span className={authLabelClass}>Email</span>
+          <input
+            type="email"
+            autoComplete="email"
+            {...form.register("email")}
+            className={authFieldClass}
+          />
+          {form.formState.errors.email ? (
+            <span className="text-xs text-destructive">
+              {form.formState.errors.email.message}
+            </span>
+          ) : null}
+        </label>
+      ) : null}
+
+      {showPhone ? (
+        <label className="block space-y-1">
+          <span className={authLabelClass}>Phone</span>
+          <input
+            type="tel"
+            autoComplete="tel"
+            {...form.register("phone")}
+            className={authFieldClass}
+          />
+          {form.formState.errors.phone ? (
+            <span className="text-xs text-destructive">
+              {form.formState.errors.phone.message}
+            </span>
+          ) : null}
+        </label>
+      ) : null}
+
       <label className="block space-y-1">
         <span className={authLabelClass}>Password</span>
         <input
@@ -91,6 +133,11 @@ export function RegisterForm({ locale }: RegisterFormProps) {
           {...form.register("password")}
           className={authFieldClass}
         />
+        {form.formState.errors.password ? (
+          <span className="text-xs text-destructive">
+            {form.formState.errors.password.message}
+          </span>
+        ) : null}
       </label>
       <label className="block space-y-1">
         <span className={authLabelClass}>Confirm Password</span>
@@ -100,6 +147,11 @@ export function RegisterForm({ locale }: RegisterFormProps) {
           {...form.register("confirmPassword")}
           className={authFieldClass}
         />
+        {form.formState.errors.confirmPassword ? (
+          <span className="text-xs text-destructive">
+            {form.formState.errors.confirmPassword.message}
+          </span>
+        ) : null}
       </label>
 
       {error ? <p className={authErrorClass}>{error}</p> : null}

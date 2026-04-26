@@ -54,6 +54,9 @@ export async function Footer({ locale }: FooterProps) {
                 return null;
               }
               const l = link as Record<string, unknown>;
+              if (l.enabled === false) {
+                return null;
+              }
               const label = typeof l.label === "string" ? l.label : null;
               const href =
                 typeof l.url === "string" ? l.url : typeof l.href === "string" ? l.href : null;

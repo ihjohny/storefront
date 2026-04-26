@@ -7,7 +7,7 @@ describe("products API helpers", () => {
   });
 
   it("getProducts applies published filter and locale", async () => {
-    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
       const url = typeof input === "string" ? input : input.toString();
       expect(url).toContain("where%5Bstatus%5D%5Bequals%5D=published");
       expect(url).toContain("locale=en");

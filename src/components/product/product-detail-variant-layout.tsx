@@ -15,6 +15,7 @@ type ProductDetailVariantLayoutProps = {
   product: Product;
   variants: ProductVariant[];
   galleryImages: Media[];
+  productDetailsTitle: string;
 };
 
 type VariantOptionMap = Record<string, string>;
@@ -30,6 +31,7 @@ export function ProductDetailVariantLayout({
   product,
   variants,
   galleryImages,
+  productDetailsTitle,
 }: ProductDetailVariantLayoutProps) {
   const optionNames = useMemo(
     () =>
@@ -174,7 +176,7 @@ export function ProductDetailVariantLayout({
           })}
           <AddToCartButton productId={product.id} variantId={selectedVariant?.id} quantity={1} />
         </div>
-        <ProductDetailNarrative product={product} />
+        <ProductDetailNarrative product={product} sectionTitle={productDetailsTitle} />
       </div>
     </>
   );

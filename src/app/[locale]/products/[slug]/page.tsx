@@ -4,6 +4,7 @@ import { getProductBySlug, getProductVariants } from "@/lib/api/products";
 import { getMediaUrl } from "@/lib/utils/url";
 import { getProductMedia } from "@/lib/utils/product-media";
 import { i18nConfig, type Locale } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { ProductDetail } from "@/components/product/product-detail";
 
 type ProductPageProps = {
@@ -47,10 +48,16 @@ export default async function ProductPage({ params }: ProductPageProps) {
   }
 
   const variants = product.hasVariants ? await getProductVariants(product.id) : [];
+  const dict = await getDictionary(locale as Locale);
 
   return (
     <main className="mx-auto w-full max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
-      <ProductDetail product={product} variants={variants} locale={locale} />
+      <ProductDetail
+        product={product}
+        variants={variants}
+        locale={locale}
+        productDetailsTitle={dict.product.productDetails}
+      />
     </main>
   );
 }

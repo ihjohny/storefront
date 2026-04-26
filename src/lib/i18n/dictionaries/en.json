@@ -38,7 +38,8 @@
     "outOfStock": "Out of Stock",
     "reviews": "Reviews",
     "writeReview": "Write a Review",
-    "relatedProducts": "Related Products"
+    "relatedProducts": "Related Products",
+    "productDetails": "Product details"
   },
   "cart": {
     "title": "Shopping Cart",

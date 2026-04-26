@@ -6,6 +6,9 @@ type RegisterPayload = {
   email?: string;
   phone?: string;
   password: string;
+  firstName?: string;
+  lastName?: string;
+  displayName?: string;
 };
 
 type RegisterResponse = {

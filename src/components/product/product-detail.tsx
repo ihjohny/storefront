@@ -15,9 +15,10 @@ type ProductDetailProps = {
   product: Product;
   variants: ProductVariant[];
   locale: string;
+  productDetailsTitle: string;
 };
 
-export function ProductDetail({ product, variants, locale }: ProductDetailProps) {
+export function ProductDetail({ product, variants, locale, productDetailsTitle }: ProductDetailProps) {
   const galleryImages = getProductMedia(product.images);
   /** Product is configured for variants and we loaded at least one SKU */
   const showVariantPdp = Boolean(product.hasVariants && variants.length > 0);
@@ -45,6 +46,7 @@ export function ProductDetail({ product, variants, locale }: ProductDetailProps)
             product={product}
             variants={variants}
             galleryImages={galleryImages}
+            productDetailsTitle={productDetailsTitle}
           />
         ) : (
           <>
@@ -81,7 +83,7 @@ export function ProductDetail({ product, variants, locale }: ProductDetailProps)
                 </div>
               )}
 
-              <ProductDetailNarrative product={product} />
+              <ProductDetailNarrative product={product} sectionTitle={productDetailsTitle} />
             </div>
           </>
         )}

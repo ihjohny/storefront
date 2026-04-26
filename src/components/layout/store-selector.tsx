@@ -93,7 +93,7 @@ export function StoreSelector() {
       >
         <p className="font-medium text-foreground">Location selection unavailable</p>
         <p className="mt-0.5">
-          We couldn't load delivery areas or stores. Refresh the page, or try again shortly.
+          We could not load delivery areas or stores. Refresh the page, or try again shortly.
         </p>
       </div>
     );

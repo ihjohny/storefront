@@ -38,7 +38,8 @@
     "outOfStock": "স্টক শেষ",
     "reviews": "রিভিউ",
     "writeReview": "রিভিউ লিখুন",
-    "relatedProducts": "সম্পর্কিত পণ্য"
+    "relatedProducts": "সম্পর্কিত পণ্য",
+    "productDetails": "পণ্যের বিবরণ"
   },
   "cart": {
     "title": "শপিং কার্ট",

@@ -24,6 +24,29 @@ function withoutToolbarCartLink(items: NavItem[], locale: string): NavItem[] {
   return items.filter((item) => item.href !== cartHref);
 }
 
+/** When the CMS has a /vendors row with enabled: false, we must not auto-inject the link again. */
+function wasVendorsLinkDisabledInCms(raw: unknown): boolean {
+  if (!Array.isArray(raw)) {
+    return false;
+  }
+  for (const item of raw) {
+    if (!item || typeof item !== "object") {
+      continue;
+    }
+    const record = item as Record<string, unknown>;
+    const u =
+      typeof record.url === "string"
+        ? record.url
+        : typeof record.href === "string"
+          ? record.href
+          : "";
+    if (u.includes("/vendors") && record.enabled === false) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function normalizeNavItems(raw: unknown, locale: string): NavItem[] {
   if (!Array.isArray(raw)) {
     return [];
@@ -82,10 +105,11 @@ export async function Header({ locale }: HeaderProps) {
   let navItems = getDefaultItems(locale, labels);
   let announcementText: string | null = null;
 
+  let navRaw: unknown = null;
   try {
     const response = await getHeader(locale);
     const data = response as Record<string, unknown>;
-    const navRaw = data.navLinks ?? data.navItems;
+    navRaw = data.navLinks ?? data.navItems;
     const fromApi = normalizeNavItems(navRaw, locale);
     const cmsNavHasRows = Array.isArray(navRaw) && navRaw.length > 0;
 
@@ -111,7 +135,11 @@ export async function Header({ locale }: HeaderProps) {
     // Fallback UI keeps layout stable when globals endpoint is unavailable.
   }
 
-  if (features.multivendor && !navItems.some((item) => item.href.includes("/vendors"))) {
+  if (
+    features.multivendor &&
+    !navItems.some((item) => item.href.includes("/vendors")) &&
+    !wasVendorsLinkDisabledInCms(navRaw)
+  ) {
     navItems.push({ label: labels.vendor, href: `/${locale}/vendors` });
   }
 

@@ -514,7 +514,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         /* ignore */
       }
     },
-    [selectedCountryId, refreshContext],
+    [selectedCountryId, refreshContext, geoFetchOpts],
   );
 
   const setLocality = useCallback(
@@ -582,7 +582,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return { applied: false, reason: "request_failed" };
       }
     },
-    [useGeo, geoFailed, countries, geoFetchOpts, refreshContext, features.autoSelectDefaultServiceArea],
+    [useGeo, geoFailed, countries, geoFetchOpts, refreshContext],
   );
 
   const selectStore = useCallback(
