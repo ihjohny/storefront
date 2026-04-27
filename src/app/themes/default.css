@@ -1,0 +1,48 @@
+/* Neutral slate baseline — swap the import in globals.css to try other theme files. */
+:root {
+  color-scheme: light;
+
+  --background: #ffffff;
+  --foreground: #0f172a;
+
+  --primary: #0f172a;
+  --primary-foreground: #ffffff;
+
+  --muted: #f1f5f9;
+  --muted-foreground: #475569;
+
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+
+  --destructive: #e11d48;
+  --destructive-foreground: #ffffff;
+
+  --ring: #0f172a;
+}
+
+html.dark {
+  color-scheme: dark;
+
+  --background: #020617;
+  --foreground: #f1f5f9;
+
+  --primary: #f1f5f9;
+  --primary-foreground: #0f172a;
+
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+
+  --border: #475569;
+  --input: #475569;
+
+  --card: #0f172a;
+  --card-foreground: #f1f5f9;
+
+  --destructive: #fb7185;
+  --destructive-foreground: #ffffff;
+
+  --ring: #94a3b8;
+}

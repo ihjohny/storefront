@@ -1,0 +1,51 @@
+/*
+  Green / fresh-produce palette for client demos (e.g. Bangladesh produce).
+  Swap the theme import in globals.css from default.css to this file.
+*/
+:root {
+  color-scheme: light;
+
+  --background: #f6faf4;
+  --foreground: #14532d;
+
+  --primary: #15803d;
+  --primary-foreground: #ffffff;
+
+  --muted: #ecfdf3;
+  --muted-foreground: #166534;
+
+  --border: #bbf7d0;
+  --input: #bbf7d0;
+
+  --card: #ffffff;
+  --card-foreground: #14532d;
+
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+
+  --ring: #15803d;
+}
+
+html.dark {
+  color-scheme: dark;
+
+  --background: #052e16;
+  --foreground: #f0fdf4;
+
+  --primary: #4ade80;
+  --primary-foreground: #052e16;
+
+  --muted: #14532d;
+  --muted-foreground: #bbf7d0;
+
+  --border: #5dae75;
+  --input: #4d9d6a;
+
+  --card: #0a3d22;
+  --card-foreground: #f0fdf4;
+
+  --destructive: #f87171;
+  --destructive-foreground: #ffffff;
+
+  --ring: #4ade80;
+}

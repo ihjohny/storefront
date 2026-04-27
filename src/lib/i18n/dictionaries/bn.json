@@ -1,0 +1,80 @@
+{
+  "common": {
+    "home": "হোম",
+    "products": "পণ্যসমূহ",
+    "categories": "ক্যাটাগরি",
+    "cart": "কার্ট",
+    "checkout": "চেকআউট",
+    "account": "অ্যাকাউন্ট",
+    "login": "লগইন",
+    "register": "রেজিস্টার",
+    "logout": "লগআউট",
+    "search": "সার্চ",
+    "addToCart": "কার্টে যোগ করুন",
+    "buyNow": "এখনই কিনুন",
+    "viewAll": "সব দেখুন",
+    "loading": "লোড হচ্ছে...",
+    "error": "কিছু ভুল হয়েছে",
+    "noResults": "কোন ফলাফল পাওয়া যায়নি",
+    "back": "পেছনে",
+    "next": "পরবর্তী",
+    "previous": "পূর্ববর্তী"
+  },
+  "auth": {
+    "loginTitle": "সাইন ইন",
+    "registerTitle": "অ্যাকাউন্ট তৈরি করুন",
+    "email": "ইমেইল",
+    "phone": "ফোন",
+    "password": "পাসওয়ার্ড",
+    "confirmPassword": "পাসওয়ার্ড নিশ্চিত করুন",
+    "forgotPassword": "পাসওয়ার্ড ভুলে গেছেন?",
+    "noAccount": "আপনার কি অ্যাকাউন্ট নেই?",
+    "hasAccount": "ইতিমধ্যেই অ্যাকাউন্ট আছে?",
+    "loginWithGoogle": "গুগল দিয়ে চালিয়ে যান",
+    "loginWithFacebook": "ফেসবুক দিয়ে চালিয়ে যান"
+  },
+  "product": {
+    "addedToCart": "কার্টে যোগ করা হয়েছে",
+    "outOfStock": "স্টক শেষ",
+    "reviews": "রিভিউ",
+    "writeReview": "রিভিউ লিখুন",
+    "relatedProducts": "সম্পর্কিত পণ্য",
+    "productDetails": "পণ্যের বিবরণ"
+  },
+  "cart": {
+    "title": "শপিং কার্ট",
+    "empty": "আপনার কার্ট খালি",
+    "subtotal": "সাবটোটাল",
+    "shipping": "ডেলিভারি",
+    "tax": "ট্যাক্স",
+    "total": "মোট",
+    "checkout": "চেকআউটে যান",
+    "continueShopping": "কেনাকাটা চালিয়ে যান",
+    "remove": "সরান",
+    "updateQuantity": "পরিমাণ আপডেট করুন"
+  },
+  "checkout": {
+    "title": "চেকআউট",
+    "shippingAddress": "ডেলিভারি ঠিকানা",
+    "billingAddress": "বিলিং ঠিকানা",
+    "shippingMethod": "ডেলিভারি পদ্ধতি",
+    "payment": "পেমেন্ট",
+    "placeOrder": "অর্ডার করুন",
+    "orderSummary": "অর্ডার সারসংক্ষেপ"
+  },
+  "order": {
+    "confirmation": "অর্ডার নিশ্চিত হয়েছে",
+    "orderNumber": "অর্ডার নম্বর",
+    "status": "স্ট্যাটাস",
+    "placed": "অর্ডার করা হয়েছে",
+    "trackOrder": "অর্ডার ট্র্যাক করুন"
+  },
+  "vendor": {
+    "directory": "ভেন্ডর",
+    "storefront": "স্টোর",
+    "becomeVendor": "ভেন্ডর হোন",
+    "products": "পণ্য",
+    "rating": "রেটিং",
+    "since": "সদস্য হওয়ার তারিখ"
+  }
+}

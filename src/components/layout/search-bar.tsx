@@ -1,0 +1,63 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+
+type SearchBarProps = {
+  locale: string;
+  placeholder?: string;
+  onSearchComplete?: () => void;
+  focusOnMount?: boolean;
+};
+
+export function SearchBar({
+  locale,
+  placeholder = "Search products",
+  onSearchComplete,
+  focusOnMount = false,
+}: SearchBarProps) {
+  const router = useRouter();
+  const [query, setQuery] = useState("");
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (!focusOnMount) {
+      return;
+    }
+
+    inputRef.current?.focus();
+  }, [focusOnMount]);
+
+  function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const trimmed = query.trim();
+
+    if (!trimmed) {
+      router.push(`/${locale}/products`);
+    } else {
+      const params = new URLSearchParams({ search: trimmed });
+      router.push(`/${locale}/products?${params.toString()}`);
+    }
+
+    onSearchComplete?.();
+  }
+
+  return (
+    <form onSubmit={onSubmit} className="flex w-full items-center gap-2">
+      <input
+        ref={inputRef}
+        type="search"
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder={placeholder}
+        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-ring/60"
+      />
+      <button
+        type="submit"
+        className="shrink-0 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
+      >
+        Search
+      </button>
+    </form>
+  );
+}
