@@ -65,6 +65,9 @@ test.describe("guest checkout happy path (live API + mocked payment)", () => {
     await page.getByRole("button", { name: "Pay Now" }).click();
 
     await page.waitForURL("**/en/checkout/success**", { timeout: 30_000 });
-    await expect(page.getByRole("heading", { name: "Payment successful", level: 1 })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 }).first()).toHaveText(
+      /Payment return received|Order placed successfully/i,
+      { timeout: 30_000 },
+    );
   });
 });

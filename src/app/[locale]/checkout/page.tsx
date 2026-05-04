@@ -1,24 +1,21 @@
-"use client";
-
-import { use } from "react";
-import { CheckoutForm } from "@/components/checkout/checkout-form";
+import { notFound } from "next/navigation";
+import { CheckoutPageClient } from "@/components/checkout/checkout-page-client";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
+import { i18nConfig, type Locale } from "@/lib/i18n/config";
+import type { CheckoutPageCopy } from "@/lib/types/checkout-copy";
 
 type CheckoutPageProps = {
   params: Promise<{ locale: string }>;
 };
 
-export default function CheckoutPage({ params }: CheckoutPageProps) {
-  use(params);
+export default async function CheckoutPage({ params }: CheckoutPageProps) {
+  const { locale } = await params;
+  if (!i18nConfig.locales.includes(locale as Locale)) {
+    notFound();
+  }
 
-  return (
-    <main className="mx-auto w-full max-w-4xl space-y-5 px-4 py-8 sm:px-6 lg:px-8">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-semibold sm:text-3xl">Checkout</h1>
-        <p className="text-sm text-slate-600 dark:text-slate-300">
-          Complete your order in a few quick steps.
-        </p>
-      </header>
-      <CheckoutForm />
-    </main>
-  );
+  const dict = await getDictionary(locale as Locale);
+  const checkout = dict.checkout as unknown as CheckoutPageCopy;
+
+  return <CheckoutPageClient checkout={checkout} />;
 }

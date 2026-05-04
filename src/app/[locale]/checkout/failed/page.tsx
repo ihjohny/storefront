@@ -1,4 +1,8 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
+import { i18nConfig, type Locale } from "@/lib/i18n/config";
+import { fillOutcomeTemplate } from "@/lib/checkout/fill-outcome-template";
 
 type FailedPageProps = {
   params: Promise<{ locale: string }>;
@@ -9,34 +13,36 @@ function firstParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
 
-export default async function CheckoutFailedPage({
-  params,
-  searchParams,
-}: FailedPageProps) {
+export default async function CheckoutFailedPage({ params, searchParams }: FailedPageProps) {
   const { locale } = await params;
+  if (!i18nConfig.locales.includes(locale as Locale)) {
+    notFound();
+  }
+
+  const dict = await getDictionary(locale as Locale);
+  const o = dict.checkout.outcomes;
   const query = await searchParams;
-  const orderId = firstParam(query.order);
+  const orderRef =
+    firstParam(query.orderNumber)?.trim() || firstParam(query.order)?.trim() || "";
+  const refSuffix = orderRef ? fillOutcomeTemplate(o.refSuffixOrderNumber, { orderRef }) : "";
+  const body = orderRef ? fillOutcomeTemplate(o.failedWithRef, { refSuffix }) : o.failedGeneric;
 
   return (
-    <main className="mx-auto w-full max-w-3xl space-y-4 px-4 py-10 text-center sm:px-6 lg:px-8">
-      <h1 className="text-2xl font-semibold sm:text-3xl">Payment failed</h1>
-      <p className="text-sm text-slate-600 dark:text-slate-300">
-        {orderId
-          ? `We could not complete payment for order ${orderId}.`
-          : "We could not complete your payment."}
-      </p>
-      <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
+    <main className="mx-auto w-full max-w-3xl space-y-4 px-4 py-10 text-center sm:px-6 sm:text-left lg:px-8">
+      <h1 className="text-2xl font-semibold sm:text-3xl">{o.failedTitle}</h1>
+      <p className="text-sm text-muted-foreground">{body}</p>
+      <div className="flex flex-col gap-2 sm:flex-row sm:justify-start">
         <Link
           href={`/${locale}/checkout`}
-          className="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
+          className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
         >
-          Try Again
+          {o.tryCheckoutAgain}
         </Link>
         <Link
           href={`/${locale}/contact`}
-          className="inline-flex items-center justify-center rounded-md border border-slate-300 px-4 py-2 text-sm transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-900"
+          className="inline-flex items-center justify-center rounded-md border border-border px-4 py-2 text-sm transition hover:bg-muted"
         >
-          Contact Support
+          {o.contactSupport}
         </Link>
       </div>
     </main>

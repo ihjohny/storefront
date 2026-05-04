@@ -1,0 +1,145 @@
+"use client";
+
+import Link from "next/link";
+import { use } from "react";
+import { features } from "@/lib/config/features";
+import type { CartItem as CartItemType } from "@/lib/types/cart";
+import { useCart } from "@/lib/hooks/use-cart";
+import { CartItem } from "@/components/cart/cart-item";
+import { CartSummary } from "@/components/cart/cart-summary";
+import { CartVendorGroup } from "@/components/cart/cart-vendor-group";
+import { CartCheckoutUrgencyBanner } from "@/components/cart/cart-checkout-urgency";
+import { CartCustomerNote } from "@/components/cart/cart-customer-note";
+
+type CartLabels = {
+  title: string;
+  empty: string;
+  emptyHint: string;
+  headerHint: string;
+  checkout: string;
+  continueShopping: string;
+  sellerNoteLabel: string;
+  sellerNotePlaceholder: string;
+  sellerNoteHint: string;
+  sellerNoteSaving: string;
+  sellerNoteSaved: string;
+  urgencyTitle: string;
+  urgencySubtitle: string;
+  urgencyExpired: string;
+};
+
+type CartPageClientProps = {
+  params: Promise<{ locale: string }>;
+  labels: CartLabels;
+};
+
+function itemKey(item: CartItemType) {
+  return `${item.product.id}-${item.variant?.id ?? "no-variant"}`;
+}
+
+export function CartPageClient({ params, labels }: CartPageClientProps) {
+  const {
+    items,
+    subtotal,
+    discountTotal,
+    appliedCouponCode,
+    isLoading,
+    updateQuantity,
+    removeItem,
+    applyCouponCode,
+    removeCoupon,
+  } = useCart();
+  const { locale } = use(params);
+  const resolvedLocale = locale || "en";
+
+  const onIncrease = (item: CartItemType) =>
+    updateQuantity(item.product.id, item.variant?.id ?? null, item.quantity + 1);
+  const onDecrease = (item: CartItemType) =>
+    updateQuantity(item.product.id, item.variant?.id ?? null, Math.max(0, item.quantity - 1));
+  const onRemove = (item: CartItemType) =>
+    removeItem(item.product.id, item.variant?.id ?? null);
+
+  const urgencyMinutes = features.cartUrgencyCountdownMinutes;
+
+  if (items.length === 0) {
+    return (
+      <main className="mx-auto flex w-full max-w-4xl flex-col items-center justify-center gap-4 px-4 py-16 text-center sm:px-6 lg:px-8">
+        <h1 className="text-2xl font-semibold sm:text-3xl">{labels.empty}</h1>
+        <p className="text-sm text-muted-foreground sm:text-base">{labels.emptyHint}</p>
+        <Link
+          href={`/${resolvedLocale}/products`}
+          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
+        >
+          {labels.continueShopping}
+        </Link>
+      </main>
+    );
+  }
+
+  return (
+    <main className="mx-auto w-full max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+      <header className="space-y-1">
+        <h1 className="text-2xl font-semibold sm:text-3xl">{labels.title}</h1>
+        <p className="text-sm text-muted-foreground">{labels.headerHint}</p>
+      </header>
+
+      <CartCheckoutUrgencyBanner
+        enabled={urgencyMinutes > 0}
+        durationMinutes={urgencyMinutes}
+        title={labels.urgencyTitle}
+        subtitle={labels.urgencySubtitle}
+        expiredLabel={labels.urgencyExpired}
+      />
+
+      <section className="grid gap-6 lg:grid-cols-[1fr_340px]">
+        <div className="space-y-4">
+          {features.multivendor ? (
+            <CartVendorGroup
+              locale={resolvedLocale}
+              items={items}
+              isLoading={isLoading}
+              onIncrease={onIncrease}
+              onDecrease={onDecrease}
+              onRemove={onRemove}
+            />
+          ) : (
+            <div className="space-y-3">
+              {items.map((item) => (
+                <CartItem
+                  key={itemKey(item)}
+                  locale={resolvedLocale}
+                  item={item}
+                  isLoading={isLoading}
+                  onIncrease={() => onIncrease(item)}
+                  onDecrease={() => onDecrease(item)}
+                  onRemove={() => onRemove(item)}
+                />
+              ))}
+            </div>
+          )}
+          <CartCustomerNote
+            labels={{
+              label: labels.sellerNoteLabel,
+              placeholder: labels.sellerNotePlaceholder,
+              hint: labels.sellerNoteHint,
+              saving: labels.sellerNoteSaving,
+              saved: labels.sellerNoteSaved,
+            }}
+          />
+        </div>
+
+        <CartSummary
+          locale={resolvedLocale}
+          subtotal={subtotal}
+          discountTotal={discountTotal}
+          appliedCouponCode={appliedCouponCode}
+          applyCouponCode={applyCouponCode}
+          removeCoupon={removeCoupon}
+          isLoading={isLoading}
+          checkoutLabel={labels.checkout}
+          continueShoppingLabel={labels.continueShopping}
+        />
+      </section>
+    </main>
+  );
+}

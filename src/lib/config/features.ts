@@ -1,3 +1,5 @@
+import { parseAuthRequiredIdentifier } from "@/lib/auth/auth-required-identifier";
+
 function parseGeoLocationTierFilter(
   raw: string | undefined,
 ): "served_only" | "served_and_extended" | "all" {
@@ -43,6 +45,35 @@ export const features = {
     process.env.NEXT_PUBLIC_AUTO_SELECT_DEFAULT_SERVICE_AREA === "true",
   /** “Use my location” + reverse geocode for service area prefill (geocoder is configured per deploy). */
   geolocationPrefill: process.env.NEXT_PUBLIC_GEOLOCATION_PREFILL === "true",
+  /**
+   * When `true`, product cards on stock-filtered PLPs show a small “available here” hint (**Q6**).
+   * Off unless explicitly enabled (`NEXT_PUBLIC_PRODUCT_CARD_STOCK_BADGES_ON_CARDS=true`).
+   */
+  productCardStockBadgesOnCards:
+    process.env.NEXT_PUBLIC_PRODUCT_CARD_STOCK_BADGES_ON_CARDS === "true",
+  /**
+   * When > 0, cart page shows an optional countdown banner (minutes from first non-empty cart this session).
+   * Set via `NEXT_PUBLIC_CART_URGENCY_COUNTDOWN_MINUTES` (omit or 0 to disable).
+   */
+  cartUrgencyCountdownMinutes: (() => {
+    const raw = process.env.NEXT_PUBLIC_CART_URGENCY_COUNTDOWN_MINUTES;
+    if (raw === undefined || raw === "") return 0;
+    const n = Number(raw);
+    if (!Number.isFinite(n) || n <= 0) return 0;
+    return Math.min(Math.floor(n), 24 * 60);
+  })(),
+  /**
+   * When not `"false"`, checkout sends `simulatePayment: true` when the backend allows it (dev/admin).
+   * Set to `false` to request the hosted payment flow when the backend has SSL Commerz session enabled.
+   */
+  checkoutSimulatePayment: process.env.NEXT_PUBLIC_CHECKOUT_SIMULATE_PAYMENT !== "false",
+  /**
+   * Guest checkout + registration parity with backend AUTH_REQUIRED_IDENTIFIER.
+   * Set NEXT_PUBLIC_AUTH_REQUIRED_IDENTIFIER to email | phone | either (default either).
+   */
+  authRequiredIdentifier: parseAuthRequiredIdentifier(
+    process.env.NEXT_PUBLIC_AUTH_REQUIRED_IDENTIFIER,
+  ),
   i18n: {
     locales: (process.env.NEXT_PUBLIC_SUPPORTED_LOCALES || "en,bn")
       .split(",")

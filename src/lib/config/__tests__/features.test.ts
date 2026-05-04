@@ -31,4 +31,28 @@ describe("features config", () => {
     expect(mod.features.guestCheckout).toBe(true);
     expect(mod.features.socialLogin).toBe(true);
   });
+
+  it("should enable PLP stock badges only when NEXT_PUBLIC_PRODUCT_CARD_STOCK_BADGES_ON_CARDS is true", async () => {
+    process.env.NEXT_PUBLIC_PRODUCT_CARD_STOCK_BADGES_ON_CARDS = "true";
+    vi.resetModules();
+    const mod = await import("@/lib/config/features");
+    expect(mod.features.productCardStockBadgesOnCards).toBe(true);
+
+    process.env.NEXT_PUBLIC_PRODUCT_CARD_STOCK_BADGES_ON_CARDS = "false";
+    vi.resetModules();
+    const mod2 = await import("@/lib/config/features");
+    expect(mod2.features.productCardStockBadgesOnCards).toBe(false);
+  });
+
+  it("parses NEXT_PUBLIC_CART_URGENCY_COUNTDOWN_MINUTES when set", async () => {
+    process.env.NEXT_PUBLIC_CART_URGENCY_COUNTDOWN_MINUTES = "45";
+    vi.resetModules();
+    const mod = await import("@/lib/config/features");
+    expect(mod.features.cartUrgencyCountdownMinutes).toBe(45);
+
+    delete process.env.NEXT_PUBLIC_CART_URGENCY_COUNTDOWN_MINUTES;
+    vi.resetModules();
+    const mod2 = await import("@/lib/config/features");
+    expect(mod2.features.cartUrgencyCountdownMinutes).toBe(0);
+  });
 });

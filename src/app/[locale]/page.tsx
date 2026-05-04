@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { apiClient } from "@/lib/api/client";
@@ -14,10 +15,26 @@ import { i18nConfig, type Locale } from "@/lib/i18n/config";
 import { notFound } from "next/navigation";
 import { HomeHeroCarousel } from "@/components/home/home-hero-carousel";
 import { getHomeHeroSlides } from "@/lib/cms/home-hero";
+import { buildLocaleAlternates } from "@/lib/seo/locale-metadata";
 
 type LocalePageProps = {
   params: Promise<{ locale: string }>;
 };
+
+export async function generateMetadata({
+  params,
+}: LocalePageProps): Promise<Metadata> {
+  const { locale } = await params;
+  if (!i18nConfig.locales.includes(locale as Locale)) {
+    return {};
+  }
+  const dict = await getDictionary(locale as Locale);
+  return {
+    title: dict.catalog.seo.homeTitle,
+    description: dict.catalog.seo.homeDescription,
+    alternates: buildLocaleAlternates(locale as Locale, ""),
+  };
+}
 
 type Media = {
   url?: string;

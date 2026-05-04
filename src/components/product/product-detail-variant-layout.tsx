@@ -174,7 +174,7 @@ export function ProductDetailVariantLayout({
               </label>
             );
           })}
-          <AddToCartButton productId={product.id} variantId={selectedVariant?.id} quantity={1} />
+          <AddToCartButton productId={product.id} variantId={selectedVariant?.id} quantity={1} showQuantityStepper />
         </div>
         <ProductDetailNarrative product={product} sectionTitle={productDetailsTitle} />
       </div>

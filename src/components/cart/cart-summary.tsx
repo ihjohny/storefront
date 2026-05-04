@@ -13,6 +13,8 @@ type CartSummaryProps = {
   applyCouponCode: (code: string) => Promise<void>;
   removeCoupon: () => Promise<void>;
   isLoading: boolean;
+  checkoutLabel?: string;
+  continueShoppingLabel?: string;
 };
 
 export function CartSummary({
@@ -23,6 +25,8 @@ export function CartSummary({
   applyCouponCode,
   removeCoupon,
   isLoading,
+  checkoutLabel = "Proceed to checkout",
+  continueShoppingLabel = "Continue shopping",
 }: CartSummaryProps) {
   const [couponInput, setCouponInput] = useState("");
   const [couponError, setCouponError] = useState<string | null>(null);
@@ -136,13 +140,13 @@ export function CartSummary({
           href={`/${locale}/checkout`}
           className="inline-flex w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
         >
-          Proceed to checkout
+          {checkoutLabel}
         </Link>
         <Link
           href={`/${locale}/products`}
           className="inline-flex w-full items-center justify-center rounded-md border border-border bg-background px-4 py-2 text-sm transition hover:bg-muted"
         >
-          Continue shopping
+          {continueShoppingLabel}
         </Link>
       </div>
     </aside>

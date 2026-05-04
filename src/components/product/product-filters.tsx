@@ -3,9 +3,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { Category } from "@/lib/types/category";
+import { InStockLocationCatalogToggle } from "@/components/product/in-stock-location-catalog-toggle";
 
 type ProductFiltersProps = {
   categories: Category[];
+  /** Multi-store + geography + visitor has a bound stock location — shows PLP-only stock filter (Q6). */
+  inStockLocationToggleEnabled?: boolean;
+  inStockLocationLabel?: string;
+  inStockLocationHint?: string;
 };
 
 const SORT_OPTIONS = [
@@ -18,7 +23,12 @@ const SORT_OPTIONS = [
 const panelClass =
   "space-y-4 rounded-xl border border-border bg-card/95 p-4 shadow-sm backdrop-blur lg:space-y-4 lg:rounded-xl lg:border lg:border-border lg:bg-card/90 lg:p-4 lg:shadow-sm";
 
-export function ProductFilters({ categories }: ProductFiltersProps) {
+export function ProductFilters({
+  categories,
+  inStockLocationToggleEnabled = false,
+  inStockLocationLabel = "",
+  inStockLocationHint,
+}: ProductFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -31,6 +41,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
   const selectedCategory = searchParams.get("category");
   const selectedSort = searchParams.get("sort") ?? "-createdAt";
   const featuredOnly = searchParams.get("featured") === "1";
+  const fullCatalogListing = searchParams.get("inStockAtStore") === "0";
 
   useEffect(() => {
     setMinPrice(searchParams.get("minPrice") ?? "");
@@ -53,9 +64,10 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
     if (minPrice.trim()) count += 1;
     if (maxPrice.trim()) count += 1;
     if (featuredOnly) count += 1;
+    if (fullCatalogListing) count += 1;
     if (selectedSort !== "-createdAt") count += 1;
     return count;
-  }, [featuredOnly, maxPrice, minPrice, selectedCategory, selectedSort]);
+  }, [featuredOnly, fullCatalogListing, maxPrice, minPrice, selectedCategory, selectedSort]);
 
   function pushWithUpdates(updates: Record<string, string | null>) {
     const params = new URLSearchParams(searchParams.toString());
@@ -77,7 +89,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
 
   function clearFilters() {
     const params = new URLSearchParams(searchParams.toString());
-    ["category", "minPrice", "maxPrice", "featured", "sort"].forEach((key) => {
+    ["category", "minPrice", "maxPrice", "featured", "sort", "inStockAtStore"].forEach((key) => {
       params.delete(key);
     });
     params.delete("page");
@@ -199,6 +211,11 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
             />
             Featured only
           </label>
+          <InStockLocationCatalogToggle
+            enabled={inStockLocationToggleEnabled}
+            label={inStockLocationLabel}
+            hint={inStockLocationHint}
+          />
           <div className="flex gap-2">
             <button
               type="submit"

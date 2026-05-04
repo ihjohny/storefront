@@ -14,6 +14,7 @@ import {
   clearCartCoupon,
   createCart,
   getCart,
+  patchCartCustomerNote,
   removeCartDocument,
   updateCart,
 } from "@/lib/api/cart";
@@ -24,6 +25,8 @@ import { useStore } from "@/lib/hooks/use-store";
 import type { Cart, CartItem } from "@/lib/types/cart";
 
 export type CartContextType = {
+  cartId: string | null;
+  customerNote: string;
   items: CartItem[];
   itemCount: number;
   subtotal: number;
@@ -41,6 +44,7 @@ export type CartContextType = {
   refreshCart: () => Promise<void>;
   applyCouponCode: (code: string) => Promise<void>;
   removeCoupon: () => Promise<void>;
+  saveCustomerNote: (note: string) => Promise<void>;
 };
 
 type CartMutationItem = {
@@ -115,6 +119,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     typeof cart?.discountTotal === "number" ? Math.max(0, cart.discountTotal) : 0;
 
   const appliedCouponCode = cart?.couponCode?.trim() ? cart.couponCode.trim() : null;
+
+  const customerNote = typeof cart?.customerNote === "string" ? cart.customerNote : "";
 
   const activeUserId = user?.id ?? null;
   const activeGuestId = !activeUserId ? guestId ?? null : null;
@@ -327,8 +333,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [cart?.id, activeGuestId]);
 
+  const saveCustomerNote = useCallback(
+    async (note: string) => {
+      if (!cart?.id) {
+        return;
+      }
+      /* Notes PATCH must not toggle global isLoading — that disables cart inputs mid-typing. */
+      const updated = await patchCartCustomerNote(
+        cart.id,
+        note,
+        activeGuestId ?? undefined,
+      );
+      setCart(updated);
+    },
+    [cart?.id, activeGuestId],
+  );
+
   const value = useMemo<CartContextType>(
     () => ({
+      cartId: cart?.id ?? null,
+      customerNote,
       items,
       itemCount,
       subtotal,
@@ -342,12 +366,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       refreshCart,
       applyCouponCode,
       removeCoupon,
+      saveCustomerNote,
     }),
     [
       addItem,
       appliedCouponCode,
       applyCouponCode,
+      cart?.id,
       clearCart,
+      customerNote,
       discountTotal,
       isLoading,
       itemCount,
@@ -355,6 +382,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       refreshCart,
       removeCoupon,
       removeItem,
+      saveCustomerNote,
       subtotal,
       updateQuantity,
     ],
