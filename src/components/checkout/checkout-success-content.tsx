@@ -64,7 +64,8 @@ export function CheckoutSuccessContent({
 
     void fetch(`${storefrontApiBase()}/payments/sslcommerz/sync-paid?${qs}`, {
       method: "GET",
-      credentials: "include",
+      mode: "cors",
+      credentials: "omit",
     })
       .then((res) => {
         if (res.ok) {
