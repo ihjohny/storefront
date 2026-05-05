@@ -26,6 +26,9 @@ import {
 import { ShippingSelector } from "@/components/checkout/shipping-selector";
 import { OrderReview } from "@/components/checkout/order-review";
 import { PaymentForm } from "@/components/checkout/payment-form";
+import type { CheckoutPageCopy } from "@/lib/types/checkout-copy";
+import { assertGuestContactAllowed } from "@/lib/checkout/guest-contact-validation";
+import { shippingSelectionsAreAllCod } from "@/lib/shipping/shipping-display";
 
 const DEFAULT_VENDOR_KEY = "default";
 
@@ -59,7 +62,11 @@ function addressToSnapshot(address: Address): AddressSnapshot {
   };
 }
 
-export function CheckoutForm() {
+type CheckoutFormProps = {
+  copy: CheckoutPageCopy;
+};
+
+export function CheckoutForm({ copy }: CheckoutFormProps) {
   const router = useRouter();
   const params = useParams<{ locale: string }>();
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
@@ -181,9 +188,22 @@ export function CheckoutForm() {
     setAddressFormKey((k) => k + 1);
   }, [isLoadingData]);
 
+  const userProfileAddressDefaults = useMemo((): Partial<AddressFormValues> => {
+    if (!isAuthenticated || !user) return {};
+    return {
+      firstName: user.firstName ?? "",
+      lastName: user.lastName ?? "",
+      phone: user.phone ?? "",
+    };
+  }, [isAuthenticated, user]);
+
   const addressMergedDefaults = useMemo((): Partial<AddressFormValues> => {
-    return { ...geocodePrefill, ...(draftedAddress ?? {}) };
-  }, [geocodePrefill, draftedAddress]);
+    return {
+      ...userProfileAddressDefaults,
+      ...geocodePrefill,
+      ...(draftedAddress ?? {}),
+    };
+  }, [userProfileAddressDefaults, geocodePrefill, draftedAddress]);
 
   const selectedShippingMethodIds = useMemo(
     () =>
@@ -191,6 +211,19 @@ export function CheckoutForm() {
         .map((vendorKey) => selectedShippingByVendor[vendorKey])
         .filter((value): value is string => Boolean(value)),
     [selectedShippingByVendor, vendorKeys],
+  );
+
+  const guestBannerText = useMemo(() => {
+    if (isAuthenticated || !features.guestCheckout) return null;
+    const mode = features.authRequiredIdentifier;
+    if (mode === "email") return copy.guestContact.reviewBannerEmail;
+    if (mode === "phone") return copy.guestContact.reviewBannerPhone;
+    return copy.guestContact.reviewBannerEither;
+  }, [isAuthenticated, copy]);
+
+  const checkoutAllCod = useMemo(
+    () => shippingSelectionsAreAllCod(shippingMethods, selectedShippingMethodIds),
+    [shippingMethods, selectedShippingMethodIds],
   );
 
   async function handleAddressSubmit(values: AddressFormValues) {
@@ -203,7 +236,7 @@ export function CheckoutForm() {
 
   function continueWithSavedAddress() {
     if (!selectedAddressId) {
-      setErrorMessage("Please select an address.");
+      setErrorMessage(copy.selectAddressError);
       return;
     }
     setErrorMessage(null);
@@ -212,7 +245,7 @@ export function CheckoutForm() {
 
   function continueShippingStep() {
     if (selectedShippingMethodIds.length !== vendorKeys.length) {
-      setErrorMessage("Please select shipping methods for all groups.");
+      setErrorMessage(copy.shipping.selectAllGroupsError);
       return;
     }
     setErrorMessage(null);
@@ -221,7 +254,7 @@ export function CheckoutForm() {
 
   async function submitCheckout() {
     if (!cartId) {
-      setErrorMessage("Your cart is empty. Please add items before checkout.");
+      setErrorMessage(copy.emptyCart);
       return;
     }
 
@@ -247,9 +280,11 @@ export function CheckoutForm() {
         throw new Error("Please provide shipping and billing address.");
       }
 
-      if (!isAuthenticated && !guestEmail.trim()) {
-        throw new Error("Guest checkout requires a valid email.");
+      if (!isAuthenticated) {
+        assertGuestContactAllowed(features.authRequiredIdentifier, guestEmail, guestPhone);
       }
+
+      const codOnly = shippingSelectionsAreAllCod(shippingMethods, selectedShippingMethodIds);
 
       const response = await processCheckout(
         {
@@ -257,9 +292,11 @@ export function CheckoutForm() {
           shippingAddress,
           billingAddress,
           shippingMethodIds: selectedShippingMethodIds,
-          guestEmail: !isAuthenticated ? guestEmail.trim() : undefined,
+          guestEmail:
+            !isAuthenticated && guestEmail.trim() ? guestEmail.trim().toLowerCase() : undefined,
           guestPhone: !isAuthenticated && guestPhone.trim() ? guestPhone.trim() : undefined,
-          simulatePayment: true,
+          simulatePayment: codOnly ? false : features.checkoutSimulatePayment,
+          cashOnDelivery: codOnly,
         },
         !isAuthenticated ? guestId ?? undefined : undefined,
       );
@@ -295,7 +332,7 @@ export function CheckoutForm() {
   if (isLoadingData) {
     return (
       <section className="rounded-xl border border-border p-4 text-sm text-muted-foreground">
-        Loading checkout...
+        {copy.loading}
       </section>
     );
   }
@@ -303,7 +340,7 @@ export function CheckoutForm() {
   if (checkoutComplete) {
     return (
       <section className="rounded-xl border border-border p-6 text-center text-sm text-muted-foreground">
-        Taking you to your order confirmation…
+        {copy.redirecting}
       </section>
     );
   }
@@ -311,7 +348,7 @@ export function CheckoutForm() {
   if (items.length === 0 || !cartId) {
     return (
       <section className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-        Your cart is empty. Add products before checkout.
+        {copy.emptyCart}
       </section>
     );
   }
@@ -326,15 +363,15 @@ export function CheckoutForm() {
     <section className="space-y-5">
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <span className={step === "address" ? "font-semibold text-foreground" : ""}>
-          Address
+          {copy.stepAddress}
         </span>
         <span>•</span>
         <span className={step === "shipping" ? "font-semibold text-foreground" : ""}>
-          Shipping
+          {copy.stepShipping}
         </span>
         <span>•</span>
         <span className={step === "review" ? "font-semibold text-foreground" : ""}>
-          Review
+          {copy.stepReview}
         </span>
       </div>
 
@@ -347,7 +384,7 @@ export function CheckoutForm() {
       {step === "address" ? (
         showSavedAddressPicker ? (
           <section className="space-y-4 rounded-xl border border-border p-4">
-            <h3 className="text-lg font-semibold">Select Address</h3>
+            <h3 className="text-lg font-semibold">{copy.selectAddressTitle}</h3>
             <div className="space-y-2">
               {addresses.map((address) => (
                 <label
@@ -376,28 +413,34 @@ export function CheckoutForm() {
                 onClick={continueWithSavedAddress}
                 className="inline-flex w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
               >
-                Continue to Shipping
+                {copy.continueToShipping}
               </button>
               <button
                 type="button"
                 onClick={() => setUseSavedAddress(false)}
                 className="inline-flex w-full items-center justify-center rounded-md border border-border px-4 py-2 text-sm transition hover:bg-muted"
               >
-                Use New Address
+                {copy.useNewAddress}
               </button>
             </div>
           </section>
         ) : (
           <section className="space-y-3 rounded-xl border border-border p-4">
             <h3 className="text-lg font-semibold">
-              {isAuthenticated ? "Add Address" : "Guest Checkout Address"}
+              {isAuthenticated ? copy.addAddressTitle : copy.guestAddressTitle}
             </h3>
             <AddressForm
               key={`${addressFormKey}-${draftedAddress ? "draft" : "new"}`}
-              requireGuestEmail={!isAuthenticated && features.guestCheckout}
+              isGuestCheckout={!isAuthenticated && features.guestCheckout}
+              guestIdentifierMode={
+                !isAuthenticated && features.guestCheckout ? features.authRequiredIdentifier : undefined
+              }
+              guestContactCopy={copy.guestContact}
+              guestBannerText={guestBannerText ?? undefined}
               defaultValues={addressMergedDefaults}
               serviceAreaReadonly={serviceAreaReadonly}
               isSubmitting={isSubmitting}
+              submitLabel={copy.continueToShipping}
               onSubmit={handleAddressSubmit}
             />
           </section>
@@ -406,6 +449,7 @@ export function CheckoutForm() {
 
       {step === "shipping" ? (
         <ShippingSelector
+          copy={copy.shipping}
           vendorKeys={vendorKeys}
           methods={shippingMethods}
           selectedByVendor={selectedShippingByVendor}
@@ -427,6 +471,9 @@ export function CheckoutForm() {
             shippingMethods={shippingMethods}
           />
           <PaymentForm
+            paymentMode={checkoutAllCod ? "cod" : "online"}
+            simulatePayment={checkoutAllCod ? false : features.checkoutSimulatePayment}
+            labels={copy.paymentLabels}
             isSubmitting={isSubmitting}
             errorMessage={errorMessage}
             onBack={() => setStep("shipping")}

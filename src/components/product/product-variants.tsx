@@ -16,6 +16,7 @@ type ProductVariantsProps = {
   /** Product-level compare-at when there are no variants in the list (fallback) */
   productCompareAtPrice?: number | null;
   productSaleDisplayMode?: SaleDisplayMode | null;
+  showQuantityStepper?: boolean;
 };
 
 type VariantOptionMap = Record<string, string>;
@@ -34,6 +35,7 @@ export function ProductVariants({
   basePrice,
   productCompareAtPrice = null,
   productSaleDisplayMode,
+  showQuantityStepper = false,
 }: ProductVariantsProps) {
   const optionNames = useMemo(
     () =>
@@ -88,7 +90,7 @@ export function ProductVariants({
           />
           <SaleBadge presentation={salePresentation} currency={currency} size="prominent" />
         </div>
-        <AddToCartButton productId={productId} quantity={1} />
+        <AddToCartButton productId={productId} quantity={1} showQuantityStepper={showQuantityStepper} />
       </div>
     );
   }
@@ -133,7 +135,12 @@ export function ProductVariants({
           </label>
         );
       })}
-      <AddToCartButton productId={productId} variantId={selectedVariant?.id} quantity={1} />
+      <AddToCartButton
+        productId={productId}
+        variantId={selectedVariant?.id}
+        quantity={1}
+        showQuantityStepper={showQuantityStepper}
+      />
     </div>
   );
 }

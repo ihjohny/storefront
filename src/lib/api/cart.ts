@@ -117,3 +117,20 @@ export async function clearCartCoupon(cartId: string, guestId?: string): Promise
 
   return response.doc;
 }
+
+export async function patchCartCustomerNote(
+  cartId: string,
+  customerNote: string,
+  guestId?: string,
+): Promise<Cart> {
+  const trimmed = customerNote.trim().slice(0, 2000);
+  const response = await apiClient<CartDocumentResponse>(`/carts/${cartId}`, {
+    method: "PATCH",
+    body: JSON.stringify(
+      trimmed.length > 0 ? { customerNote: trimmed } : { customerNote: null },
+    ),
+    guestId,
+  });
+
+  return response.doc;
+}

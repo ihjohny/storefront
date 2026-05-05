@@ -7,13 +7,13 @@ import { test, expect } from "@playwright/test";
 test.describe("navigation happy path (offline-tolerant)", () => {
   test("checkout callback pages render", async ({ page }) => {
     await page.goto("/en/checkout/success");
-    await expect(page.getByRole("heading", { name: "Payment successful", level: 1 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Payment return received", level: 1 })).toBeVisible();
 
     await page.goto("/en/checkout/cancel");
     await expect(page.getByRole("heading", { name: "Payment cancelled", level: 1 })).toBeVisible();
 
     await page.goto("/en/checkout/failed");
-    await expect(page.getByRole("heading", { name: "Payment failed", level: 1 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Payment couldn't be completed", level: 1 })).toBeVisible();
   });
 
   test("verify-email page handles missing token", async ({ page }) => {

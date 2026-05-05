@@ -73,6 +73,8 @@ export interface Order {
   grandTotal: number;
   currency: string;
   paymentStatus: "unpaid" | "paid" | "partially-refunded" | "refunded";
+  /** Recorded at checkout (admin read-only after create). */
+  checkoutPaymentChannel?: "online" | "cash_on_delivery";
   notes: string | null;
   placedAt: string;
 }
@@ -85,6 +87,7 @@ export interface CheckoutRequest {
   guestEmail?: string;
   guestPhone?: string;
   simulatePayment?: boolean;
+  cashOnDelivery?: boolean;
 }
 
 export interface CheckoutOrderSummary {
@@ -104,6 +107,8 @@ export interface CheckoutOrderSummary {
   guestEmail?: string;
   guestPhone?: string;
   shippingAddress?: AddressSnapshot;
+  checkoutPaymentChannel?: "online" | "cash_on_delivery";
+  paymentStatus?: "unpaid" | "paid" | "partially-refunded" | "refunded";
 }
 
 export interface CheckoutResponse {

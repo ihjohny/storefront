@@ -5,20 +5,35 @@ import { ProductDetailNarrative } from "@/components/product/product-detail-narr
 import { ProductVariants } from "@/components/product/product-variants";
 import { AddToCartButton } from "@/components/product/add-to-cart-button";
 import { ProductReviews } from "@/components/product/product-reviews";
+import { ProductDeliveryOptions } from "@/components/product/product-delivery-options";
 import { SaleBadge } from "@/components/product/sale-badge";
 import { PriceDisplay } from "@/components/shared/price-display";
 import { getProductMedia } from "@/lib/utils/product-media";
 import { resolveSalePresentation } from "@/lib/utils/sale-presentation";
 import type { Product, ProductVariant } from "@/lib/types/product";
+import type { CheckoutShippingCopy } from "@/lib/types/checkout-copy";
 
 type ProductDetailProps = {
   product: Product;
   variants: ProductVariant[];
   locale: string;
   productDetailsTitle: string;
+  deliveryOptionsTitle: string;
+  deliveryOptionsLoading: string;
+  deliveryOptionsFootnote: string;
+  shippingMethodCopy: CheckoutShippingCopy;
 };
 
-export function ProductDetail({ product, variants, locale, productDetailsTitle }: ProductDetailProps) {
+export function ProductDetail({
+  product,
+  variants,
+  locale,
+  productDetailsTitle,
+  deliveryOptionsTitle,
+  deliveryOptionsLoading,
+  deliveryOptionsFootnote,
+  shippingMethodCopy,
+}: ProductDetailProps) {
   const galleryImages = getProductMedia(product.images);
   /** Product is configured for variants and we loaded at least one SKU */
   const showVariantPdp = Boolean(product.hasVariants && variants.length > 0);
@@ -62,6 +77,7 @@ export function ProductDetail({ product, variants, locale, productDetailsTitle }
                   basePrice={product.basePrice}
                   productCompareAtPrice={product.compareAtPrice}
                   productSaleDisplayMode={product.saleDisplayMode}
+                  showQuantityStepper
                 />
               ) : (
                 <div className="space-y-4 rounded-xl border border-border bg-card p-4 shadow-sm">
@@ -79,7 +95,7 @@ export function ProductDetail({ product, variants, locale, productDetailsTitle }
                       size="prominent"
                     />
                   </div>
-                  <AddToCartButton productId={product.id} quantity={1} />
+                  <AddToCartButton productId={product.id} quantity={1} showQuantityStepper />
                 </div>
               )}
 
@@ -88,6 +104,13 @@ export function ProductDetail({ product, variants, locale, productDetailsTitle }
           </>
         )}
       </div>
+
+      <ProductDeliveryOptions
+        title={deliveryOptionsTitle}
+        footnote={deliveryOptionsFootnote}
+        loadingLabel={deliveryOptionsLoading}
+        shippingCopy={shippingMethodCopy}
+      />
 
       <ProductReviews productId={product.id} locale={locale} />
     </section>

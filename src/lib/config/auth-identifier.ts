@@ -2,9 +2,9 @@
  * Mirrors backend AUTH_REQUIRED_IDENTIFIER (see BS-Commerce `lib/auth-config.ts`).
  * Set NEXT_PUBLIC_AUTH_REQUIRED_IDENTIFIER on the storefront to match the API env.
  */
-export type AuthRequiredIdentifier = "email" | "phone" | "either";
+import { LOOSE_EMAIL_FORMAT_RE } from "@/lib/validation/email-format";
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export type AuthRequiredIdentifier = "email" | "phone" | "either";
 
 export function getAuthRequiredIdentifier(): AuthRequiredIdentifier {
   const v = process.env.NEXT_PUBLIC_AUTH_REQUIRED_IDENTIFIER?.toLowerCase();
@@ -25,7 +25,7 @@ export function toForgotPasswordPayload(
     return { username: trimmed.toLowerCase() };
   }
   const lower = trimmed.toLowerCase();
-  if (EMAIL_REGEX.test(lower)) {
+  if (LOOSE_EMAIL_FORMAT_RE.test(lower)) {
     return { email: lower };
   }
   return { username: trimmed.toLowerCase() };
@@ -40,7 +40,7 @@ export function isValidForgotPasswordInput(
   }
   const mode = getAuthRequiredIdentifier();
   if (mode === "email") {
-    if (!EMAIL_REGEX.test(v.toLowerCase())) {
+    if (!LOOSE_EMAIL_FORMAT_RE.test(v.toLowerCase())) {
       return { ok: false, message: "Please enter a valid email address." };
     }
     return { ok: true };
@@ -51,7 +51,7 @@ export function isValidForgotPasswordInput(
     }
     return { ok: true };
   }
-  if (EMAIL_REGEX.test(v.toLowerCase())) {
+  if (LOOSE_EMAIL_FORMAT_RE.test(v.toLowerCase())) {
     return { ok: true };
   }
   if (v.length < 5) {

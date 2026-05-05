@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ApiError } from "@/lib/api/client";
 import { getProducts } from "@/lib/api/products";
@@ -5,11 +6,15 @@ import { getCategories } from "@/lib/api/categories";
 import { getSelectedStoreId } from "@/lib/utils/get-store-id";
 import { emptyProductListingResponse } from "@/lib/utils/empty-product-listing";
 import { i18nConfig, type Locale } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { ProductGrid } from "@/components/product/product-grid";
 import { ProductFilters } from "@/components/product/product-filters";
 import { Pagination } from "@/components/shared/pagination";
 import type { Category } from "@/lib/types/category";
 import type { ProductsResponse } from "@/lib/types/product";
+import { features } from "@/lib/config/features";
+import { resolveListingStoreId } from "@/lib/utils/listing-store-id";
+import { buildLocaleAlternates } from "@/lib/seo/locale-metadata";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +22,23 @@ type ProductsPageProps = {
   params: Promise<{ locale: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  if (!i18nConfig.locales.includes(locale as Locale)) {
+    return {};
+  }
+  const dict = await getDictionary(locale as Locale);
+  return {
+    title: dict.catalog.seo.productsTitle,
+    description: dict.catalog.seo.productsDescription,
+    alternates: buildLocaleAlternates(locale as Locale, "/products"),
+  };
+}
 
 function firstParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -40,7 +62,14 @@ export default async function ProductsPage({
   }
 
   const query = await searchParams;
-  const storeId = await getSelectedStoreId();
+  const cookieStoreId = await getSelectedStoreId();
+  const inStockAtStoreParam = firstParam(query.inStockAtStore);
+  const listingStoreId = resolveListingStoreId({
+    serviceAreaStoreSelection: features.serviceAreaStoreSelection,
+    selectedStockLocationId: cookieStoreId,
+    inStockAtStoreParam,
+  });
+
   const page = Math.max(1, toNumber(firstParam(query.page)) ?? 1);
   const filters = {
     locale,
@@ -51,7 +80,7 @@ export default async function ProductsPage({
     minPrice: toNumber(firstParam(query.minPrice)),
     maxPrice: toNumber(firstParam(query.maxPrice)),
     featured: firstParam(query.featured) === "1",
-    storeId,
+    storeId: listingStoreId,
   };
 
   let productsResponse: ProductsResponse = emptyProductListingResponse(page);
@@ -76,6 +105,7 @@ export default async function ProductsPage({
     }
   }
 
+  const dict = await getDictionary(locale as Locale);
   const paginationQuery = {
     category: filters.category,
     search: filters.search,
@@ -83,15 +113,22 @@ export default async function ProductsPage({
     minPrice: filters.minPrice ? String(filters.minPrice) : undefined,
     maxPrice: filters.maxPrice ? String(filters.maxPrice) : undefined,
     featured: filters.featured ? "1" : undefined,
+    inStockAtStore: inStockAtStoreParam === "0" ? "0" : undefined,
   };
+
+  const showStockToggle =
+    features.serviceAreaStoreSelection && Boolean(cookieStoreId);
+  const listingUsedStoreFilter = Boolean(listingStoreId);
+  const availabilityBadgeLabel =
+    features.productCardStockBadgesOnCards && listingUsedStoreFilter
+      ? dict.catalog.availableAtLocationBadge
+      : null;
 
   return (
     <main className="mx-auto w-full max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
       <header className="space-y-2">
-        <h1 className="text-2xl font-semibold sm:text-3xl">Products</h1>
-        <p className="text-sm text-muted-foreground">
-          Browse published products with category, sort, and price filters.
-        </p>
+        <h1 className="text-2xl font-semibold sm:text-3xl">{dict.catalog.productsTitle}</h1>
+        <p className="text-sm text-muted-foreground">{dict.catalog.productsDescription}</p>
       </header>
 
       {catalogError ? (
@@ -105,7 +142,12 @@ export default async function ProductsPage({
 
       <section className="grid gap-6 lg:grid-cols-[280px_1fr]">
         <div className="order-2 space-y-5 lg:order-2">
-          <ProductGrid products={productsResponse.docs} locale={locale} />
+          <ProductGrid
+            products={productsResponse.docs}
+            locale={locale}
+            emptyMessage={dict.catalog.noProductsFiltered}
+            availabilityBadgeLabel={availabilityBadgeLabel}
+          />
           <Pagination
             currentPage={productsResponse.page}
             totalPages={productsResponse.totalPages}
@@ -114,7 +156,12 @@ export default async function ProductsPage({
           />
         </div>
         <div className="order-1 lg:order-1 lg:sticky lg:top-24 lg:self-start">
-          <ProductFilters categories={categories} />
+          <ProductFilters
+            categories={categories}
+            inStockLocationToggleEnabled={showStockToggle}
+            inStockLocationLabel={dict.catalog.inStockAtLocationLabel}
+            inStockLocationHint={dict.catalog.inStockAtLocationHint}
+          />
         </div>
       </section>
     </main>

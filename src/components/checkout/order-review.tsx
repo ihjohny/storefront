@@ -1,7 +1,9 @@
 "use client";
 
+import { useMemo } from "react";
 import type { CartItem } from "@/lib/types/cart";
 import type { ShippingMethod } from "@/lib/api/shipping";
+import { features } from "@/lib/config/features";
 import { formatPrice } from "@/lib/utils/format-price";
 
 type OrderReviewProps = {
@@ -12,6 +14,18 @@ type OrderReviewProps = {
   shippingMethods: ShippingMethod[];
 };
 
+function resolveCheckoutCurrency(
+  selectedMethodIds: string[],
+  shippingMethods: ShippingMethod[],
+): string {
+  for (const id of selectedMethodIds) {
+    const m = shippingMethods.find((entry) => entry.id === id);
+    const c = m?.currency?.trim();
+    if (c) return c.toUpperCase();
+  }
+  return features.currency.default;
+}
+
 export function OrderReview({
   items,
   subtotal,
@@ -19,6 +33,11 @@ export function OrderReview({
   selectedMethodIds,
   shippingMethods,
 }: OrderReviewProps) {
+  const currency = useMemo(
+    () => resolveCheckoutCurrency(selectedMethodIds, shippingMethods),
+    [selectedMethodIds, shippingMethods],
+  );
+
   const shippingTotal = selectedMethodIds.reduce((total, id) => {
     const method = shippingMethods.find((entry) => entry.id === id);
     return total + (method?.rate ?? 0);
@@ -44,7 +63,7 @@ export function OrderReview({
                 {item.variant ? ` - ${item.variant.name}` : ""}
               </p>
             </div>
-            <p className="font-medium">{formatPrice(item.quantity * item.unitPrice)}</p>
+            <p className="font-medium">{formatPrice(item.quantity * item.unitPrice, currency)}</p>
           </div>
         ))}
       </div>
@@ -52,21 +71,21 @@ export function OrderReview({
       <div className="space-y-1 border-t border-border pt-3 text-sm">
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Subtotal</span>
-          <span>{formatPrice(subtotal)}</span>
+          <span>{formatPrice(subtotal, currency)}</span>
         </div>
         {discountTotal > 0 ? (
           <div className="flex items-center justify-between text-primary">
             <span>Discount</span>
-            <span>−{formatPrice(discountTotal)}</span>
+            <span>−{formatPrice(discountTotal, currency)}</span>
           </div>
         ) : null}
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Shipping</span>
-          <span>{formatPrice(shippingTotal)}</span>
+          <span>{formatPrice(shippingTotal, currency)}</span>
         </div>
         <div className="flex items-center justify-between text-base font-semibold">
           <span>Total</span>
-          <span>{formatPrice(grandTotal)}</span>
+          <span>{formatPrice(grandTotal, currency)}</span>
         </div>
       </div>
     </section>

@@ -4,6 +4,9 @@ import { useEffect, useRef } from "react";
 import { useForm, useFormState } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import type { AuthRequiredIdentifierMode } from "@/lib/auth/auth-required-identifier";
+import { LOOSE_EMAIL_FORMAT_RE } from "@/lib/validation/email-format";
+import type { CheckoutGuestContactCopy } from "@/lib/types/checkout-copy";
 
 const emailOrEmpty = z.union([
   z.literal(""),
@@ -21,26 +24,23 @@ const addressSchema = z.object({
   postalCode: z.string().min(1, "Postal code is required"),
   country: z.string().min(2, "Country is required").max(2, "Use ISO country code"),
   phone: z.string().optional(),
-  /** Empty string is common from inputs; treat as “no email” for schema checks */
   guestEmail: emailOrEmpty,
 });
 
 export type AddressFormValues = z.infer<typeof addressSchema>;
 
-/**
- * Locks checkout fields to match the header service-area selection only at the levels the shopper chose:
- * - Country + region (subdivision) always locked when geography checkout is active.
- * - City locked only if they picked a specific locality; otherwise they enter street-level / local area detail.
- */
 export type ServiceAreaReadonlyFields = {
   countryIso: string;
   region: string;
-  /** When set, user chose a locality in the header — city matches it. When null, only region is fixed. */
   localityName: string | null;
 };
 
 type AddressFormProps = {
-  requireGuestEmail?: boolean;
+  isGuestCheckout?: boolean;
+  guestIdentifierMode?: AuthRequiredIdentifierMode;
+  guestContactCopy?: CheckoutGuestContactCopy;
+  /** Policy reminder shown above guest fields (from dictionary). */
+  guestBannerText?: string | null;
   defaultValues?: Partial<AddressFormValues>;
   serviceAreaReadonly?: ServiceAreaReadonlyFields;
   isSubmitting?: boolean;
@@ -49,7 +49,10 @@ type AddressFormProps = {
 };
 
 export function AddressForm({
-  requireGuestEmail = false,
+  isGuestCheckout = false,
+  guestIdentifierMode,
+  guestContactCopy,
+  guestBannerText,
   defaultValues,
   serviceAreaReadonly,
   isSubmitting = false,
@@ -120,27 +123,86 @@ export function AddressForm({
   ]);
 
   async function handleSubmit(values: AddressFormValues) {
-    if (requireGuestEmail && !values.guestEmail?.trim()) {
-      form.setError("guestEmail", { message: "Guest email is required" });
-      return;
+    if (isGuestCheckout && guestIdentifierMode && guestContactCopy) {
+      const ge = values.guestEmail?.trim() ?? "";
+      const gp = values.phone?.trim() ?? "";
+      const emailOk = ge.length > 0 && LOOSE_EMAIL_FORMAT_RE.test(ge);
+      const phoneOk = gp.length >= 5;
+
+      if (guestIdentifierMode === "email") {
+        if (!emailOk) {
+          form.setError("guestEmail", { message: "Enter a valid email." });
+          return;
+        }
+      } else if (guestIdentifierMode === "phone") {
+        if (!phoneOk) {
+          form.setError("phone", {
+            message: "Enter phone (at least 5 characters).",
+          });
+          return;
+        }
+      } else {
+        if (!emailOk && !phoneOk) {
+          form.setError("guestEmail", {
+            message: "Enter an email or use phone below (at least 5 characters).",
+          });
+          form.setError("phone", {
+            message: "Enter phone (5+ characters) or provide email above.",
+          });
+          return;
+        }
+        if (ge.length > 0 && !emailOk) {
+          form.setError("guestEmail", { message: "Enter a valid email." });
+          return;
+        }
+        if (gp.length > 0 && gp.length < 5) {
+          form.setError("phone", {
+            message: "Phone must be at least 5 characters.",
+          });
+          return;
+        }
+      }
     }
 
     await onSubmit(values);
   }
 
   const hasErrors = Object.keys(errors).length > 0;
+  const showGuestEmail = isGuestCheckout && guestIdentifierMode !== "phone";
+
+  const phoneHint =
+    isGuestCheckout && guestContactCopy && guestIdentifierMode
+      ? guestIdentifierMode === "phone"
+        ? guestContactCopy.fieldHintPhoneRequired
+        : guestIdentifierMode === "either"
+          ? guestContactCopy.fieldHintPhoneEither
+          : undefined
+      : undefined;
+
+  const emailHint =
+    isGuestCheckout && guestContactCopy && guestIdentifierMode && showGuestEmail
+      ? guestIdentifierMode === "email"
+        ? guestContactCopy.fieldHintEmailRequired
+        : guestContactCopy.fieldHintEmailEither
+      : undefined;
 
   return (
     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+      {guestBannerText ? (
+        <p className="rounded-md border border-border bg-muted/80 px-3 py-2 text-xs text-muted-foreground">
+          {guestBannerText}
+        </p>
+      ) : null}
+
       {isSubmitted && hasErrors ? (
         <p
           role="alert"
           className="rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground"
         >
-          Please review the highlighted fields. Street address is required; guest checkout also
-          requires a valid email.
+          Please review the highlighted fields.
         </p>
       ) : null}
+
       {regionLocked ? (
         <p className="rounded-md border border-border bg-muted/80 px-3 py-2 text-xs text-muted-foreground">
           {cityLocked
@@ -149,18 +211,28 @@ export function AddressForm({
         </p>
       ) : null}
 
-      {requireGuestEmail ? (
-        <label className="block space-y-1">
-          <span className="text-sm font-medium">Email</span>
-          <input
-            {...form.register("guestEmail")}
-            type="email"
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
-          />
-          {errors.guestEmail ? (
-            <span className="text-xs text-destructive">{errors.guestEmail.message}</span>
-          ) : null}
-        </label>
+      {showGuestEmail ? (
+        <div className="space-y-1">
+          <label className="block space-y-1">
+            <span className="text-sm font-medium">
+              Email
+              {guestIdentifierMode === "email" ? (
+                <span className="text-destructive"> *</span>
+              ) : null}
+            </span>
+            <input
+              {...form.register("guestEmail")}
+              type="email"
+              autoComplete="email"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+            />
+            {errors.guestEmail ? (
+              <span className="text-xs text-destructive">{errors.guestEmail.message}</span>
+            ) : emailHint ? (
+              <span className="text-xs text-muted-foreground">{emailHint}</span>
+            ) : null}
+          </label>
+        </div>
       ) : null}
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -174,11 +246,27 @@ export function AddressForm({
         </label>
 
         <label className="block space-y-1">
-          <span className="text-sm font-medium">Phone</span>
+          <span className="text-sm font-medium">
+            Phone
+            {isGuestCheckout &&
+            guestIdentifierMode &&
+            (guestIdentifierMode === "phone" || guestIdentifierMode === "either") ? (
+              guestIdentifierMode === "phone" ? (
+                <span className="text-destructive"> *</span>
+              ) : null
+            ) : null}
+          </span>
           <input
             {...form.register("phone")}
+            type="tel"
+            autoComplete="tel"
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
           />
+          {errors.phone ? (
+            <span className="text-xs text-destructive">{errors.phone.message}</span>
+          ) : phoneHint ? (
+            <span className="text-xs text-muted-foreground">{phoneHint}</span>
+          ) : null}
         </label>
       </div>
 

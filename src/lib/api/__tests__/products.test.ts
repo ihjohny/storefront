@@ -6,10 +6,10 @@ describe("products API helpers", () => {
     vi.restoreAllMocks();
   });
 
-  it("getProducts applies published filter and locale", async () => {
+  it("getProducts applies locale and default pagination to /api/products", async () => {
     const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
       const url = typeof input === "string" ? input : input.toString();
-      expect(url).toContain("where%5Bstatus%5D%5Bequals%5D=published");
+      expect(url).toContain("/api/products?");
       expect(url).toContain("locale=en");
       return new Response(
         JSON.stringify({

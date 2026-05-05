@@ -27,6 +27,8 @@ export interface Cart {
   couponCode: string | null;
   discountTotal?: number | null;
   grandTotal?: number | null;
+  /** Optional seller / fulfillment note (copied to order at checkout). */
+  customerNote?: string | null;
   store: string | { id: string; name: string } | null;
   expiresAt: string | null;
 }
