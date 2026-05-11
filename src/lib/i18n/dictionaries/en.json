@@ -40,9 +40,17 @@
     "writeReview": "Write a Review",
     "relatedProducts": "Related Products",
     "productDetails": "Product details",
+    "descriptionSeeLess": "See less",
     "deliveryOptions": "Delivery options",
     "deliveryOptionsLoading": "Loading delivery options…",
-    "deliveryOptionsFootnote": "Rates shown here use configured shipping methods; totals are finalized at checkout."
+    "deliveryOptionsFootnote": "Rates shown here use configured shipping methods; totals are finalized at checkout.",
+    "gallery": {
+      "dialogTitle": "Product images",
+      "openPreview": "Open larger preview",
+      "closePreview": "Close",
+      "previousImage": "Previous image",
+      "nextImage": "Next image"
+    }
   },
   "cart": {
     "title": "Shopping Cart",

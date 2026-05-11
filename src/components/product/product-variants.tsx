@@ -7,6 +7,11 @@ import { resolveSalePresentation } from "@/lib/utils/sale-presentation";
 import { PriceDisplay } from "@/components/shared/price-display";
 import { SaleBadge } from "@/components/product/sale-badge";
 import { AddToCartButton } from "@/components/product/add-to-cart-button";
+import {
+  resolveVariantOptionMapAfterChange,
+  variantToOptionMap,
+  type VariantOptionMap,
+} from "@/lib/utils/variant-selection";
 
 type ProductVariantsProps = {
   productId: string;
@@ -18,15 +23,6 @@ type ProductVariantsProps = {
   productSaleDisplayMode?: SaleDisplayMode | null;
   showQuantityStepper?: boolean;
 };
-
-type VariantOptionMap = Record<string, string>;
-
-function toOptionMap(variant: ProductVariant): VariantOptionMap {
-  return variant.options.reduce<VariantOptionMap>((acc, option) => {
-    acc[option.name] = option.value;
-    return acc;
-  }, {});
-}
 
 export function ProductVariants({
   productId,
@@ -48,7 +44,7 @@ export function ProductVariants({
     if (!first) {
       return {};
     }
-    return toOptionMap(first);
+    return variantToOptionMap(first);
   }, [variants]);
 
   const [selectedOptions, setSelectedOptions] =
@@ -57,7 +53,7 @@ export function ProductVariants({
   const selectedVariant = useMemo(
     () =>
       variants.find((variant) =>
-        optionNames.every((name) => toOptionMap(variant)[name] === selectedOptions[name]),
+        optionNames.every((name) => variantToOptionMap(variant)[name] === selectedOptions[name]),
       ) ?? variants[0],
     [optionNames, selectedOptions, variants],
   );
@@ -112,7 +108,7 @@ export function ProductVariants({
         const values = Array.from(
           new Set(
             variants
-              .map((variant) => toOptionMap(variant)[name])
+              .map((variant) => variantToOptionMap(variant)[name])
               .filter((value): value is string => Boolean(value)),
           ),
         );
@@ -122,7 +118,15 @@ export function ProductVariants({
             <select
               value={selectedOptions[name] ?? values[0] ?? ""}
               onChange={(event) =>
-                setSelectedOptions((prev) => ({ ...prev, [name]: event.target.value }))
+                setSelectedOptions(
+                  resolveVariantOptionMapAfterChange({
+                    variants,
+                    optionNames,
+                    selectedOptions,
+                    changedName: name,
+                    changedValue: event.target.value,
+                  }),
+                )
               }
               className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-card-foreground shadow-sm outline-none transition focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring"
             >

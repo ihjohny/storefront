@@ -103,6 +103,7 @@ export async function getProductVariants(productId: string): Promise<ProductVari
   params.set("where[product][equals]", productId);
   params.set("where[isActive][equals]", "true");
   params.set("limit", "100");
+  params.set("depth", "2");
 
   const response = await apiClient<PaginatedResponse<ProductVariant>>(
     `/product-variants?${params.toString()}`,

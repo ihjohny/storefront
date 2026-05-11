@@ -40,9 +40,17 @@
     "writeReview": "রিভিউ লিখুন",
     "relatedProducts": "সম্পর্কিত পণ্য",
     "productDetails": "পণ্যের বিবরণ",
+    "descriptionSeeLess": "কম দেখুন",
     "deliveryOptions": "ডেলিভারি অপশন",
     "deliveryOptionsLoading": "ডেলিভারি অপশন লোড হচ্ছে…",
-    "deliveryOptionsFootnote": "এখানকার হার কনফিগার করা শিপিং মেথডের উপর ভিত্তি করে; চেকআউটে চূড়ান্ত হয়।"
+    "deliveryOptionsFootnote": "এখানকার হার কনফিগার করা শিপিং মেথডের উপর ভিত্তি করে; চেকআউটে চূড়ান্ত হয়।",
+    "gallery": {
+      "dialogTitle": "পণ্যের ছবি",
+      "openPreview": "বড় প্রিভিউ খুলুন",
+      "closePreview": "বন্ধ করুন",
+      "previousImage": "পূর্ববর্তী ছবি",
+      "nextImage": "পরবর্তী ছবি"
+    }
   },
   "cart": {
     "title": "শপিং কার্ট",

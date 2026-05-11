@@ -1,4 +1,7 @@
-import { ProductGallery } from "@/components/product/product-gallery";
+import {
+  ProductGallery,
+  type ProductGalleryLabels,
+} from "@/components/product/product-gallery";
 import { ProductDetailVariantLayout } from "@/components/product/product-detail-variant-layout";
 import { ProductDetailHeading } from "@/components/product/product-detail-heading";
 import { ProductDetailNarrative } from "@/components/product/product-detail-narrative";
@@ -8,6 +11,7 @@ import { ProductReviews } from "@/components/product/product-reviews";
 import { ProductDeliveryOptions } from "@/components/product/product-delivery-options";
 import { SaleBadge } from "@/components/product/sale-badge";
 import { PriceDisplay } from "@/components/shared/price-display";
+import { features } from "@/lib/config/features";
 import { getProductMedia } from "@/lib/utils/product-media";
 import { resolveSalePresentation } from "@/lib/utils/sale-presentation";
 import type { Product, ProductVariant } from "@/lib/types/product";
@@ -18,6 +22,8 @@ type ProductDetailProps = {
   variants: ProductVariant[];
   locale: string;
   productDetailsTitle: string;
+  productDetailsSeeLess: string;
+  productGalleryLabels: ProductGalleryLabels;
   deliveryOptionsTitle: string;
   deliveryOptionsLoading: string;
   deliveryOptionsFootnote: string;
@@ -29,6 +35,8 @@ export function ProductDetail({
   variants,
   locale,
   productDetailsTitle,
+  productDetailsSeeLess,
+  productGalleryLabels,
   deliveryOptionsTitle,
   deliveryOptionsLoading,
   deliveryOptionsFootnote,
@@ -54,18 +62,22 @@ export function ProductDetail({
     ) : undefined;
 
   return (
-    <section className="space-y-12">
-      <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-10">
+    <section className="space-y-10 lg:space-y-12">
+      <div className="grid gap-8 lg:grid-cols-2 lg:gap-10 lg:items-start">
         {showVariantPdp ? (
           <ProductDetailVariantLayout
             product={product}
             variants={variants}
-            galleryImages={galleryImages}
-            productDetailsTitle={productDetailsTitle}
+            galleryLabels={productGalleryLabels}
           />
         ) : (
           <>
-            <ProductGallery images={galleryImages} fallbackAlt={product.name} overlay={galleryOverlay} />
+            <ProductGallery
+              images={galleryImages}
+              fallbackAlt={product.name}
+              labels={productGalleryLabels}
+              overlay={galleryOverlay}
+            />
             <div className="flex min-h-0 flex-col gap-5">
               <ProductDetailHeading product={product} />
 
@@ -98,18 +110,26 @@ export function ProductDetail({
                   <AddToCartButton productId={product.id} quantity={1} showQuantityStepper />
                 </div>
               )}
-
-              <ProductDetailNarrative product={product} sectionTitle={productDetailsTitle} />
             </div>
           </>
         )}
       </div>
+
+      <ProductDetailNarrative
+        product={product}
+        sectionTitle={productDetailsTitle}
+        collapsible
+        defaultOpen={features.pdpDescriptionDefaultOpen}
+        seeLessLabel={productDetailsSeeLess}
+      />
 
       <ProductDeliveryOptions
         title={deliveryOptionsTitle}
         footnote={deliveryOptionsFootnote}
         loadingLabel={deliveryOptionsLoading}
         shippingCopy={shippingMethodCopy}
+        collapsible
+        defaultOpen
       />
 
       <ProductReviews productId={product.id} locale={locale} />

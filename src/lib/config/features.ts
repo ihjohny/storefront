@@ -10,6 +10,35 @@ function parseGeoLocationTierFilter(
   return "served_and_extended";
 }
 
+function parsePdpGalleryMobileArrows(raw: string | undefined): boolean {
+  const v = (raw ?? "").toLowerCase().trim();
+  if (v === "") return true;
+  if (
+    v === "false" ||
+    v === "0" ||
+    v === "no" ||
+    v === "off" ||
+    v === "hidden" ||
+    v === "hide"
+  ) {
+    return false;
+  }
+  return true;
+}
+
+function parsePdpDescriptionDefaultOpen(raw: string | undefined): boolean {
+  const v = (raw ?? "").toLowerCase().trim();
+  if (v === "") return false;
+  return (
+    v === "true" ||
+    v === "1" ||
+    v === "yes" ||
+    v === "on" ||
+    v === "open" ||
+    v === "expanded"
+  );
+}
+
 export const features = {
   multivendor: process.env.NEXT_PUBLIC_MULTIVENDOR_ENABLED === "true",
   guestCheckout: process.env.NEXT_PUBLIC_GUEST_CHECKOUT_ENABLED !== "false",
@@ -73,6 +102,22 @@ export const features = {
    */
   authRequiredIdentifier: parseAuthRequiredIdentifier(
     process.env.NEXT_PUBLIC_AUTH_REQUIRED_IDENTIFIER,
+  ),
+  /**
+   * PDP gallery: show outlined prev/next + counter on **mobile** (`md:hidden` strip).
+   * Set `NEXT_PUBLIC_PDP_GALLERY_MOBILE_ARROWS=false`, `hidden`, `hide`, or `0` to disable (swipe + thumbnails only).
+   * Default: **shown** when unset.
+   */
+  pdpGalleryMobileArrows: parsePdpGalleryMobileArrows(
+    process.env.NEXT_PUBLIC_PDP_GALLERY_MOBILE_ARROWS,
+  ),
+  /**
+   * PDP collapsible **product description**: expanded on first paint when truthy.
+   * Set `NEXT_PUBLIC_PDP_DESCRIPTION_DEFAULT_OPEN=true` | `open` | `1` | `expanded` | `yes`.
+   * Default: **collapsed** when unset.
+   */
+  pdpDescriptionDefaultOpen: parsePdpDescriptionDefaultOpen(
+    process.env.NEXT_PUBLIC_PDP_DESCRIPTION_DEFAULT_OPEN,
   ),
   i18n: {
     locales: (process.env.NEXT_PUBLIC_SUPPORTED_LOCALES || "en,bn")

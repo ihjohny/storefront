@@ -66,6 +66,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
         variants={variants}
         locale={locale}
         productDetailsTitle={dict.product.productDetails}
+        productDetailsSeeLess={dict.product.descriptionSeeLess}
+        productGalleryLabels={dict.product.gallery}
         deliveryOptionsTitle={dict.product.deliveryOptions}
         deliveryOptionsLoading={dict.product.deliveryOptionsLoading}
         deliveryOptionsFootnote={dict.product.deliveryOptionsFootnote}

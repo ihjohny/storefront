@@ -55,4 +55,38 @@ describe("features config", () => {
     const mod2 = await import("@/lib/config/features");
     expect(mod2.features.cartUrgencyCountdownMinutes).toBe(0);
   });
+
+  it("parses PDP gallery mobile arrows env", async () => {
+    delete process.env.NEXT_PUBLIC_PDP_GALLERY_MOBILE_ARROWS;
+    vi.resetModules();
+    let mod = await import("@/lib/config/features");
+    expect(mod.features.pdpGalleryMobileArrows).toBe(true);
+
+    process.env.NEXT_PUBLIC_PDP_GALLERY_MOBILE_ARROWS = "false";
+    vi.resetModules();
+    mod = await import("@/lib/config/features");
+    expect(mod.features.pdpGalleryMobileArrows).toBe(false);
+
+    process.env.NEXT_PUBLIC_PDP_GALLERY_MOBILE_ARROWS = "hidden";
+    vi.resetModules();
+    mod = await import("@/lib/config/features");
+    expect(mod.features.pdpGalleryMobileArrows).toBe(false);
+  });
+
+  it("parses PDP description default open env", async () => {
+    delete process.env.NEXT_PUBLIC_PDP_DESCRIPTION_DEFAULT_OPEN;
+    vi.resetModules();
+    let mod = await import("@/lib/config/features");
+    expect(mod.features.pdpDescriptionDefaultOpen).toBe(false);
+
+    process.env.NEXT_PUBLIC_PDP_DESCRIPTION_DEFAULT_OPEN = "open";
+    vi.resetModules();
+    mod = await import("@/lib/config/features");
+    expect(mod.features.pdpDescriptionDefaultOpen).toBe(true);
+
+    process.env.NEXT_PUBLIC_PDP_DESCRIPTION_DEFAULT_OPEN = "true";
+    vi.resetModules();
+    mod = await import("@/lib/config/features");
+    expect(mod.features.pdpDescriptionDefaultOpen).toBe(true);
+  });
 });
