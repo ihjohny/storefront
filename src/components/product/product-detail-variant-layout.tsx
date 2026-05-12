@@ -17,6 +17,8 @@ import {
   type VariantOptionMap,
 } from "@/lib/utils/variant-selection";
 import { useSyncProductVariantSearchParam } from "@/lib/hooks/use-sync-product-variant-search-param";
+import type { ProductCompareLabels } from "@/lib/i18n/compare-labels";
+import { ProductCompareButton } from "@/components/product/product-compare-button";
 
 type ProductDetailVariantLayoutProps = {
   product: Product;
@@ -28,6 +30,7 @@ type ProductDetailVariantLayoutProps = {
   availabilityCheckFailedLabel: string;
   /** When true (default), keep `?variant=` in sync for shareable URLs. Disable in Quick View. */
   syncVariantSearchParam?: boolean;
+  compareLabels?: ProductCompareLabels | null;
 };
 
 export function ProductDetailVariantLayout({
@@ -39,6 +42,7 @@ export function ProductDetailVariantLayout({
   checkingAvailabilityLabel,
   availabilityCheckFailedLabel,
   syncVariantSearchParam = true,
+  compareLabels = null,
 }: ProductDetailVariantLayoutProps) {
   const optionNames = useMemo(
     () =>
@@ -163,15 +167,26 @@ export function ProductDetailVariantLayout({
               </label>
             );
           })}
-          <WarehouseAwareAddToCartButton
-            productId={product.id}
-            variantId={selectedVariant?.id}
-            quantity={1}
-            showQuantityStepper
-            outOfStockLabel={outOfStockLabel}
-            checkingAvailabilityLabel={checkingAvailabilityLabel}
-            availabilityCheckFailedLabel={availabilityCheckFailedLabel}
-          />
+          <div className="flex flex-wrap items-end gap-2 pt-1">
+            <div className="min-w-0 flex-1 [&>*]:w-full">
+              <WarehouseAwareAddToCartButton
+                productId={product.id}
+                variantId={selectedVariant?.id}
+                quantity={1}
+                showQuantityStepper
+                outOfStockLabel={outOfStockLabel}
+                checkingAvailabilityLabel={checkingAvailabilityLabel}
+                availabilityCheckFailedLabel={availabilityCheckFailedLabel}
+              />
+            </div>
+            {compareLabels ? (
+              <ProductCompareButton
+                productId={product.id}
+                variantId={selectedVariant?.id ?? null}
+                labels={compareLabels}
+              />
+            ) : null}
+          </div>
         </div>
       </div>
     </>

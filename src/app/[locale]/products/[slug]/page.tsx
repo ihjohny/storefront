@@ -83,6 +83,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
         productOutOfStockLabel={dict.product.outOfStock}
         productCheckingAvailabilityLabel={dict.product.checkingAvailability}
         productAvailabilityCheckFailedLabel={dict.product.availabilityCheckFailed}
+        compareLabels={dict.catalog.compare}
       />
       <RelatedProductsSection
         locale={locale}
@@ -93,6 +94,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
         quickViewGalleryLabels={dict.product.gallery}
         quickViewProductDetailsTitle={dict.product.productDetails}
         quickViewProductDetailsSeeLess={dict.product.descriptionSeeLess}
+        compareLabels={dict.catalog.compare}
       />
     </main>
   );

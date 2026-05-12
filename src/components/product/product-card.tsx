@@ -14,6 +14,7 @@ import { AddToCartButton } from "@/components/product/add-to-cart-button";
 import type { QuickViewCopy } from "@/components/product/product-quick-view";
 import { ProductQuickView } from "@/components/product/product-quick-view";
 import type { ProductGalleryLabels } from "@/components/product/product-gallery";
+import type { ProductCompareLabels } from "@/lib/i18n/compare-labels";
 
 type ProductCardProps = {
   product: Product;
@@ -25,6 +26,7 @@ type ProductCardProps = {
   quickViewGalleryLabels?: ProductGalleryLabels | null;
   quickViewProductDetailsTitle?: string | null;
   quickViewProductDetailsSeeLess?: string | null;
+  compareLabels?: ProductCompareLabels | null;
 };
 
 function ListingQuickViewEyeIcon({ className }: { className?: string }) {
@@ -63,6 +65,7 @@ export function ProductCard({
   quickViewGalleryLabels = null,
   quickViewProductDetailsTitle = null,
   quickViewProductDetailsSeeLess = null,
+  compareLabels = null,
 }: ProductCardProps) {
   const [qvOpen, setQvOpen] = useState(false);
 
@@ -200,6 +203,7 @@ export function ProductCard({
           galleryLabels={quickViewGalleryLabels}
           productDetailsTitle={quickViewProductDetailsTitle}
           productDetailsSeeLess={quickViewProductDetailsSeeLess}
+          compareLabels={compareLabels}
         />
       ) : null}
     </div>

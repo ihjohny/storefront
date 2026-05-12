@@ -165,6 +165,11 @@ export const features = {
    */
   quickViewEnabled: parseQuickViewEnabled(process.env.NEXT_PUBLIC_QUICK_VIEW_ENABLED),
   /**
+   * Product comparison (`NEXT_PUBLIC_PRODUCT_COMPARE_ENABLED`) — listing + PDP + `/compare`.
+   * Default **on** when unset; set to `false` | `0` | `off` | `hidden` to disable.
+   */
+  productCompareEnabled: parseQuickViewEnabled(process.env.NEXT_PUBLIC_PRODUCT_COMPARE_ENABLED),
+  /**
    * Listing card image/title click when Quick View is enabled (`NEXT_PUBLIC_LISTING_PRODUCT_CARD_CLICK`).
    * - `pdp` (default) — navigate to the product page (eye icon still opens Quick View).
    * - `quickview` | `quick_view` | `modal` — open Quick View from the image/title tap area.

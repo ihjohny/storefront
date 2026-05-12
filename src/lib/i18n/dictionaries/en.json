@@ -199,6 +199,26 @@
       "checkingAvailability": "Checking availability…",
       "availabilityCheckFailed": "Couldn't verify stock availability. Try again."
     },
+    "compare": {
+      "add": "Compare",
+      "added": "In compare list",
+      "removeColumn": "Remove",
+      "maxReached": "You can compare up to four products. Remove one to add another.",
+      "trayTitle": "Compare list",
+      "trayAction": "Compare now",
+      "trayClear": "Clear",
+      "pageTitle": "Compare products",
+      "pageDescription": "Compare up to four published products side by side.",
+      "emptyState": "Add products from listings or product pages using Compare, then tap Compare now.",
+      "tableVariant": "Variant",
+      "tableSku": "SKU",
+      "tablePrice": "Price",
+      "tableCategories": "Categories",
+      "tableSummary": "Summary",
+      "tableVendor": "Seller",
+      "clearAll": "Clear list",
+      "loadError": "Could not load some products. Remove unavailable rows or try again."
+    },
     "seo": {
       "homeTitle": "Home",
       "homeDescription": "Discover products, categories, and offers.",

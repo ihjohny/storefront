@@ -107,6 +107,18 @@ describe("features config", () => {
     expect(mod.features.quickViewEnabled).toBe(false);
   });
 
+  it("parses Product Compare env (default on)", async () => {
+    delete process.env.NEXT_PUBLIC_PRODUCT_COMPARE_ENABLED;
+    vi.resetModules();
+    let mod = await import("@/lib/config/features");
+    expect(mod.features.productCompareEnabled).toBe(true);
+
+    process.env.NEXT_PUBLIC_PRODUCT_COMPARE_ENABLED = "false";
+    vi.resetModules();
+    mod = await import("@/lib/config/features");
+    expect(mod.features.productCompareEnabled).toBe(false);
+  });
+
   it("parses PDP description default open env", async () => {
     delete process.env.NEXT_PUBLIC_PDP_DESCRIPTION_DEFAULT_OPEN;
     vi.resetModules();

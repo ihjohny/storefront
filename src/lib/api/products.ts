@@ -81,6 +81,24 @@ async function getStoreProducts(
   );
 }
 
+export async function getProductById(id: string, locale: string): Promise<Product | null> {
+  const params = new URLSearchParams();
+  params.set("where[id][equals]", id);
+  params.set("locale", locale);
+  params.set("depth", "2");
+  params.set("limit", "1");
+
+  const response = await apiClient<ProductsResponse>(`/products?${params.toString()}`, {
+    ...(typeof window === "undefined" ? { next: { revalidate: 30 } } : {}),
+  } as RequestInit);
+
+  const doc = response.docs[0];
+  if (!doc || doc.status !== "published") {
+    return null;
+  }
+  return doc;
+}
+
 export async function getProductBySlug(
   slug: string,
   locale: string,

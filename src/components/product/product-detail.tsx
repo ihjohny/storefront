@@ -16,6 +16,8 @@ import { getProductMedia } from "@/lib/utils/product-media";
 import { resolveSalePresentation } from "@/lib/utils/sale-presentation";
 import type { Product, ProductVariant } from "@/lib/types/product";
 import type { CheckoutShippingCopy } from "@/lib/types/checkout-copy";
+import type { ProductCompareLabels } from "@/lib/i18n/compare-labels";
+import { ProductCompareButton } from "@/components/product/product-compare-button";
 
 type ProductDetailProps = {
   product: Product;
@@ -33,6 +35,7 @@ type ProductDetailProps = {
   productOutOfStockLabel: string;
   productCheckingAvailabilityLabel: string;
   productAvailabilityCheckFailedLabel: string;
+  compareLabels?: ProductCompareLabels | null;
 };
 
 export function ProductDetail({
@@ -50,6 +53,7 @@ export function ProductDetail({
   productOutOfStockLabel,
   productCheckingAvailabilityLabel,
   productAvailabilityCheckFailedLabel,
+  compareLabels = null,
 }: ProductDetailProps) {
   const galleryImages = getProductMedia(product.images);
   /** Product is configured for variants and we loaded at least one SKU */
@@ -82,6 +86,7 @@ export function ProductDetail({
             outOfStockLabel={productOutOfStockLabel}
             checkingAvailabilityLabel={productCheckingAvailabilityLabel}
             availabilityCheckFailedLabel={productAvailabilityCheckFailedLabel}
+            compareLabels={compareLabels}
           />
         ) : (
           <>
@@ -106,6 +111,7 @@ export function ProductDetail({
                   outOfStockLabel={productOutOfStockLabel}
                   checkingAvailabilityLabel={productCheckingAvailabilityLabel}
                   availabilityCheckFailedLabel={productAvailabilityCheckFailedLabel}
+                  compareLabels={compareLabels}
                 />
               ) : (
                 <>
@@ -125,14 +131,21 @@ export function ProductDetail({
                       size="prominent"
                     />
                   </div>
-                  <WarehouseAwareAddToCartButton
-                    productId={product.id}
-                    quantity={1}
-                    showQuantityStepper
-                    outOfStockLabel={productOutOfStockLabel}
-                    checkingAvailabilityLabel={productCheckingAvailabilityLabel}
-                    availabilityCheckFailedLabel={productAvailabilityCheckFailedLabel}
-                  />
+                  <div className="flex flex-wrap items-end gap-2 pt-1">
+                    <div className="min-w-0 flex-1 [&>*]:w-full">
+                      <WarehouseAwareAddToCartButton
+                        productId={product.id}
+                        quantity={1}
+                        showQuantityStepper
+                        outOfStockLabel={productOutOfStockLabel}
+                        checkingAvailabilityLabel={productCheckingAvailabilityLabel}
+                        availabilityCheckFailedLabel={productAvailabilityCheckFailedLabel}
+                      />
+                    </div>
+                    {compareLabels ? (
+                      <ProductCompareButton productId={product.id} labels={compareLabels} />
+                    ) : null}
+                  </div>
                 </div>
                 </>
               )}

@@ -199,6 +199,26 @@
       "checkingAvailability": "উপলব্ধতা যাচাই করা হচ্ছে…",
       "availabilityCheckFailed": "স্টক যাচাই করা যায়নি। আবার চেষ্টা করুন।"
     },
+    "compare": {
+      "add": "তুলনা করুন",
+      "added": "তালিকায় আছে",
+      "removeColumn": "সরান",
+      "maxReached": "সর্বোচ্চ চারটি পণ্য তুলনা করা যায়। যোগ করতে একটি সরান।",
+      "trayTitle": "তুলনার তালিকা",
+      "trayAction": "এখন তুলনা করুন",
+      "trayClear": "খালি করুন",
+      "pageTitle": "পণ্য তুলনা",
+      "pageDescription": "সর্বোচ্চ চারটি প্রকাশিত পণ্য পাশাপাশি দেখুন।",
+      "emptyState": "তালিকা বা পণ্যের পৃষ্ঠা থেকে তুলনায় যোগ করুন, তারপর এখন তুলনা করুন ট্যাপ করুন।",
+      "tableVariant": "ভেরিয়েন্ট",
+      "tableSku": "SKU",
+      "tablePrice": "মূল্য",
+      "tableCategories": "ক্যাটাগরি",
+      "tableSummary": "সারাংশ",
+      "tableVendor": "বিক্রেতা",
+      "clearAll": "তালিকা খালি",
+      "loadError": "কিছু পণ্য লোড করা যায়নি। সারি সরান অথবা আবার চেষ্টা করুন।"
+    },
     "seo": {
       "homeTitle": "হোম",
       "homeDescription": "পণ্য, ক্যাটাগরি ও অফার আবিষ্কার করুন।",

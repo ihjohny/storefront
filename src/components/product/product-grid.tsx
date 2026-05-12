@@ -2,6 +2,7 @@ import type { Product } from "@/lib/types/product";
 import { ProductCard } from "@/components/product/product-card";
 import type { QuickViewCopy } from "@/components/product/product-quick-view";
 import type { ProductGalleryLabels } from "@/components/product/product-gallery";
+import type { ProductCompareLabels } from "@/lib/i18n/compare-labels";
 
 type ProductGridProps = {
   products: Product[];
@@ -13,6 +14,7 @@ type ProductGridProps = {
   quickViewGalleryLabels?: ProductGalleryLabels | null;
   quickViewProductDetailsTitle?: string | null;
   quickViewProductDetailsSeeLess?: string | null;
+  compareLabels?: ProductCompareLabels | null;
 };
 
 export function ProductGrid({
@@ -24,6 +26,7 @@ export function ProductGrid({
   quickViewGalleryLabels = null,
   quickViewProductDetailsTitle = null,
   quickViewProductDetailsSeeLess = null,
+  compareLabels = null,
 }: ProductGridProps) {
   if (products.length === 0) {
     return (
@@ -45,6 +48,7 @@ export function ProductGrid({
           quickViewGalleryLabels={quickViewGalleryLabels}
           quickViewProductDetailsTitle={quickViewProductDetailsTitle}
           quickViewProductDetailsSeeLess={quickViewProductDetailsSeeLess}
+          compareLabels={compareLabels}
         />
       ))}
     </div>

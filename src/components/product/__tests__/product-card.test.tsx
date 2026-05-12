@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const featureFlags = vi.hoisted(() => ({
   multivendor: false,
   quickViewEnabled: false,
+  productCompareEnabled: false,
   listingProductCardClick: "pdp" as "pdp" | "quickview",
 }));
 
@@ -37,6 +38,7 @@ describe("ProductCard", () => {
   beforeEach(() => {
     featureFlags.multivendor = false;
     featureFlags.quickViewEnabled = false;
+    featureFlags.productCompareEnabled = false;
     featureFlags.listingProductCardClick = "pdp";
   });
 

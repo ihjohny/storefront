@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
-import { getProductBySlug, getProductVariants, getProducts } from "../products";
+import { getProductBySlug, getProductVariants, getProducts, getProductById } from "../products";
 
 describe("products API helpers", () => {
   afterEach(() => {
@@ -61,6 +61,47 @@ describe("products API helpers", () => {
     expect(found?.slug).toBe("mock-product");
     const missing = await getProductBySlug("nope", "en");
     expect(missing).toBeNull();
+  });
+
+  it("getProductById requests published product by id", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      const url = typeof input === "string" ? input : input.toString();
+      expect(url).toContain("where%5Bid%5D%5Bequals%5D=published-id");
+      expect(url).toContain("locale=en");
+      return new Response(
+        JSON.stringify({
+          docs: [
+            {
+              id: "published-id",
+              name: "P",
+              slug: "p",
+              status: "published",
+              basePrice: 1,
+              currency: "USD",
+              categories: [],
+              images: [],
+              hasVariants: false,
+              tenant: null,
+            },
+          ],
+          totalDocs: 1,
+          limit: 1,
+          totalPages: 1,
+          page: 1,
+          hasPrevPage: false,
+          hasNextPage: false,
+          prevPage: null,
+          nextPage: null,
+          pagingCounter: 1,
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
+    });
+
+    const { getProductById } = await import("../products");
+    const found = await getProductById("published-id", "en");
+    expect(found?.id).toBe("published-id");
+    expect(fetchMock).toHaveBeenCalled();
   });
 
   it("getProductVariants returns array via MSW", async () => {
