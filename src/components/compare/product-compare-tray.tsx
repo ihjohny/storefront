@@ -12,11 +12,11 @@ type ProductCompareTrayProps = {
 };
 
 export function ProductCompareTray({ locale, labels }: ProductCompareTrayProps) {
+  const { entries, hydrated, clearAll } = useProductCompare();
+
   if (!features.productCompareEnabled) {
     return null;
   }
-
-  const { entries, hydrated, clearAll } = useProductCompare();
 
   if (!hydrated || entries.length === 0) {
     return null;

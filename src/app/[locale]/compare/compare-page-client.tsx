@@ -359,7 +359,7 @@ export function ComparePageClient({
                     <th scope="row" className={COMPARE_LABEL_COLUMN_CLASS}>
                       {labels.tableVariant}
                     </th>
-                    {rows.map(({ line, product, variant }) => (
+                    {rows.map(({ line, variant }) => (
                       <td
                         key={`${line.productId}:${line.variantId ?? ""}-opt`}
                         className="border-l border-border px-3 text-center sm:text-left"

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
-import { getProductBySlug, getProductVariants, getProducts, getProductById } from "../products";
+import { getProductBySlug, getProductVariants, getProducts } from "../products";
 
 describe("products API helpers", () => {
   afterEach(() => {
