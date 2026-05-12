@@ -3,10 +3,16 @@
 import type { Product } from "@/lib/types/product";
 
 type ProductDetailHeadingProps = {
-  product: Product;
+  product: Pick<Product, "name" | "shortDescription" | "sku">;
+  /** When set (non-empty after trim), shown instead of `product.sku` for PDP variant picks. */
+  skuOverride?: string | null;
 };
 
-export function ProductDetailHeading({ product }: ProductDetailHeadingProps) {
+export function ProductDetailHeading({ product, skuOverride }: ProductDetailHeadingProps) {
+  const variantSku = skuOverride?.trim();
+  const productSku = product.sku?.trim();
+  const displaySku = variantSku || productSku;
+
   return (
     <div className="space-y-3">
       <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
@@ -17,9 +23,9 @@ export function ProductDetailHeading({ product }: ProductDetailHeadingProps) {
           {product.shortDescription}
         </p>
       ) : null}
-      {product.sku ? (
+      {displaySku ? (
         <p className="text-xs font-medium tabular-nums tracking-wide text-muted-foreground">
-          SKU · {product.sku}
+          SKU · {displaySku}
         </p>
       ) : null}
     </div>

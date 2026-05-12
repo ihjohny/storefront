@@ -1,13 +1,17 @@
-import { ProductGallery } from "@/components/product/product-gallery";
+import {
+  ProductGallery,
+  type ProductGalleryLabels,
+} from "@/components/product/product-gallery";
 import { ProductDetailVariantLayout } from "@/components/product/product-detail-variant-layout";
 import { ProductDetailHeading } from "@/components/product/product-detail-heading";
 import { ProductDetailNarrative } from "@/components/product/product-detail-narrative";
 import { ProductVariants } from "@/components/product/product-variants";
-import { AddToCartButton } from "@/components/product/add-to-cart-button";
+import { WarehouseAwareAddToCartButton } from "@/components/product/warehouse-aware-add-to-cart-button";
 import { ProductReviews } from "@/components/product/product-reviews";
 import { ProductDeliveryOptions } from "@/components/product/product-delivery-options";
 import { SaleBadge } from "@/components/product/sale-badge";
 import { PriceDisplay } from "@/components/shared/price-display";
+import { features } from "@/lib/config/features";
 import { getProductMedia } from "@/lib/utils/product-media";
 import { resolveSalePresentation } from "@/lib/utils/sale-presentation";
 import type { Product, ProductVariant } from "@/lib/types/product";
@@ -18,10 +22,17 @@ type ProductDetailProps = {
   variants: ProductVariant[];
   locale: string;
   productDetailsTitle: string;
+  productDetailsSeeLess: string;
+  productGalleryLabels: ProductGalleryLabels;
   deliveryOptionsTitle: string;
   deliveryOptionsLoading: string;
   deliveryOptionsFootnote: string;
   shippingMethodCopy: CheckoutShippingCopy;
+  /** From `?variant=` — selects matching SKU on load (e.g. cart → PDP). */
+  initialVariantId?: string;
+  productOutOfStockLabel: string;
+  productCheckingAvailabilityLabel: string;
+  productAvailabilityCheckFailedLabel: string;
 };
 
 export function ProductDetail({
@@ -29,10 +40,16 @@ export function ProductDetail({
   variants,
   locale,
   productDetailsTitle,
+  productDetailsSeeLess,
+  productGalleryLabels,
   deliveryOptionsTitle,
   deliveryOptionsLoading,
   deliveryOptionsFootnote,
   shippingMethodCopy,
+  initialVariantId,
+  productOutOfStockLabel,
+  productCheckingAvailabilityLabel,
+  productAvailabilityCheckFailedLabel,
 }: ProductDetailProps) {
   const galleryImages = getProductMedia(product.images);
   /** Product is configured for variants and we loaded at least one SKU */
@@ -54,23 +71,30 @@ export function ProductDetail({
     ) : undefined;
 
   return (
-    <section className="space-y-12">
-      <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-10">
+    <section className="space-y-10 lg:space-y-12">
+      <div className="grid gap-8 lg:grid-cols-2 lg:gap-10 lg:items-start">
         {showVariantPdp ? (
           <ProductDetailVariantLayout
             product={product}
             variants={variants}
-            galleryImages={galleryImages}
-            productDetailsTitle={productDetailsTitle}
+            galleryLabels={productGalleryLabels}
+            initialVariantId={initialVariantId}
+            outOfStockLabel={productOutOfStockLabel}
+            checkingAvailabilityLabel={productCheckingAvailabilityLabel}
+            availabilityCheckFailedLabel={productAvailabilityCheckFailedLabel}
           />
         ) : (
           <>
-            <ProductGallery images={galleryImages} fallbackAlt={product.name} overlay={galleryOverlay} />
+            <ProductGallery
+              images={galleryImages}
+              fallbackAlt={product.name}
+              labels={productGalleryLabels}
+              overlay={galleryOverlay}
+            />
             <div className="flex min-h-0 flex-col gap-5">
-              <ProductDetailHeading product={product} />
-
               {product.hasVariants ? (
                 <ProductVariants
+                  product={product}
                   productId={product.id}
                   variants={variants}
                   currency={product.currency}
@@ -78,8 +102,14 @@ export function ProductDetail({
                   productCompareAtPrice={product.compareAtPrice}
                   productSaleDisplayMode={product.saleDisplayMode}
                   showQuantityStepper
+                  initialVariantId={initialVariantId}
+                  outOfStockLabel={productOutOfStockLabel}
+                  checkingAvailabilityLabel={productCheckingAvailabilityLabel}
+                  availabilityCheckFailedLabel={productAvailabilityCheckFailedLabel}
                 />
               ) : (
+                <>
+                  <ProductDetailHeading product={product} />
                 <div className="space-y-4 rounded-xl border border-border bg-card p-4 shadow-sm">
                   <div className="flex flex-wrap items-center gap-3">
                     <PriceDisplay
@@ -95,21 +125,37 @@ export function ProductDetail({
                       size="prominent"
                     />
                   </div>
-                  <AddToCartButton productId={product.id} quantity={1} showQuantityStepper />
+                  <WarehouseAwareAddToCartButton
+                    productId={product.id}
+                    quantity={1}
+                    showQuantityStepper
+                    outOfStockLabel={productOutOfStockLabel}
+                    checkingAvailabilityLabel={productCheckingAvailabilityLabel}
+                    availabilityCheckFailedLabel={productAvailabilityCheckFailedLabel}
+                  />
                 </div>
+                </>
               )}
-
-              <ProductDetailNarrative product={product} sectionTitle={productDetailsTitle} />
             </div>
           </>
         )}
       </div>
+
+      <ProductDetailNarrative
+        product={product}
+        sectionTitle={productDetailsTitle}
+        collapsible
+        defaultOpen={features.pdpDescriptionDefaultOpen}
+        seeLessLabel={productDetailsSeeLess}
+      />
 
       <ProductDeliveryOptions
         title={deliveryOptionsTitle}
         footnote={deliveryOptionsFootnote}
         loadingLabel={deliveryOptionsLoading}
         shippingCopy={shippingMethodCopy}
+        collapsible
+        defaultOpen
       />
 
       <ProductReviews productId={product.id} locale={locale} />

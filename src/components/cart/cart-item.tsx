@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { CartItem as CartItemType } from "@/lib/types/cart";
 import { formatPrice } from "@/lib/utils/format-price";
+import { buildProductDetailHref } from "@/lib/utils/product-detail-href";
 import { getMediaUrl } from "@/lib/utils/url";
 
 type CartItemProps = {
@@ -57,7 +58,7 @@ export function CartItem({
       <div className="space-y-3">
         <div className="space-y-1">
           <Link
-            href={`/${locale}/products/${item.product.slug}`}
+            href={buildProductDetailHref(locale, item.product.slug, item.variant?.id)}
             className="line-clamp-2 text-sm font-semibold hover:underline sm:text-base"
           >
             {item.product.name}

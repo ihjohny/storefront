@@ -1,6 +1,17 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+/** Mutable mock — ProductCard reads `features` by reference. */
+const featureFlags = vi.hoisted(() => ({
+  multivendor: false,
+  quickViewEnabled: false,
+  listingProductCardClick: "pdp" as "pdp" | "quickview",
+}));
+
+vi.mock("@/lib/config/features", () => ({
+  features: featureFlags,
+}));
+
 vi.mock("next/image", () => ({
   default: () => null,
 }));
@@ -8,6 +19,8 @@ vi.mock("next/image", () => ({
 vi.mock("@/components/product/add-to-cart-button", () => ({
   AddToCartButton: () => <button type="button">Add</button>,
 }));
+
+import { ProductCard } from "@/components/product/product-card";
 
 const baseProduct = {
   id: "p1",
@@ -22,38 +35,27 @@ const baseProduct = {
 
 describe("ProductCard", () => {
   beforeEach(() => {
-    vi.resetModules();
+    featureFlags.multivendor = false;
+    featureFlags.quickViewEnabled = false;
+    featureFlags.listingProductCardClick = "pdp";
   });
 
-  it("renders product name and price", async () => {
-    vi.doMock("@/lib/config/features", () => ({
-      features: { multivendor: false },
-    }));
-    const { ProductCard } = await import("@/components/product/product-card");
-
+  it("renders product name and price", () => {
     render(<ProductCard product={baseProduct as never} locale="en" />);
 
     expect(screen.getByText("Test Product")).toBeInTheDocument();
     expect(screen.getByText(/\$10\.00/)).toBeInTheDocument();
   });
 
-  it("shows vendor badge when multivendor is enabled", async () => {
-    vi.doMock("@/lib/config/features", () => ({
-      features: { multivendor: true },
-    }));
-    const { ProductCard } = await import("@/components/product/product-card");
+  it("shows vendor badge when multivendor is enabled", () => {
+    featureFlags.multivendor = true;
 
     render(<ProductCard product={baseProduct as never} locale="en" />);
 
     expect(screen.getByRole("link", { name: /vendor one/i })).toBeInTheDocument();
   });
 
-  it("hides vendor badge when multivendor is disabled", async () => {
-    vi.doMock("@/lib/config/features", () => ({
-      features: { multivendor: false },
-    }));
-    const { ProductCard } = await import("@/components/product/product-card");
-
+  it("hides vendor badge when multivendor is disabled", () => {
     render(<ProductCard product={baseProduct as never} locale="en" />);
 
     expect(screen.queryByRole("link", { name: /vendor one/i })).not.toBeInTheDocument();

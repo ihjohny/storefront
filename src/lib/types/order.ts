@@ -20,6 +20,11 @@ export interface OrderItem {
   totalPrice: number;
   productImage: string | null;
   vendorNameSnapshot?: string | null;
+  /** Checkout snapshot; wins over live `product.slug` for PDP links from order history. */
+  productSlug?: string | null;
+  /** REST `depth≥2`: populated `{ slug }`; otherwise often an id string only. */
+  product?: string | { id?: string; slug?: string | null } | null;
+  variant?: string | { id?: string } | null;
 }
 
 export type OrderStatus =

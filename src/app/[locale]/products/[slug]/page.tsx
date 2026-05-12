@@ -9,14 +9,19 @@ import { ProductDetail } from "@/components/product/product-detail";
 import type { CheckoutShippingCopy } from "@/lib/types/checkout-copy";
 import { RelatedProductsSection } from "@/components/product/related-products-section";
 import { buildLocaleAlternates } from "@/lib/seo/locale-metadata";
+import { parseProductVariantSearchParam } from "@/lib/utils/product-detail-href";
 
-type ProductPageProps = {
+type ProductPageParams = {
   params: Promise<{ locale: string; slug: string }>;
+};
+
+type ProductPageProps = ProductPageParams & {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export async function generateMetadata({
   params,
-}: ProductPageProps): Promise<Metadata> {
+}: ProductPageParams): Promise<Metadata> {
   const { locale, slug } = await params;
   if (!i18nConfig.locales.includes(locale as Locale)) {
     return {};
@@ -45,8 +50,10 @@ export async function generateMetadata({
   };
 }
 
-export default async function ProductPage({ params }: ProductPageProps) {
+export default async function ProductPage({ params, searchParams }: ProductPageProps) {
   const { locale, slug } = await params;
+  const query = await searchParams;
+  const initialVariantId = parseProductVariantSearchParam(query);
   if (!i18nConfig.locales.includes(locale as Locale)) {
     notFound();
   }
@@ -64,18 +71,28 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <ProductDetail
         product={product}
         variants={variants}
+        initialVariantId={initialVariantId}
         locale={locale}
         productDetailsTitle={dict.product.productDetails}
+        productDetailsSeeLess={dict.product.descriptionSeeLess}
+        productGalleryLabels={dict.product.gallery}
         deliveryOptionsTitle={dict.product.deliveryOptions}
         deliveryOptionsLoading={dict.product.deliveryOptionsLoading}
         deliveryOptionsFootnote={dict.product.deliveryOptionsFootnote}
         shippingMethodCopy={dict.checkout.shipping as CheckoutShippingCopy}
+        productOutOfStockLabel={dict.product.outOfStock}
+        productCheckingAvailabilityLabel={dict.product.checkingAvailability}
+        productAvailabilityCheckFailedLabel={dict.product.availabilityCheckFailed}
       />
       <RelatedProductsSection
         locale={locale}
         currentProductId={product.id}
         product={product}
         title={dict.product.relatedProducts}
+        quickViewCopy={dict.catalog.quickView}
+        quickViewGalleryLabels={dict.product.gallery}
+        quickViewProductDetailsTitle={dict.product.productDetails}
+        quickViewProductDetailsSeeLess={dict.product.descriptionSeeLess}
       />
     </main>
   );

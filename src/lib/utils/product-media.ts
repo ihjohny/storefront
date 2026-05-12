@@ -42,3 +42,26 @@ export function getProductMedia(images: ProductImageLike[] | null | undefined): 
     .map((entry) => extractMedia(entry))
     .filter((entry): entry is Media => Boolean(entry?.url));
 }
+
+/**
+ * PDP gallery for configurable products: show variant-specific upload first when set,
+ * then remaining product images (deduped by `id`).
+ */
+export function getProductGalleryMedia(
+  images: ProductImageLike[] | null | undefined,
+  variantImage: Media | null | undefined,
+): Media[] {
+  const base = getProductMedia(images);
+  const v =
+    variantImage &&
+    typeof variantImage === "object" &&
+    typeof variantImage.url === "string" &&
+    variantImage.url.trim()
+      ? variantImage
+      : null;
+  if (!v) {
+    return base;
+  }
+  const rest = base.filter((m) => m.id !== v.id);
+  return [v, ...rest];
+}

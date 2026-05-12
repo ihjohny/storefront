@@ -1,37 +1,44 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import Image from "next/image";
-import { getMediaUrl } from "@/lib/utils/url";
-import type { Media, Product, ProductVariant } from "@/lib/types/product";
-import { AddToCartButton } from "@/components/product/add-to-cart-button";
+import { useEffect, useMemo, useState } from "react";
+import type { Product, ProductVariant } from "@/lib/types/product";
+import { WarehouseAwareAddToCartButton } from "@/components/product/warehouse-aware-add-to-cart-button";
 import { ProductDetailHeading } from "@/components/product/product-detail-heading";
-import { ProductDetailNarrative } from "@/components/product/product-detail-narrative";
+import type { ProductGalleryLabels } from "@/components/product/product-gallery";
+import { ProductGallery } from "@/components/product/product-gallery";
 import { SaleBadge } from "@/components/product/sale-badge";
 import { PriceDisplay } from "@/components/shared/price-display";
 import { resolveSalePresentation } from "@/lib/utils/sale-presentation";
+import { getProductGalleryMedia } from "@/lib/utils/product-media";
+import {
+  initialVariantOptionMap,
+  resolveVariantOptionMapAfterChange,
+  variantToOptionMap,
+  type VariantOptionMap,
+} from "@/lib/utils/variant-selection";
+import { useSyncProductVariantSearchParam } from "@/lib/hooks/use-sync-product-variant-search-param";
 
 type ProductDetailVariantLayoutProps = {
   product: Product;
   variants: ProductVariant[];
-  galleryImages: Media[];
-  productDetailsTitle: string;
+  galleryLabels: ProductGalleryLabels;
+  initialVariantId?: string;
+  outOfStockLabel: string;
+  checkingAvailabilityLabel: string;
+  availabilityCheckFailedLabel: string;
+  /** When true (default), keep `?variant=` in sync for shareable URLs. Disable in Quick View. */
+  syncVariantSearchParam?: boolean;
 };
-
-type VariantOptionMap = Record<string, string>;
-
-function toOptionMap(variant: ProductVariant): VariantOptionMap {
-  return variant.options.reduce<VariantOptionMap>((acc, option) => {
-    acc[option.name] = option.value;
-    return acc;
-  }, {});
-}
 
 export function ProductDetailVariantLayout({
   product,
   variants,
-  galleryImages,
-  productDetailsTitle,
+  galleryLabels,
+  initialVariantId,
+  outOfStockLabel,
+  checkingAvailabilityLabel,
+  availabilityCheckFailedLabel,
+  syncVariantSearchParam = true,
 }: ProductDetailVariantLayoutProps) {
   const optionNames = useMemo(
     () =>
@@ -39,21 +46,29 @@ export function ProductDetailVariantLayout({
     [variants],
   );
 
-  const initialSelection = useMemo(() => {
-    const first = variants[0];
-    if (!first) return {};
-    return toOptionMap(first);
-  }, [variants]);
+  const initialSelection = useMemo(
+    () => initialVariantOptionMap({ variants, initialVariantId }),
+    [variants, initialVariantId],
+  );
 
   const [selectedOptions, setSelectedOptions] = useState<VariantOptionMap>(initialSelection);
+
+  useEffect(() => {
+    setSelectedOptions(initialSelection);
+  }, [initialSelection]);
 
   const selectedVariant = useMemo(
     () =>
       variants.find((variant) =>
-        optionNames.every((name) => toOptionMap(variant)[name] === selectedOptions[name]),
+        optionNames.every((name) => variantToOptionMap(variant)[name] === selectedOptions[name]),
       ) ?? variants[0],
     [optionNames, selectedOptions, variants],
   );
+
+  useSyncProductVariantSearchParam({
+    selectedVariantId: selectedVariant?.id,
+    enabled: syncVariantSearchParam && variants.length > 0,
+  });
 
   const price = selectedVariant?.price ?? product.basePrice;
   const compareAt =
@@ -70,67 +85,33 @@ export function ProductDetailVariantLayout({
     [price, compareAt, product.saleDisplayMode, selectedVariant?.saleDisplayMode],
   );
 
-  const safeImages = useMemo(() => galleryImages.filter((image) => Boolean(image?.url)), [galleryImages]);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const activeImage = safeImages[activeIndex];
-  const activeUrl = getMediaUrl(activeImage?.url);
+  const displayImages = useMemo(
+    () => getProductGalleryMedia(product.images, selectedVariant?.image ?? null),
+    [product.images, selectedVariant?.image],
+  );
+
+  const galleryOverlay = salePresentation.isOnSale ? (
+    <SaleBadge
+      presentation={salePresentation}
+      currency={product.currency}
+      size="prominent"
+    />
+  ) : undefined;
+
+  const skuOverride = selectedVariant?.sku?.trim() || undefined;
 
   return (
     <>
-      <div className="space-y-3">
-        <div className="relative aspect-square overflow-hidden rounded-xl border border-border bg-muted">
-          {activeUrl ? (
-            <Image
-              src={activeUrl}
-              alt={activeImage?.alt || product.name}
-              fill
-              className="object-cover"
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              priority
-            />
-          ) : null}
-          {salePresentation.isOnSale ? (
-            <div className="pointer-events-none absolute left-3 top-3 z-10 max-w-[min(100%,12rem)]">
-              <SaleBadge
-                presentation={salePresentation}
-                currency={product.currency}
-                size="prominent"
-              />
-            </div>
-          ) : null}
-        </div>
-        {safeImages.length > 1 ? (
-          <div className="grid grid-cols-5 gap-2">
-            {safeImages.map((image, index) => {
-              const thumbUrl = getMediaUrl(image.url);
-              return (
-                <button
-                  key={image.id}
-                  type="button"
-                  onClick={() => setActiveIndex(index)}
-                  className={`relative aspect-square overflow-hidden rounded-md border ${
-                    index === activeIndex ? "border-primary" : "border-border"
-                  }`}
-                  aria-label={`Show image ${index + 1}`}
-                >
-                  {thumbUrl ? (
-                    <Image
-                      src={thumbUrl}
-                      alt={image.alt || product.name}
-                      fill
-                      className="object-cover"
-                      sizes="80px"
-                    />
-                  ) : null}
-                </button>
-              );
-            })}
-          </div>
-        ) : null}
-      </div>
+      <ProductGallery
+        key={selectedVariant?.id ?? product.id}
+        images={displayImages}
+        fallbackAlt={product.name}
+        labels={galleryLabels}
+        overlay={galleryOverlay}
+      />
 
       <div className="flex min-h-0 flex-col gap-5">
-        <ProductDetailHeading product={product} />
+        <ProductDetailHeading product={product} skuOverride={skuOverride} />
         <div className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-sm">
           <div className="flex flex-wrap items-center gap-3">
             <PriceDisplay
@@ -151,7 +132,7 @@ export function ProductDetailVariantLayout({
             const values = Array.from(
               new Set(
                 variants
-                  .map((variant) => toOptionMap(variant)[name])
+                  .map((variant) => variantToOptionMap(variant)[name])
                   .filter((value): value is string => Boolean(value)),
               ),
             );
@@ -161,7 +142,15 @@ export function ProductDetailVariantLayout({
                 <select
                   value={selectedOptions[name] ?? values[0] ?? ""}
                   onChange={(event) =>
-                    setSelectedOptions((prev) => ({ ...prev, [name]: event.target.value }))
+                    setSelectedOptions(
+                      resolveVariantOptionMapAfterChange({
+                        variants,
+                        optionNames,
+                        selectedOptions,
+                        changedName: name,
+                        changedValue: event.target.value,
+                      }),
+                    )
                   }
                   className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-card-foreground shadow-sm outline-none transition focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring"
                 >
@@ -174,9 +163,16 @@ export function ProductDetailVariantLayout({
               </label>
             );
           })}
-          <AddToCartButton productId={product.id} variantId={selectedVariant?.id} quantity={1} showQuantityStepper />
+          <WarehouseAwareAddToCartButton
+            productId={product.id}
+            variantId={selectedVariant?.id}
+            quantity={1}
+            showQuantityStepper
+            outOfStockLabel={outOfStockLabel}
+            checkingAvailabilityLabel={checkingAvailabilityLabel}
+            availabilityCheckFailedLabel={availabilityCheckFailedLabel}
+          />
         </div>
-        <ProductDetailNarrative product={product} sectionTitle={productDetailsTitle} />
       </div>
     </>
   );

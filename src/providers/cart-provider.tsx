@@ -23,6 +23,7 @@ import { useGuestId } from "@/lib/hooks/use-guest-id";
 import { features } from "@/lib/config/features";
 import { useStore } from "@/lib/hooks/use-store";
 import type { Cart, CartItem } from "@/lib/types/cart";
+import { collapseGhostVariantCartLines } from "@/lib/utils/collapse-cart-ghost-lines";
 
 export type CartContextType = {
   cartId: string | null;
@@ -173,9 +174,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const mergedItems = mergeMutationItems(
-        toMutationItems(userCart?.items ?? []),
-        toMutationItems(guestCart.items),
+      const mergedItems = collapseGhostVariantCartLines(
+        mergeMutationItems(
+          toMutationItems(userCart?.items ?? []),
+          toMutationItems(guestCart.items),
+        ),
       );
 
       if (mergedItems.length > 0) {
@@ -213,7 +216,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
       setIsLoading(true);
       try {
-        if (nextItems.length === 0) {
+        const collapsedItems = collapseGhostVariantCartLines(nextItems);
+
+        if (collapsedItems.length === 0) {
           if (cart?.id) {
             await removeCartDocument(cart.id, activeGuestId ?? undefined, storeId);
           }
@@ -222,8 +227,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
 
         const savedCart = cart?.id
-          ? await updateCart(cart.id, nextItems, activeGuestId ?? undefined, storeId)
-          : await createCart(nextItems, activeGuestId ?? undefined, storeId);
+          ? await updateCart(cart.id, collapsedItems, activeGuestId ?? undefined, storeId)
+          : await createCart(collapsedItems, activeGuestId ?? undefined, storeId);
 
         setCart(savedCart);
         await refreshCart();
