@@ -1,6 +1,8 @@
 import { features } from "@/lib/config/features";
 import { getProducts } from "@/lib/api/products";
 import { ProductCard } from "@/components/product/product-card";
+import type { QuickViewCopy } from "@/components/product/product-quick-view";
+import type { ProductGalleryLabels } from "@/components/product/product-gallery";
 import type { Product } from "@/lib/types/product";
 import { getSelectedStoreId } from "@/lib/utils/get-store-id";
 
@@ -22,6 +24,10 @@ type RelatedProductsSectionProps = {
   currentProductId: string;
   product: Product;
   title: string;
+  quickViewCopy?: QuickViewCopy | null;
+  quickViewGalleryLabels?: ProductGalleryLabels | null;
+  quickViewProductDetailsTitle?: string | null;
+  quickViewProductDetailsSeeLess?: string | null;
 };
 
 export async function RelatedProductsSection({
@@ -29,6 +35,10 @@ export async function RelatedProductsSection({
   currentProductId,
   product,
   title,
+  quickViewCopy = null,
+  quickViewGalleryLabels = null,
+  quickViewProductDetailsTitle = null,
+  quickViewProductDetailsSeeLess = null,
 }: RelatedProductsSectionProps) {
   const categoryId = firstCategoryId(product);
   if (!categoryId) return null;
@@ -60,7 +70,15 @@ export async function RelatedProductsSection({
       </h2>
       <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {related.map((p) => (
-          <ProductCard key={p.id} product={p} locale={locale} />
+          <ProductCard
+            key={p.id}
+            product={p}
+            locale={locale}
+            quickViewCopy={quickViewCopy}
+            quickViewGalleryLabels={quickViewGalleryLabels}
+            quickViewProductDetailsTitle={quickViewProductDetailsTitle}
+            quickViewProductDetailsSeeLess={quickViewProductDetailsSeeLess}
+          />
         ))}
       </div>
     </section>

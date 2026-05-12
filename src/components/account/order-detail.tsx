@@ -1,7 +1,8 @@
 import Link from "next/link";
-import type { Order, OrderStatus } from "@/lib/types/order";
+import type { Order, OrderItem, OrderStatus } from "@/lib/types/order";
 import { formatDate } from "@/lib/utils/format-date";
 import { formatPrice } from "@/lib/utils/format-price";
+import { orderItemProductDetailHref } from "@/lib/utils/product-detail-href";
 import { Badge } from "@/components/shared/badge";
 
 type OrderDetailProps = {
@@ -9,6 +10,22 @@ type OrderDetailProps = {
   locale: string;
   isMultivendor: boolean;
 };
+
+function OrderLineProductHeading({ item, locale }: { item: OrderItem; locale: string }) {
+  const href = orderItemProductDetailHref(locale, item);
+  const title = item.productName ?? "Item";
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className="font-medium text-sky-700 underline-offset-4 hover:underline dark:text-sky-300"
+      >
+        {title}
+      </Link>
+    );
+  }
+  return <p className="font-medium">{title}</p>;
+}
 
 function statusVariant(status: OrderStatus) {
   if (["completed", "delivered"].includes(status)) {
@@ -59,7 +76,7 @@ export function OrderDetail({ order, locale, isMultivendor }: OrderDetailProps) 
             className="flex items-start justify-between gap-3 text-sm"
           >
             <div>
-              <p className="font-medium">{item.productName ?? "Item"}</p>
+              <OrderLineProductHeading item={item} locale={locale} />
               {isMultivendor && item.vendorNameSnapshot ? (
                 <p className="text-xs text-slate-500 dark:text-slate-400">{item.vendorNameSnapshot}</p>
               ) : null}

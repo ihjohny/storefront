@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  initialVariantOptionMap,
   resolveVariantOptionMapAfterChange,
   variantToOptionMap,
 } from "@/lib/utils/variant-selection";
@@ -21,6 +22,28 @@ function v(
     isActive: true,
   };
 }
+
+describe("initialVariantOptionMap", () => {
+  it("should select variant matching deep-link id", () => {
+    const variants = [
+      v("first", [{ name: "Color", value: "Red" }]),
+      v("second", [{ name: "Color", value: "Blue" }]),
+    ];
+    expect(initialVariantOptionMap({ variants, initialVariantId: "second" })).toEqual({
+      Color: "Blue",
+    });
+  });
+
+  it("should fall back to first variant when id unknown", () => {
+    const variants = [
+      v("first", [{ name: "Color", value: "Red" }]),
+      v("second", [{ name: "Color", value: "Blue" }]),
+    ];
+    expect(initialVariantOptionMap({ variants, initialVariantId: "nope" })).toEqual({
+      Color: "Red",
+    });
+  });
+});
 
 describe("resolveVariantOptionMapAfterChange", () => {
   it("should keep all selects aligned when the new combo exists", () => {

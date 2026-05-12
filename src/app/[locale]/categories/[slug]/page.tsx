@@ -141,6 +141,10 @@ export default async function CategoryPage({
         locale={locale}
         emptyMessage={dict.catalog.noProductsFiltered}
         availabilityBadgeLabel={availabilityBadgeLabel}
+        quickViewCopy={dict.catalog.quickView}
+        quickViewGalleryLabels={dict.product.gallery}
+        quickViewProductDetailsTitle={dict.product.productDetails}
+        quickViewProductDetailsSeeLess={dict.product.descriptionSeeLess}
       />
       <Pagination
         currentPage={products.page}

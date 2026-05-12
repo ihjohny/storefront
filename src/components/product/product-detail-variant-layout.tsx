@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Product, ProductVariant } from "@/lib/types/product";
-import { AddToCartButton } from "@/components/product/add-to-cart-button";
+import { WarehouseAwareAddToCartButton } from "@/components/product/warehouse-aware-add-to-cart-button";
 import { ProductDetailHeading } from "@/components/product/product-detail-heading";
 import type { ProductGalleryLabels } from "@/components/product/product-gallery";
 import { ProductGallery } from "@/components/product/product-gallery";
@@ -11,21 +11,34 @@ import { PriceDisplay } from "@/components/shared/price-display";
 import { resolveSalePresentation } from "@/lib/utils/sale-presentation";
 import { getProductGalleryMedia } from "@/lib/utils/product-media";
 import {
+  initialVariantOptionMap,
   resolveVariantOptionMapAfterChange,
   variantToOptionMap,
   type VariantOptionMap,
 } from "@/lib/utils/variant-selection";
+import { useSyncProductVariantSearchParam } from "@/lib/hooks/use-sync-product-variant-search-param";
 
 type ProductDetailVariantLayoutProps = {
   product: Product;
   variants: ProductVariant[];
   galleryLabels: ProductGalleryLabels;
+  initialVariantId?: string;
+  outOfStockLabel: string;
+  checkingAvailabilityLabel: string;
+  availabilityCheckFailedLabel: string;
+  /** When true (default), keep `?variant=` in sync for shareable URLs. Disable in Quick View. */
+  syncVariantSearchParam?: boolean;
 };
 
 export function ProductDetailVariantLayout({
   product,
   variants,
   galleryLabels,
+  initialVariantId,
+  outOfStockLabel,
+  checkingAvailabilityLabel,
+  availabilityCheckFailedLabel,
+  syncVariantSearchParam = true,
 }: ProductDetailVariantLayoutProps) {
   const optionNames = useMemo(
     () =>
@@ -33,13 +46,16 @@ export function ProductDetailVariantLayout({
     [variants],
   );
 
-  const initialSelection = useMemo(() => {
-    const first = variants[0];
-    if (!first) return {};
-    return variantToOptionMap(first);
-  }, [variants]);
+  const initialSelection = useMemo(
+    () => initialVariantOptionMap({ variants, initialVariantId }),
+    [variants, initialVariantId],
+  );
 
   const [selectedOptions, setSelectedOptions] = useState<VariantOptionMap>(initialSelection);
+
+  useEffect(() => {
+    setSelectedOptions(initialSelection);
+  }, [initialSelection]);
 
   const selectedVariant = useMemo(
     () =>
@@ -48,6 +64,11 @@ export function ProductDetailVariantLayout({
       ) ?? variants[0],
     [optionNames, selectedOptions, variants],
   );
+
+  useSyncProductVariantSearchParam({
+    selectedVariantId: selectedVariant?.id,
+    enabled: syncVariantSearchParam && variants.length > 0,
+  });
 
   const price = selectedVariant?.price ?? product.basePrice;
   const compareAt =
@@ -77,6 +98,8 @@ export function ProductDetailVariantLayout({
     />
   ) : undefined;
 
+  const skuOverride = selectedVariant?.sku?.trim() || undefined;
+
   return (
     <>
       <ProductGallery
@@ -88,7 +111,7 @@ export function ProductDetailVariantLayout({
       />
 
       <div className="flex min-h-0 flex-col gap-5">
-        <ProductDetailHeading product={product} />
+        <ProductDetailHeading product={product} skuOverride={skuOverride} />
         <div className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-sm">
           <div className="flex flex-wrap items-center gap-3">
             <PriceDisplay
@@ -140,7 +163,15 @@ export function ProductDetailVariantLayout({
               </label>
             );
           })}
-          <AddToCartButton productId={product.id} variantId={selectedVariant?.id} quantity={1} showQuantityStepper />
+          <WarehouseAwareAddToCartButton
+            productId={product.id}
+            variantId={selectedVariant?.id}
+            quantity={1}
+            showQuantityStepper
+            outOfStockLabel={outOfStockLabel}
+            checkingAvailabilityLabel={checkingAvailabilityLabel}
+            availabilityCheckFailedLabel={availabilityCheckFailedLabel}
+          />
         </div>
       </div>
     </>

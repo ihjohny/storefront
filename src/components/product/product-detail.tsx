@@ -6,7 +6,7 @@ import { ProductDetailVariantLayout } from "@/components/product/product-detail-
 import { ProductDetailHeading } from "@/components/product/product-detail-heading";
 import { ProductDetailNarrative } from "@/components/product/product-detail-narrative";
 import { ProductVariants } from "@/components/product/product-variants";
-import { AddToCartButton } from "@/components/product/add-to-cart-button";
+import { WarehouseAwareAddToCartButton } from "@/components/product/warehouse-aware-add-to-cart-button";
 import { ProductReviews } from "@/components/product/product-reviews";
 import { ProductDeliveryOptions } from "@/components/product/product-delivery-options";
 import { SaleBadge } from "@/components/product/sale-badge";
@@ -28,6 +28,11 @@ type ProductDetailProps = {
   deliveryOptionsLoading: string;
   deliveryOptionsFootnote: string;
   shippingMethodCopy: CheckoutShippingCopy;
+  /** From `?variant=` — selects matching SKU on load (e.g. cart → PDP). */
+  initialVariantId?: string;
+  productOutOfStockLabel: string;
+  productCheckingAvailabilityLabel: string;
+  productAvailabilityCheckFailedLabel: string;
 };
 
 export function ProductDetail({
@@ -41,6 +46,10 @@ export function ProductDetail({
   deliveryOptionsLoading,
   deliveryOptionsFootnote,
   shippingMethodCopy,
+  initialVariantId,
+  productOutOfStockLabel,
+  productCheckingAvailabilityLabel,
+  productAvailabilityCheckFailedLabel,
 }: ProductDetailProps) {
   const galleryImages = getProductMedia(product.images);
   /** Product is configured for variants and we loaded at least one SKU */
@@ -69,6 +78,10 @@ export function ProductDetail({
             product={product}
             variants={variants}
             galleryLabels={productGalleryLabels}
+            initialVariantId={initialVariantId}
+            outOfStockLabel={productOutOfStockLabel}
+            checkingAvailabilityLabel={productCheckingAvailabilityLabel}
+            availabilityCheckFailedLabel={productAvailabilityCheckFailedLabel}
           />
         ) : (
           <>
@@ -79,10 +92,9 @@ export function ProductDetail({
               overlay={galleryOverlay}
             />
             <div className="flex min-h-0 flex-col gap-5">
-              <ProductDetailHeading product={product} />
-
               {product.hasVariants ? (
                 <ProductVariants
+                  product={product}
                   productId={product.id}
                   variants={variants}
                   currency={product.currency}
@@ -90,8 +102,14 @@ export function ProductDetail({
                   productCompareAtPrice={product.compareAtPrice}
                   productSaleDisplayMode={product.saleDisplayMode}
                   showQuantityStepper
+                  initialVariantId={initialVariantId}
+                  outOfStockLabel={productOutOfStockLabel}
+                  checkingAvailabilityLabel={productCheckingAvailabilityLabel}
+                  availabilityCheckFailedLabel={productAvailabilityCheckFailedLabel}
                 />
               ) : (
+                <>
+                  <ProductDetailHeading product={product} />
                 <div className="space-y-4 rounded-xl border border-border bg-card p-4 shadow-sm">
                   <div className="flex flex-wrap items-center gap-3">
                     <PriceDisplay
@@ -107,8 +125,16 @@ export function ProductDetail({
                       size="prominent"
                     />
                   </div>
-                  <AddToCartButton productId={product.id} quantity={1} showQuantityStepper />
+                  <WarehouseAwareAddToCartButton
+                    productId={product.id}
+                    quantity={1}
+                    showQuantityStepper
+                    outOfStockLabel={productOutOfStockLabel}
+                    checkingAvailabilityLabel={productCheckingAvailabilityLabel}
+                    availabilityCheckFailedLabel={productAvailabilityCheckFailedLabel}
+                  />
                 </div>
+                </>
               )}
             </div>
           </>

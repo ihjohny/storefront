@@ -35,7 +35,9 @@
   },
   "product": {
     "addedToCart": "Added to cart",
-    "outOfStock": "Out of Stock",
+    "outOfStock": "Not available at this location",
+    "checkingAvailability": "Checking availability…",
+    "availabilityCheckFailed": "Couldn't verify stock availability. Try again.",
     "reviews": "Reviews",
     "writeReview": "Write a Review",
     "relatedProducts": "Related Products",
@@ -186,6 +188,17 @@
     "inStockAtLocationLabel": "Only show items available at my selected location",
     "inStockAtLocationHint": "Turn off to browse the full catalog; checkout still uses your selected store.",
     "availableAtLocationBadge": "Available here",
+    "quickView": {
+      "dialogTitle": "Quick view",
+      "openTrigger": "Quick view",
+      "close": "Close",
+      "viewFullDetails": "View full details",
+      "loadingVariants": "Loading options…",
+      "variantsLoadError": "Could not load options. Open the product page to choose variants.",
+      "outOfStock": "Not available at this location",
+      "checkingAvailability": "Checking availability…",
+      "availabilityCheckFailed": "Couldn't verify stock availability. Try again."
+    },
     "seo": {
       "homeTitle": "Home",
       "homeDescription": "Discover products, categories, and offers.",

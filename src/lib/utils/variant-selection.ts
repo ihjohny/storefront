@@ -9,6 +9,26 @@ export function variantToOptionMap(variant: ProductVariant): VariantOptionMap {
   }, {});
 }
 
+/** Initial `<select>` state from optional `?variant=` deep-link (e.g. cart → PDP). */
+export function initialVariantOptionMap(args: {
+  variants: ProductVariant[];
+  initialVariantId?: string | null;
+}): VariantOptionMap {
+  const { variants, initialVariantId } = args;
+  const first = variants[0];
+  if (!first) {
+    return {};
+  }
+  const trimmed = initialVariantId != null ? String(initialVariantId).trim() : "";
+  if (trimmed.length > 0) {
+    const match = variants.find((v) => String(v.id) === trimmed);
+    if (match) {
+      return variantToOptionMap(match);
+    }
+  }
+  return variantToOptionMap(first);
+}
+
 /**
  * When the shopper changes one option dimension, produce a full option map that matches a real variant.
  * - Prefer an exact match for the tentative cartesian selection.

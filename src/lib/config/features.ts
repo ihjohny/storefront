@@ -39,7 +39,47 @@ function parsePdpDescriptionDefaultOpen(raw: string | undefined): boolean {
   );
 }
 
+function parseQuickViewEnabled(raw: string | undefined): boolean {
+  const v = (raw ?? "").toLowerCase().trim();
+  if (v === "false" || v === "0" || v === "no" || v === "off" || v === "hidden" || v === "hide") {
+    return false;
+  }
+  return true;
+}
+
+function parseListingProductCardClick(raw: string | undefined): "pdp" | "quickview" {
+  const v = (raw ?? "").toLowerCase().trim();
+  if (v === "quickview" || v === "quick_view" || v === "modal") {
+    return "quickview";
+  }
+  return "pdp";
+}
+
+function parseWarehouseAvailabilityUi(raw: string | undefined): boolean {
+  const v = (raw ?? "").toLowerCase().trim();
+  if (
+    v === "false" ||
+    v === "0" ||
+    v === "no" ||
+    v === "off" ||
+    v === "hidden" ||
+    v === "hide"
+  ) {
+    return false;
+  }
+  // Default on when unset — avoids PDP allowing Add to cart when cart hooks reject the line.
+  return true;
+}
+
 export const features = {
+  /**
+   * PDP / Quick View: fetch `/api/storefront/variant-availability` and disable Add to cart when the
+   * backend cannot allocate the line. Default **on**; set `NEXT_PUBLIC_WAREHOUSE_AVAILABILITY_UI=false` to disable.
+   * Harmless when backend returns **`inventoryEnabled: false`** (`INVENTORY_ENABLED=false`) or **`404`** (probe disabled).
+   */
+  warehouseAvailabilityUi: parseWarehouseAvailabilityUi(
+    process.env.NEXT_PUBLIC_WAREHOUSE_AVAILABILITY_UI,
+  ),
   multivendor: process.env.NEXT_PUBLIC_MULTIVENDOR_ENABLED === "true",
   guestCheckout: process.env.NEXT_PUBLIC_GUEST_CHECKOUT_ENABLED !== "false",
   socialLogin: process.env.NEXT_PUBLIC_SOCIAL_LOGIN_ENABLED !== "false",
@@ -118,6 +158,19 @@ export const features = {
    */
   pdpDescriptionDefaultOpen: parsePdpDescriptionDefaultOpen(
     process.env.NEXT_PUBLIC_PDP_DESCRIPTION_DEFAULT_OPEN,
+  ),
+  /**
+   * PLP / listing Quick View modal (`NEXT_PUBLIC_QUICK_VIEW_ENABLED`).
+   * Default **on** when unset; set to `false` | `0` | `off` | `hidden` to disable.
+   */
+  quickViewEnabled: parseQuickViewEnabled(process.env.NEXT_PUBLIC_QUICK_VIEW_ENABLED),
+  /**
+   * Listing card image/title click when Quick View is enabled (`NEXT_PUBLIC_LISTING_PRODUCT_CARD_CLICK`).
+   * - `pdp` (default) — navigate to the product page (eye icon still opens Quick View).
+   * - `quickview` | `quick_view` | `modal` — open Quick View from the image/title tap area.
+   */
+  listingProductCardClick: parseListingProductCardClick(
+    process.env.NEXT_PUBLIC_LISTING_PRODUCT_CARD_CLICK,
   ),
   i18n: {
     locales: (process.env.NEXT_PUBLIC_SUPPORTED_LOCALES || "en,bn")

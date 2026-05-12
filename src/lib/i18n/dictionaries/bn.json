@@ -35,7 +35,9 @@
   },
   "product": {
     "addedToCart": "কার্টে যোগ করা হয়েছে",
-    "outOfStock": "স্টক শেষ",
+    "outOfStock": "এই লোকেশনে পাওয়া যাচ্ছে না",
+    "checkingAvailability": "উপলব্ধতা যাচাই করা হচ্ছে…",
+    "availabilityCheckFailed": "স্টক যাচাই করা যায়নি। আবার চেষ্টা করুন।",
     "reviews": "রিভিউ",
     "writeReview": "রিভিউ লিখুন",
     "relatedProducts": "সম্পর্কিত পণ্য",
@@ -186,6 +188,17 @@
     "inStockAtLocationLabel": "শুধু আমার নির্বাচিত লোকেশনে উপলব্ধ পণ্য দেখান",
     "inStockAtLocationHint": "বন্ধ করলে সম্পূর্ণ ক্যাটালগ দেখা যাবে; চেকআউটে নির্বাচিত স্টোরই প্রযোজ্য।",
     "availableAtLocationBadge": "এখানে উপলব্ধ",
+    "quickView": {
+      "dialogTitle": "দ্রুত দেখুন",
+      "openTrigger": "দ্রুত দেখুন",
+      "close": "বন্ধ করুন",
+      "viewFullDetails": "সম্পূর্ণ বিবরণ দেখুন",
+      "loadingVariants": "অপশন লোড হচ্ছে…",
+      "variantsLoadError": "অপশন লোড করা যায়নি। ভেরিয়েন্ট বেছে নিতে পণ্যের পৃষ্ঠা খুলুন।",
+      "outOfStock": "এই লোকেশনে পাওয়া যাচ্ছে না",
+      "checkingAvailability": "উপলব্ধতা যাচাই করা হচ্ছে…",
+      "availabilityCheckFailed": "স্টক যাচাই করা যায়নি। আবার চেষ্টা করুন।"
+    },
     "seo": {
       "homeTitle": "হোম",
       "homeDescription": "পণ্য, ক্যাটাগরি ও অফার আবিষ্কার করুন।",

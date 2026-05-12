@@ -40,6 +40,10 @@ describe("CartItem", () => {
     expect(screen.getByText("Sample Product")).toBeInTheDocument();
     expect(screen.getByText("Blue / M")).toBeInTheDocument();
     expect(screen.getByText(/\$30\.00/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Sample Product" })).toHaveAttribute(
+      "href",
+      "/en/products/sample-product?variant=v1",
+    );
   });
 
   it("handles quantity controls and remove action", async () => {

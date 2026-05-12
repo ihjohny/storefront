@@ -98,7 +98,10 @@ export async function getProductBySlug(
   return response.docs[0] ?? null;
 }
 
-export async function getProductVariants(productId: string): Promise<ProductVariant[]> {
+export async function getProductVariants(
+  productId: string,
+  locale?: string,
+): Promise<ProductVariant[]> {
   const params = new URLSearchParams();
   params.set("where[product][equals]", productId);
   params.set("where[isActive][equals]", "true");
@@ -107,7 +110,10 @@ export async function getProductVariants(productId: string): Promise<ProductVari
 
   const response = await apiClient<PaginatedResponse<ProductVariant>>(
     `/product-variants?${params.toString()}`,
-    { next: { revalidate: 30 } } as RequestInit,
+    {
+      ...(locale ? { locale } : {}),
+      ...(typeof window === "undefined" ? { next: { revalidate: 30 } } : {}),
+    } as RequestInit,
   );
 
   return response.docs;

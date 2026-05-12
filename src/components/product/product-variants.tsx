@@ -1,17 +1,20 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import type { ProductVariant } from "@/lib/types/product";
+import { useEffect, useMemo, useState } from "react";
+import type { Product, ProductVariant } from "@/lib/types/product";
+import { ProductDetailHeading } from "@/components/product/product-detail-heading";
 import type { SaleDisplayMode } from "@/lib/utils/sale-presentation";
 import { resolveSalePresentation } from "@/lib/utils/sale-presentation";
 import { PriceDisplay } from "@/components/shared/price-display";
 import { SaleBadge } from "@/components/product/sale-badge";
-import { AddToCartButton } from "@/components/product/add-to-cart-button";
+import { WarehouseAwareAddToCartButton } from "@/components/product/warehouse-aware-add-to-cart-button";
 import {
+  initialVariantOptionMap,
   resolveVariantOptionMapAfterChange,
   variantToOptionMap,
   type VariantOptionMap,
 } from "@/lib/utils/variant-selection";
+import { useSyncProductVariantSearchParam } from "@/lib/hooks/use-sync-product-variant-search-param";
 
 type ProductVariantsProps = {
   productId: string;
@@ -22,7 +25,24 @@ type ProductVariantsProps = {
   productCompareAtPrice?: number | null;
   productSaleDisplayMode?: SaleDisplayMode | null;
   showQuantityStepper?: boolean;
+  /** `embedded` drops bordered card chrome for Quick View / tight layouts. */
+  presentation?: "card" | "embedded";
+  /** When set, renders the title block above price/picks; SKU tracks the selected variant when present. */
+  product?: Pick<Product, "name" | "shortDescription" | "sku">;
+  initialVariantId?: string;
+  /** When true (default), keep `?variant=` in sync for shareable URLs. Disable in Quick View. */
+  syncVariantSearchParam?: boolean;
+  /** Shown when `NEXT_PUBLIC_WAREHOUSE_AVAILABILITY_UI` and allocation fails for the SKU */
+  outOfStockLabel?: string;
+  checkingAvailabilityLabel?: string;
+  availabilityCheckFailedLabel?: string;
 };
+
+function wrapClass(presentation: "card" | "embedded") {
+  return presentation === "embedded"
+    ? "space-y-4"
+    : "space-y-4 rounded-xl border border-border bg-card p-4 shadow-sm";
+}
 
 export function ProductVariants({
   productId,
@@ -32,6 +52,13 @@ export function ProductVariants({
   productCompareAtPrice = null,
   productSaleDisplayMode,
   showQuantityStepper = false,
+  presentation = "card",
+  product,
+  initialVariantId,
+  syncVariantSearchParam = true,
+  outOfStockLabel = "Out of Stock",
+  checkingAvailabilityLabel = "Checking availability…",
+  availabilityCheckFailedLabel = "Couldn't verify stock availability. Try again.",
 }: ProductVariantsProps) {
   const optionNames = useMemo(
     () =>
@@ -39,16 +66,17 @@ export function ProductVariants({
     [variants],
   );
 
-  const initialSelection = useMemo(() => {
-    const first = variants[0];
-    if (!first) {
-      return {};
-    }
-    return variantToOptionMap(first);
-  }, [variants]);
+  const initialSelection = useMemo(
+    () => initialVariantOptionMap({ variants, initialVariantId }),
+    [variants, initialVariantId],
+  );
 
   const [selectedOptions, setSelectedOptions] =
     useState<VariantOptionMap>(initialSelection);
+
+  useEffect(() => {
+    setSelectedOptions(initialSelection);
+  }, [initialSelection]);
 
   const selectedVariant = useMemo(
     () =>
@@ -57,6 +85,11 @@ export function ProductVariants({
       ) ?? variants[0],
     [optionNames, selectedOptions, variants],
   );
+
+  useSyncProductVariantSearchParam({
+    selectedVariantId: selectedVariant?.id,
+    enabled: syncVariantSearchParam && variants.length > 0,
+  });
 
   const price = selectedVariant?.price ?? basePrice;
   const compareAt = selectedVariant?.compareAtPrice ?? productCompareAtPrice ?? null;
@@ -72,9 +105,17 @@ export function ProductVariants({
     [price, compareAt, productSaleDisplayMode, selectedVariant?.saleDisplayMode],
   );
 
+  const skuOverride = selectedVariant?.sku?.trim() || undefined;
+
+  const headingBlock =
+    product != null ? (
+      <ProductDetailHeading product={product} skuOverride={skuOverride} />
+    ) : null;
+
   if (variants.length === 0) {
     return (
-      <div className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-sm">
+      <div className={presentation === "embedded" ? "space-y-3 pt-1" : wrapClass(presentation)}>
+        {headingBlock}
         <p className="text-sm font-medium text-muted-foreground">No variants available.</p>
         <div className="flex flex-wrap items-center gap-3">
           <PriceDisplay
@@ -86,13 +127,21 @@ export function ProductVariants({
           />
           <SaleBadge presentation={salePresentation} currency={currency} size="prominent" />
         </div>
-        <AddToCartButton productId={productId} quantity={1} showQuantityStepper={showQuantityStepper} />
+          <WarehouseAwareAddToCartButton
+            productId={productId}
+            quantity={1}
+            showQuantityStepper={showQuantityStepper}
+            outOfStockLabel={outOfStockLabel}
+            checkingAvailabilityLabel={checkingAvailabilityLabel}
+            availabilityCheckFailedLabel={availabilityCheckFailedLabel}
+          />
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 rounded-xl border border-border bg-card p-4 shadow-sm">
+    <div className={wrapClass(presentation)}>
+      {headingBlock}
       <div className="flex flex-wrap items-center gap-3">
         <PriceDisplay
           price={price}
@@ -139,11 +188,14 @@ export function ProductVariants({
           </label>
         );
       })}
-      <AddToCartButton
+      <WarehouseAwareAddToCartButton
         productId={productId}
         variantId={selectedVariant?.id}
         quantity={1}
         showQuantityStepper={showQuantityStepper}
+        outOfStockLabel={outOfStockLabel}
+        checkingAvailabilityLabel={checkingAvailabilityLabel}
+        availabilityCheckFailedLabel={availabilityCheckFailedLabel}
       />
     </div>
   );

@@ -76,11 +76,15 @@ export function getApiErrorMessage(error: unknown): string {
       }
       const errors = b.errors;
       if (Array.isArray(errors) && errors.length > 0) {
-        const first = errors[0];
-        if (first && typeof first === "object" && first !== null) {
-          const m = (first as { message?: unknown }).message;
-          if (typeof m === "string" && m.trim()) {
-            return m;
+        for (const entry of errors) {
+          if (typeof entry === "string" && entry.trim()) {
+            return entry;
+          }
+          if (entry && typeof entry === "object" && entry !== null) {
+            const m = (entry as { message?: unknown }).message;
+            if (typeof m === "string" && m.trim()) {
+              return m;
+            }
           }
         }
       }
