@@ -9,6 +9,7 @@ type ProductFilters = {
   minPrice?: number;
   maxPrice?: number;
   tenant?: string;
+  productType?: "standard" | "bundle";
   featured?: boolean;
   sort?: string;
   page?: number;
@@ -49,6 +50,9 @@ export async function getProducts(
   if (filters.tenant) {
     params.set("where[tenant][equals]", filters.tenant);
   }
+  if (filters.productType) {
+    params.set("where[productType][equals]", filters.productType);
+  }
   if (filters.featured) {
     params.set("where[featured][equals]", "true");
   }
@@ -73,6 +77,7 @@ async function getStoreProducts(
   if (typeof filters.minPrice === "number") params.set("minPrice", String(filters.minPrice));
   if (typeof filters.maxPrice === "number") params.set("maxPrice", String(filters.maxPrice));
   if (filters.tenant) params.set("tenant", filters.tenant);
+  if (filters.productType) params.set("productType", filters.productType);
   if (filters.featured) params.set("featured", "true");
 
   return apiClient<ProductsResponse>(

@@ -3,7 +3,7 @@
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@headlessui/react";
 import Link from "next/link";
 import { Fragment, useEffect, useState } from "react";
-import { getProductVariants } from "@/lib/api/products";
+import { getProductById, getProductVariants } from "@/lib/api/products";
 import { features } from "@/lib/config/features";
 import { WarehouseAwareAddToCartButton } from "@/components/product/warehouse-aware-add-to-cart-button";
 import { ProductDetailHeading } from "@/components/product/product-detail-heading";
@@ -19,6 +19,7 @@ import type { ProductCompareLabels } from "@/lib/i18n/compare-labels";
 import { ProductCompareButton } from "@/components/product/product-compare-button";
 import { getProductMedia } from "@/lib/utils/product-media";
 import { resolveSalePresentation } from "@/lib/utils/sale-presentation";
+import { formatPrice } from "@/lib/utils/format-price";
 
 export type QuickViewCopy = {
   dialogTitle: string;
@@ -31,6 +32,12 @@ export type QuickViewCopy = {
   outOfStock: string;
   checkingAvailability: string;
   availabilityCheckFailed: string;
+  bundleIncludesTitle: string;
+  bundleLoadingItems: string;
+  bundleRegularTotal: string;
+  bundleYouPay: string;
+  bundleYouSave: string;
+  bundleQty: string;
 };
 
 type ProductQuickViewProps = {
@@ -68,6 +75,8 @@ export function ProductQuickView({
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [variantsLoading, setVariantsLoading] = useState(false);
   const [variantsError, setVariantsError] = useState<string | null>(null);
+  const [bundleProductDetail, setBundleProductDetail] = useState<Product | null>(null);
+  const [bundleLoading, setBundleLoading] = useState(false);
 
   const galleryImages = getProductMedia(product.images);
   const vendor = getVendor(product.tenant);
@@ -108,8 +117,34 @@ export function ProductQuickView({
       setVariants([]);
       setVariantsError(null);
       setVariantsLoading(false);
+      setBundleProductDetail(null);
+      setBundleLoading(false);
     }
   }, [open]);
+
+  useEffect(() => {
+    if (!open || product.productType !== "bundle") {
+      return;
+    }
+
+    let cancelled = false;
+    setBundleLoading(true);
+    void getProductById(product.id, locale)
+      .then((doc) => {
+        if (!cancelled && doc?.productType === "bundle") {
+          setBundleProductDetail(doc);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setBundleLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, product.id, product.productType, locale]);
 
   const showVariantPdp = Boolean(product.hasVariants && variants.length > 0 && !variantsLoading);
 
@@ -127,6 +162,7 @@ export function ProductQuickView({
         size="prominent"
       />
     ) : undefined;
+  const bundleBreakdown = getBundleBreakdown(bundleProductDetail ?? product);
 
   function renderPrimaryGrid() {
     if (product.hasVariants && variantsLoading) {
@@ -222,7 +258,7 @@ export function ProductQuickView({
                 />
               </div>
               <div className="flex flex-wrap items-end gap-2 pt-1">
-                <div className="min-w-0 flex-1 [&>*]:w-full">
+                <div className="min-w-0 flex-1 *:w-full">
                   <WarehouseAwareAddToCartButton
                     productId={product.id}
                     quantity={1}
@@ -246,7 +282,7 @@ export function ProductQuickView({
 
   return (
     <Transition show={open} as={Fragment}>
-      <Dialog as="div" className="relative z-[60]" onClose={() => onOpenChange(false)}>
+      <Dialog as="div" className="relative z-60" onClose={() => onOpenChange(false)}>
         <TransitionChild
           as={Fragment}
           enter="ease-out duration-200"
@@ -304,6 +340,52 @@ export function ProductQuickView({
                   ) : null}
 
                   <div className="grid gap-6 lg:grid-cols-2 lg:items-start">{renderPrimaryGrid()}</div>
+                  {product.productType === "bundle" ? (
+                    <div className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-sm">
+                      <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                        {labels.bundleIncludesTitle}
+                      </h3>
+                      {bundleLoading ? (
+                        <p className="text-sm text-muted-foreground">{labels.bundleLoadingItems}</p>
+                      ) : bundleBreakdown ? (
+                        <>
+                          <div className="space-y-2 text-sm">
+                            {bundleBreakdown.lines.map((line) => (
+                              <div
+                                key={line.key}
+                                className="flex items-start justify-between gap-4 border-b border-border/60 pb-2 last:border-b-0 last:pb-0"
+                              >
+                                <div className="min-w-0">
+                                  <p className="font-medium text-foreground">{line.title}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {labels.bundleQty} {line.quantity} x{" "}
+                                    {formatPrice(line.unitPrice, line.currency)}
+                                  </p>
+                                </div>
+                                <p className="shrink-0 font-medium text-foreground">
+                                  {formatPrice(line.lineTotal, line.currency)}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="space-y-1 border-t border-border pt-2 text-sm">
+                            <div className="flex items-center justify-between text-muted-foreground">
+                              <span>{labels.bundleRegularTotal}</span>
+                              <span>{formatPrice(bundleBreakdown.regularTotal, product.currency)}</span>
+                            </div>
+                            <div className="flex items-center justify-between font-semibold text-foreground">
+                              <span>{labels.bundleYouPay}</span>
+                              <span>{formatPrice(bundleBreakdown.bundlePrice, product.currency)}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-emerald-700 dark:text-emerald-400">
+                              <span>{labels.bundleYouSave}</span>
+                              <span>{formatPrice(bundleBreakdown.savings, product.currency)}</span>
+                            </div>
+                          </div>
+                        </>
+                      ) : null}
+                    </div>
+                  ) : null}
 
                   <ProductDetailNarrative
                     product={product}
@@ -330,4 +412,71 @@ export function ProductQuickView({
       </Dialog>
     </Transition>
   );
+}
+
+function getBundleBreakdown(product: Product) {
+  if (product.productType !== "bundle" || !Array.isArray(product.bundleItems) || product.bundleItems.length === 0) {
+    return null;
+  }
+
+  const lines: Array<{
+    key: string;
+    title: string;
+    quantity: number;
+    unitPrice: number;
+    lineTotal: number;
+    currency: string;
+  }> = [];
+  let regularTotal = 0;
+
+  for (let i = 0; i < product.bundleItems.length; i++) {
+    const row = product.bundleItems[i];
+    const rowProduct = row && typeof row.product === "object" && row.product !== null ? row.product : null;
+    const rowVariant = row && row.variant && typeof row.variant === "object" ? row.variant : null;
+    const quantity = Math.max(1, Number(row?.quantity ?? 1));
+    const unitPrice =
+      typeof rowVariant?.price === "number"
+        ? rowVariant.price
+        : typeof rowProduct?.basePrice === "number"
+          ? rowProduct.basePrice
+          : null;
+    if (unitPrice == null) {
+      continue;
+    }
+
+    const title = rowVariant?.name
+      ? `${rowProduct?.name ?? "Item"} - ${rowVariant.name}`
+      : rowProduct?.name ?? "Item";
+    const lineTotal = unitPrice * quantity;
+    lines.push({
+      key: `${toBundleLineId(row.product)}:${toBundleLineId(row.variant)}:${i}`,
+      title,
+      quantity,
+      unitPrice,
+      lineTotal,
+      currency: rowProduct?.currency ?? product.currency,
+    });
+    regularTotal += lineTotal;
+  }
+
+  if (lines.length === 0) {
+    return null;
+  }
+
+  return {
+    lines,
+    regularTotal,
+    bundlePrice: product.basePrice,
+    savings: Math.max(0, regularTotal - product.basePrice),
+  };
+}
+
+function toBundleLineId(value: unknown): string {
+  if (!value) return "none";
+  if (typeof value === "string") return value;
+  if (typeof value === "object" && value !== null && "id" in value) {
+    const id = (value as { id?: unknown }).id;
+    return id == null ? "none" : String(id);
+  }
+  return "none";
 }

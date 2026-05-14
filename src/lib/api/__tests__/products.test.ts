@@ -56,6 +56,30 @@ describe("products API helpers", () => {
     expect(url).toContain("where%5Bcategories%5D%5Bin%5D=cat-uuid-1");
   });
 
+  it("getProducts passes productType filter for bundle listing", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          docs: [],
+          totalDocs: 0,
+          limit: 12,
+          totalPages: 0,
+          page: 1,
+          hasPrevPage: false,
+          hasNextPage: false,
+          prevPage: null,
+          nextPage: null,
+          pagingCounter: 1,
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+
+    await getProducts({ locale: "en", productType: "bundle" });
+    const url = String(fetchMock.mock.calls[0]?.[0] ?? "");
+    expect(url).toContain("where%5BproductType%5D%5Bequals%5D=bundle");
+  });
+
   it("getProductBySlug returns first doc or null via MSW", async () => {
     const found = await getProductBySlug("mock-product", "en");
     expect(found?.slug).toBe("mock-product");

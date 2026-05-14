@@ -7,6 +7,7 @@ import type { ProductCompareLabels } from "@/lib/i18n/compare-labels";
 type ProductGridProps = {
   products: Product[];
   locale: string;
+  productHrefBase?: string;
   emptyMessage?: string;
   /** Stock-location-filtered listing + env flag — forwards badge label to cards. */
   availabilityBadgeLabel?: string | null;
@@ -20,6 +21,7 @@ type ProductGridProps = {
 export function ProductGrid({
   products,
   locale,
+  productHrefBase = "products",
   emptyMessage = "No products found for your current filters.",
   availabilityBadgeLabel = null,
   quickViewCopy = null,
@@ -43,6 +45,7 @@ export function ProductGrid({
           key={product.id}
           product={product}
           locale={locale}
+          productHrefBase={productHrefBase}
           availabilityBadgeLabel={availabilityBadgeLabel}
           quickViewCopy={quickViewCopy}
           quickViewGalleryLabels={quickViewGalleryLabels}

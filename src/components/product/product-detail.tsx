@@ -18,6 +18,7 @@ import type { Product, ProductVariant } from "@/lib/types/product";
 import type { CheckoutShippingCopy } from "@/lib/types/checkout-copy";
 import type { ProductCompareLabels } from "@/lib/i18n/compare-labels";
 import { ProductCompareButton } from "@/components/product/product-compare-button";
+import { BundleItemInsights } from "@/components/product/bundle-item-insights";
 
 type ProductDetailProps = {
   product: Product;
@@ -36,7 +37,120 @@ type ProductDetailProps = {
   productCheckingAvailabilityLabel: string;
   productAvailabilityCheckFailedLabel: string;
   compareLabels?: ProductCompareLabels | null;
+  bundleIncludesTitle: string;
+  bundleRegularTotalLabel: string;
+  bundleYouPayLabel: string;
+  bundleYouSaveLabel: string;
+  bundleItemFallbackLabel: string;
+  bundleItemQtyLabel: string;
+  bundleViewDetailsLabel: string;
+  bundleItemDialogTitle: string;
+  bundleItemViewOnlyNotice: string;
+  bundleGoToProductLabel: string;
+  bundleItemCloseLabel: string;
+  bundleItemSkuLabel: string;
+  bundleItemUnitPriceLabel: string;
+  bundleItemCompareAtLabel: string;
+  bundleItemQuantityLabel: string;
+  bundleItemLineTotalLabel: string;
 };
+
+type BundleBreakdownLine = {
+  key: string;
+  title: string;
+  quantity: number;
+  unitPrice: number;
+  lineTotal: number;
+  currency: string;
+  sku?: string | null;
+  compareAtPrice?: number | null;
+  shortDescription?: string | null;
+  productName?: string | null;
+  productSlug?: string | null;
+  imageUrl?: string | null;
+};
+
+function getBundleBreakdown(product: Product, fallbackTitle: string) {
+  if (product.productType !== "bundle" || !Array.isArray(product.bundleItems) || product.bundleItems.length === 0) {
+    return null;
+  }
+
+  const lines: BundleBreakdownLine[] = [];
+  let regularTotal = 0;
+
+  for (let i = 0; i < product.bundleItems.length; i++) {
+    const row = product.bundleItems[i];
+    const rowProduct =
+      row && typeof row.product === "object" && row.product !== null ? row.product : null;
+    const rowVariant =
+      row && row.variant && typeof row.variant === "object" ? row.variant : null;
+    const quantity = Math.max(1, Number(row?.quantity ?? 1));
+
+    const unitPrice = typeof rowVariant?.price === "number"
+      ? rowVariant.price
+      : typeof rowProduct?.basePrice === "number"
+        ? rowProduct.basePrice
+        : null;
+    if (unitPrice == null) {
+      continue;
+    }
+
+    const lineTitle = rowVariant?.name
+      ? `${rowProduct?.name ?? fallbackTitle} - ${rowVariant.name}`
+      : rowProduct?.name ?? fallbackTitle;
+    const lineTotal = unitPrice * quantity;
+    const media = rowProduct?.images ? getProductMedia(rowProduct.images) : [];
+
+    lines.push({
+      key: `${toBundleLineId(row.product)}:${toBundleLineId(row.variant)}:${i}`,
+      title: lineTitle,
+      quantity,
+      unitPrice,
+      lineTotal,
+      currency:
+        (typeof rowVariant?.product === "object" &&
+        rowVariant.product &&
+        typeof rowVariant.product.currency === "string"
+          ? rowVariant.product.currency
+          : null) ??
+        rowProduct?.currency ??
+        product.currency,
+      sku: rowVariant?.sku ?? rowProduct?.sku ?? null,
+      compareAtPrice:
+        typeof rowVariant?.compareAtPrice === "number"
+          ? rowVariant.compareAtPrice
+          : typeof rowProduct?.compareAtPrice === "number"
+            ? rowProduct.compareAtPrice
+            : null,
+      shortDescription: rowProduct?.shortDescription ?? null,
+      productName: rowProduct?.name ?? null,
+      productSlug: rowProduct?.slug ?? null,
+      imageUrl: rowVariant?.image?.url ?? media[0]?.url ?? null,
+    });
+    regularTotal += lineTotal;
+  }
+
+  if (lines.length === 0) {
+    return null;
+  }
+
+  return {
+    lines,
+    regularTotal,
+    bundlePrice: product.basePrice,
+    savings: Math.max(0, regularTotal - product.basePrice),
+  };
+}
+
+function toBundleLineId(value: unknown): string {
+  if (!value) return "none";
+  if (typeof value === "string") return value;
+  if (typeof value === "object" && value !== null && "id" in value) {
+    const id = (value as { id?: unknown }).id;
+    return id == null ? "none" : String(id);
+  }
+  return "none";
+}
 
 export function ProductDetail({
   product,
@@ -54,6 +168,22 @@ export function ProductDetail({
   productCheckingAvailabilityLabel,
   productAvailabilityCheckFailedLabel,
   compareLabels = null,
+  bundleIncludesTitle,
+  bundleRegularTotalLabel,
+  bundleYouPayLabel,
+  bundleYouSaveLabel,
+  bundleItemFallbackLabel,
+  bundleItemQtyLabel,
+  bundleViewDetailsLabel,
+  bundleItemDialogTitle,
+  bundleItemViewOnlyNotice,
+  bundleGoToProductLabel,
+  bundleItemCloseLabel,
+  bundleItemSkuLabel,
+  bundleItemUnitPriceLabel,
+  bundleItemCompareAtLabel,
+  bundleItemQuantityLabel,
+  bundleItemLineTotalLabel,
 }: ProductDetailProps) {
   const galleryImages = getProductMedia(product.images);
   /** Product is configured for variants and we loaded at least one SKU */
@@ -73,6 +203,7 @@ export function ProductDetail({
         size="prominent"
       />
     ) : undefined;
+  const bundleBreakdown = getBundleBreakdown(product, bundleItemFallbackLabel);
 
   return (
     <section className="space-y-10 lg:space-y-12">
@@ -132,7 +263,7 @@ export function ProductDetail({
                     />
                   </div>
                   <div className="flex flex-wrap items-end gap-2 pt-1">
-                    <div className="min-w-0 flex-1 [&>*]:w-full">
+                    <div className="min-w-0 flex-1 *:w-full">
                       <WarehouseAwareAddToCartButton
                         productId={product.id}
                         quantity={1}
@@ -147,6 +278,32 @@ export function ProductDetail({
                     ) : null}
                   </div>
                 </div>
+                {bundleBreakdown ? (
+                  <BundleItemInsights
+                    items={bundleBreakdown.lines}
+                    regularTotal={bundleBreakdown.regularTotal}
+                    bundlePrice={bundleBreakdown.bundlePrice}
+                    savings={bundleBreakdown.savings}
+                    locale={locale}
+                    copy={{
+                      includesTitle: bundleIncludesTitle,
+                      qtyLabel: bundleItemQtyLabel,
+                      viewDetailsLabel: bundleViewDetailsLabel,
+                      regularTotalLabel: bundleRegularTotalLabel,
+                      bundlePriceLabel: bundleYouPayLabel,
+                      savingsLabel: bundleYouSaveLabel,
+                      dialogTitle: bundleItemDialogTitle,
+                      viewOnlyNotice: bundleItemViewOnlyNotice,
+                      goToProductLabel: bundleGoToProductLabel,
+                      closeLabel: bundleItemCloseLabel,
+                      skuLabel: bundleItemSkuLabel,
+                      unitPriceLabel: bundleItemUnitPriceLabel,
+                      compareAtLabel: bundleItemCompareAtLabel,
+                      quantityLabel: bundleItemQuantityLabel,
+                      lineTotalLabel: bundleItemLineTotalLabel,
+                    }}
+                  />
+                ) : null}
                 </>
               )}
             </div>

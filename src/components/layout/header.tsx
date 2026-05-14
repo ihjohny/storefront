@@ -14,6 +14,7 @@ function getDefaultItems(locale: string, labels: Record<string, string>): NavIte
   return [
     { label: labels.home, href: `/${locale}` },
     { label: labels.products, href: `/${locale}/products` },
+    { label: labels.bundles, href: `/${locale}/bundles` },
     { label: labels.categories, href: `/${locale}/categories` },
   ];
 }
@@ -98,6 +99,7 @@ export async function Header({ locale }: HeaderProps) {
   const labels = {
     home: dictionary.common?.home ?? "Home",
     products: dictionary.common?.products ?? "Products",
+    bundles: dictionary.common?.bundles ?? "Bundles",
     categories: dictionary.common?.categories ?? "Categories",
     vendor: dictionary.vendor?.directory ?? "Vendors",
   };

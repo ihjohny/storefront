@@ -19,6 +19,7 @@ import type { ProductCompareLabels } from "@/lib/i18n/compare-labels";
 type ProductCardProps = {
   product: Product;
   locale: string;
+  productHrefBase?: string;
   /** Shown when listing is stock-location-filtered and badges are enabled (Q6). */
   availabilityBadgeLabel?: string | null;
   /** When set with gallery + narrative strings and `features.quickViewEnabled`, enables Quick View. */
@@ -60,6 +61,7 @@ function getVendor(tenant: Product["tenant"]) {
 export function ProductCard({
   product,
   locale,
+  productHrefBase = "products",
   availabilityBadgeLabel = null,
   quickViewCopy = null,
   quickViewGalleryLabels = null,
@@ -73,7 +75,7 @@ export function ProductCard({
   const firstImage = media[0];
   const imageUrl = getMediaUrl(firstImage?.url);
   const vendor = getVendor(product.tenant);
-  const productHref = `/${locale}/products/${product.slug}`;
+  const productHref = `/${locale}/${productHrefBase}/${product.slug}`;
   const salePresentation = resolveSalePresentation({
     sellingPrice: product.basePrice,
     compareAtPrice: product.compareAtPrice,
@@ -107,7 +109,7 @@ export function ProductCard({
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           />
         ) : null}
-        <div className="pointer-events-none absolute left-2 top-2 z-[5] flex flex-col gap-1">
+        <div className="pointer-events-none absolute left-2 top-2 z-5 flex flex-col gap-1">
           <SaleBadge presentation={salePresentation} currency={product.currency} />
           {availabilityBadgeLabel ? (
             <span className="rounded bg-emerald-700/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white shadow-sm dark:bg-emerald-600/90">
