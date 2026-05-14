@@ -2,12 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { Product, ProductVariant } from "@/lib/types/product";
+import type { ProductCompareLabels } from "@/lib/i18n/compare-labels";
 import { ProductDetailHeading } from "@/components/product/product-detail-heading";
 import type { SaleDisplayMode } from "@/lib/utils/sale-presentation";
 import { resolveSalePresentation } from "@/lib/utils/sale-presentation";
 import { PriceDisplay } from "@/components/shared/price-display";
 import { SaleBadge } from "@/components/product/sale-badge";
 import { WarehouseAwareAddToCartButton } from "@/components/product/warehouse-aware-add-to-cart-button";
+import { ProductCompareButton } from "@/components/product/product-compare-button";
 import {
   initialVariantOptionMap,
   resolveVariantOptionMapAfterChange,
@@ -36,6 +38,7 @@ type ProductVariantsProps = {
   outOfStockLabel?: string;
   checkingAvailabilityLabel?: string;
   availabilityCheckFailedLabel?: string;
+  compareLabels?: ProductCompareLabels | null;
 };
 
 function wrapClass(presentation: "card" | "embedded") {
@@ -59,6 +62,7 @@ export function ProductVariants({
   outOfStockLabel = "Out of Stock",
   checkingAvailabilityLabel = "Checking availability…",
   availabilityCheckFailedLabel = "Couldn't verify stock availability. Try again.",
+  compareLabels = null,
 }: ProductVariantsProps) {
   const optionNames = useMemo(
     () =>
@@ -127,14 +131,21 @@ export function ProductVariants({
           />
           <SaleBadge presentation={salePresentation} currency={currency} size="prominent" />
         </div>
-          <WarehouseAwareAddToCartButton
-            productId={productId}
-            quantity={1}
-            showQuantityStepper={showQuantityStepper}
-            outOfStockLabel={outOfStockLabel}
-            checkingAvailabilityLabel={checkingAvailabilityLabel}
-            availabilityCheckFailedLabel={availabilityCheckFailedLabel}
-          />
+        <div className="flex flex-wrap items-end gap-2 pt-1">
+          <div className="min-w-0 flex-1 [&>*]:w-full">
+            <WarehouseAwareAddToCartButton
+              productId={productId}
+              quantity={1}
+              showQuantityStepper={showQuantityStepper}
+              outOfStockLabel={outOfStockLabel}
+              checkingAvailabilityLabel={checkingAvailabilityLabel}
+              availabilityCheckFailedLabel={availabilityCheckFailedLabel}
+            />
+          </div>
+          {compareLabels ? (
+            <ProductCompareButton productId={productId} variantId={null} labels={compareLabels} />
+          ) : null}
+        </div>
       </div>
     );
   }
@@ -188,15 +199,26 @@ export function ProductVariants({
           </label>
         );
       })}
-      <WarehouseAwareAddToCartButton
-        productId={productId}
-        variantId={selectedVariant?.id}
-        quantity={1}
-        showQuantityStepper={showQuantityStepper}
-        outOfStockLabel={outOfStockLabel}
-        checkingAvailabilityLabel={checkingAvailabilityLabel}
-        availabilityCheckFailedLabel={availabilityCheckFailedLabel}
-      />
+      <div className="flex flex-wrap items-end gap-2 pt-1">
+        <div className="min-w-0 flex-1 [&>*]:w-full">
+          <WarehouseAwareAddToCartButton
+            productId={productId}
+            variantId={selectedVariant?.id}
+            quantity={1}
+            showQuantityStepper={showQuantityStepper}
+            outOfStockLabel={outOfStockLabel}
+            checkingAvailabilityLabel={checkingAvailabilityLabel}
+            availabilityCheckFailedLabel={availabilityCheckFailedLabel}
+          />
+        </div>
+        {compareLabels ? (
+          <ProductCompareButton
+            productId={productId}
+            variantId={selectedVariant?.id ?? null}
+            labels={compareLabels}
+          />
+        ) : null}
+      </div>
     </div>
   );
 }

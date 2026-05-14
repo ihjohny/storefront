@@ -145,6 +145,7 @@ export default async function CategoryPage({
         quickViewGalleryLabels={dict.product.gallery}
         quickViewProductDetailsTitle={dict.product.productDetails}
         quickViewProductDetailsSeeLess={dict.product.descriptionSeeLess}
+        compareLabels={dict.catalog.compare}
       />
       <Pagination
         currentPage={products.page}

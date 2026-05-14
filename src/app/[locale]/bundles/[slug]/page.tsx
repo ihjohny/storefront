@@ -7,34 +7,33 @@ import { i18nConfig, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { ProductDetail } from "@/components/product/product-detail";
 import type { CheckoutShippingCopy } from "@/lib/types/checkout-copy";
-import { RelatedProductsSection } from "@/components/product/related-products-section";
 import { buildLocaleAlternates } from "@/lib/seo/locale-metadata";
 import { parseProductVariantSearchParam } from "@/lib/utils/product-detail-href";
 
-type ProductPageParams = {
+type BundlePageParams = {
   params: Promise<{ locale: string; slug: string }>;
 };
 
-type ProductPageProps = ProductPageParams & {
+type BundlePageProps = BundlePageParams & {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export async function generateMetadata({
   params,
-}: ProductPageParams): Promise<Metadata> {
+}: BundlePageParams): Promise<Metadata> {
   const { locale, slug } = await params;
   if (!i18nConfig.locales.includes(locale as Locale)) {
     return {};
   }
 
   const product = await getProductBySlug(slug, locale);
-  if (!product) {
+  if (!product || product.productType !== "bundle") {
     return {};
   }
 
   const firstImage = getProductMedia(product.images)[0];
   const firstImageUrl = firstImage?.url ? getMediaUrl(firstImage.url) : null;
-  const path = `/products/${product.slug}`;
+  const path = `/bundles/${product.slug}`;
   const alternates = buildLocaleAlternates(locale as Locale, path);
   const canonical =
     typeof alternates.canonical === "string" ? alternates.canonical : undefined;
@@ -50,7 +49,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function ProductPage({ params, searchParams }: ProductPageProps) {
+export default async function BundlePage({ params, searchParams }: BundlePageProps) {
   const { locale, slug } = await params;
   const query = await searchParams;
   const initialVariantId = parseProductVariantSearchParam(query);
@@ -59,7 +58,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   }
 
   const product = await getProductBySlug(slug, locale);
-  if (!product) {
+  if (!product || product.productType !== "bundle") {
     notFound();
   }
 
@@ -100,17 +99,6 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
         bundleItemCompareAtLabel={dict.product.bundleItemCompareAt}
         bundleItemQuantityLabel={dict.product.bundleItemQuantity}
         bundleItemLineTotalLabel={dict.product.bundleItemLineTotal}
-      />
-      <RelatedProductsSection
-        locale={locale}
-        currentProductId={product.id}
-        product={product}
-        title={dict.product.relatedProducts}
-        quickViewCopy={dict.catalog.quickView}
-        quickViewGalleryLabels={dict.product.gallery}
-        quickViewProductDetailsTitle={dict.product.productDetails}
-        quickViewProductDetailsSeeLess={dict.product.descriptionSeeLess}
-        compareLabels={dict.catalog.compare}
       />
     </main>
   );

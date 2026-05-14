@@ -17,6 +17,7 @@ export interface Product {
   id: string;
   name: string;
   slug: string;
+  productType?: "standard" | "bundle";
   description: unknown;
   shortDescription: string | null;
   sku: string | null;
@@ -31,6 +32,11 @@ export interface Product {
   costPrice?: number | null;
   currency: string;
   hasVariants: boolean;
+  bundleItems?: Array<{
+    product: Product | string;
+    variant?: ProductVariant | string | null;
+    quantity: number;
+  }>;
   tenant: { id: string; name: string; slug: string } | string | null;
   meta: {
     title: string | null;

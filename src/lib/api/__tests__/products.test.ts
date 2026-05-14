@@ -56,11 +56,76 @@ describe("products API helpers", () => {
     expect(url).toContain("where%5Bcategories%5D%5Bin%5D=cat-uuid-1");
   });
 
+  it("getProducts passes productType filter for bundle listing", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          docs: [],
+          totalDocs: 0,
+          limit: 12,
+          totalPages: 0,
+          page: 1,
+          hasPrevPage: false,
+          hasNextPage: false,
+          prevPage: null,
+          nextPage: null,
+          pagingCounter: 1,
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+
+    await getProducts({ locale: "en", productType: "bundle" });
+    const url = String(fetchMock.mock.calls[0]?.[0] ?? "");
+    expect(url).toContain("where%5BproductType%5D%5Bequals%5D=bundle");
+  });
+
   it("getProductBySlug returns first doc or null via MSW", async () => {
     const found = await getProductBySlug("mock-product", "en");
     expect(found?.slug).toBe("mock-product");
     const missing = await getProductBySlug("nope", "en");
     expect(missing).toBeNull();
+  });
+
+  it("getProductById requests published product by id", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      const url = typeof input === "string" ? input : input.toString();
+      expect(url).toContain("where%5Bid%5D%5Bequals%5D=published-id");
+      expect(url).toContain("locale=en");
+      return new Response(
+        JSON.stringify({
+          docs: [
+            {
+              id: "published-id",
+              name: "P",
+              slug: "p",
+              status: "published",
+              basePrice: 1,
+              currency: "USD",
+              categories: [],
+              images: [],
+              hasVariants: false,
+              tenant: null,
+            },
+          ],
+          totalDocs: 1,
+          limit: 1,
+          totalPages: 1,
+          page: 1,
+          hasPrevPage: false,
+          hasNextPage: false,
+          prevPage: null,
+          nextPage: null,
+          pagingCounter: 1,
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
+    });
+
+    const { getProductById } = await import("../products");
+    const found = await getProductById("published-id", "en");
+    expect(found?.id).toBe("published-id");
+    expect(fetchMock).toHaveBeenCalled();
   });
 
   it("getProductVariants returns array via MSW", async () => {

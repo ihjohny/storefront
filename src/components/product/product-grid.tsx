@@ -2,10 +2,12 @@ import type { Product } from "@/lib/types/product";
 import { ProductCard } from "@/components/product/product-card";
 import type { QuickViewCopy } from "@/components/product/product-quick-view";
 import type { ProductGalleryLabels } from "@/components/product/product-gallery";
+import type { ProductCompareLabels } from "@/lib/i18n/compare-labels";
 
 type ProductGridProps = {
   products: Product[];
   locale: string;
+  productHrefBase?: string;
   emptyMessage?: string;
   /** Stock-location-filtered listing + env flag — forwards badge label to cards. */
   availabilityBadgeLabel?: string | null;
@@ -13,17 +15,20 @@ type ProductGridProps = {
   quickViewGalleryLabels?: ProductGalleryLabels | null;
   quickViewProductDetailsTitle?: string | null;
   quickViewProductDetailsSeeLess?: string | null;
+  compareLabels?: ProductCompareLabels | null;
 };
 
 export function ProductGrid({
   products,
   locale,
+  productHrefBase = "products",
   emptyMessage = "No products found for your current filters.",
   availabilityBadgeLabel = null,
   quickViewCopy = null,
   quickViewGalleryLabels = null,
   quickViewProductDetailsTitle = null,
   quickViewProductDetailsSeeLess = null,
+  compareLabels = null,
 }: ProductGridProps) {
   if (products.length === 0) {
     return (
@@ -40,11 +45,13 @@ export function ProductGrid({
           key={product.id}
           product={product}
           locale={locale}
+          productHrefBase={productHrefBase}
           availabilityBadgeLabel={availabilityBadgeLabel}
           quickViewCopy={quickViewCopy}
           quickViewGalleryLabels={quickViewGalleryLabels}
           quickViewProductDetailsTitle={quickViewProductDetailsTitle}
           quickViewProductDetailsSeeLess={quickViewProductDetailsSeeLess}
+          compareLabels={compareLabels}
         />
       ))}
     </div>

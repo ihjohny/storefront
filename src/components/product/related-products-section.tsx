@@ -3,6 +3,7 @@ import { getProducts } from "@/lib/api/products";
 import { ProductCard } from "@/components/product/product-card";
 import type { QuickViewCopy } from "@/components/product/product-quick-view";
 import type { ProductGalleryLabels } from "@/components/product/product-gallery";
+import type { ProductCompareLabels } from "@/lib/i18n/compare-labels";
 import type { Product } from "@/lib/types/product";
 import { getSelectedStoreId } from "@/lib/utils/get-store-id";
 
@@ -28,6 +29,7 @@ type RelatedProductsSectionProps = {
   quickViewGalleryLabels?: ProductGalleryLabels | null;
   quickViewProductDetailsTitle?: string | null;
   quickViewProductDetailsSeeLess?: string | null;
+  compareLabels?: ProductCompareLabels | null;
 };
 
 export async function RelatedProductsSection({
@@ -39,6 +41,7 @@ export async function RelatedProductsSection({
   quickViewGalleryLabels = null,
   quickViewProductDetailsTitle = null,
   quickViewProductDetailsSeeLess = null,
+  compareLabels = null,
 }: RelatedProductsSectionProps) {
   const categoryId = firstCategoryId(product);
   if (!categoryId) return null;
@@ -78,6 +81,7 @@ export async function RelatedProductsSection({
             quickViewGalleryLabels={quickViewGalleryLabels}
             quickViewProductDetailsTitle={quickViewProductDetailsTitle}
             quickViewProductDetailsSeeLess={quickViewProductDetailsSeeLess}
+            compareLabels={compareLabels}
           />
         ))}
       </div>
