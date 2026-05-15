@@ -107,6 +107,14 @@
     "addAddressTitle": "Add Address",
     "guestAddressTitle": "Guest Checkout Address",
     "selectAddressError": "Please select an address.",
+
+    "saveAddressForLaterLabel": "Save this address to my account for future checkout.",
+
+    "saveAddressChangesLabel": "Save changes to this selected address in my account.",
+    "savedAddressPrefillHint": "Select a saved address to prefill the form, review details, edit if needed, then continue.",
+    "showSavedAddressDetails": "Show full address",
+    "startFromBlankAddress": "Start with a blank address form",
+    "saveAddressFailedNotice": "Address used for this checkout, but it could not be saved to your account.",
     "guestContact": {
       "reviewBannerEither": "Guest checkout: enter a valid email or a phone number with at least 5 characters (matches site sign-up rules).",
       "reviewBannerEmail": "Guest checkout: email is required for your account policy.",

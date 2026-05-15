@@ -82,6 +82,12 @@ export type CheckoutPageCopy = {
   addAddressTitle: string;
   guestAddressTitle: string;
   selectAddressError: string;
+  saveAddressForLaterLabel: string;
+  saveAddressChangesLabel: string;
+  saveAddressFailedNotice: string;
+  savedAddressPrefillHint: string;
+  showSavedAddressDetails: string;
+  startFromBlankAddress: string;
   guestContact: CheckoutGuestContactCopy;
   paymentLabels: CheckoutPaymentLabelsCopy;
   shipping: CheckoutShippingCopy;
