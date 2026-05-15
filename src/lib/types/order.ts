@@ -88,6 +88,12 @@ export interface CheckoutRequest {
   cartId: string;
   shippingAddress: AddressSnapshot;
   billingAddress: AddressSnapshot;
+  storeId?: string;
+  serviceArea?: {
+    countryId?: string | null;
+    subdivisionId?: string | null;
+    localityId?: string | null;
+  };
   shippingMethodIds?: string[];
   guestEmail?: string;
   guestPhone?: string;
@@ -120,4 +126,8 @@ export interface CheckoutResponse {
   order: CheckoutOrderSummary;
   transaction?: { id: string };
   paymentRedirectUrl?: string;
+  warnings?: string[];
+  warningCodes?: string[];
+  resolvedStoreId?: string;
+  errorCode?: string;
 }

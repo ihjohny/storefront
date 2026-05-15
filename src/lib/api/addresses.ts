@@ -13,20 +13,35 @@ export interface Address {
   state: string | null;
   postalCode: string;
   country: string;
+  geoCountryId?: string | null;
+  geoSubdivisionId?: string | null;
+  geoLocalityId?: string | null;
+  preferredStoreId?: string | null;
   phone: string | null;
   isDefault: boolean;
 }
 
 export type AddressInput = Omit<Address, "id">;
 
-export async function getAddresses(userId: string): Promise<Address[]> {
+type AddressListOptions = {
+  page?: number;
+  limit?: number;
+};
+
+export async function getAddressesPage(
+  userId: string,
+  options: AddressListOptions = {},
+): Promise<PaginatedResponse<Address>> {
   const params = new URLSearchParams();
   params.set("where[user][equals]", userId);
-  params.set("limit", "50");
+  params.set("limit", String(options.limit ?? 50));
+  params.set("page", String(options.page ?? 1));
 
-  const response = await apiClient<PaginatedResponse<Address>>(
-    `/addresses?${params.toString()}`,
-  );
+  return apiClient<PaginatedResponse<Address>>(`/addresses?${params.toString()}`);
+}
+
+export async function getAddresses(userId: string): Promise<Address[]> {
+  const response = await getAddressesPage(userId, { page: 1, limit: 50 });
   return response.docs;
 }
 

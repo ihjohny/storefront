@@ -6,7 +6,31 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { AuthRequiredIdentifierMode } from "@/lib/auth/auth-required-identifier";
 import { LOOSE_EMAIL_FORMAT_RE } from "@/lib/validation/email-format";
+import {
+  ADDRESS_ISO_COUNTRY_RE,
+  ADDRESS_LABEL_RE,
+  ADDRESS_PERSON_NAME_RE,
+  ADDRESS_PHONE_RE,
+  ADDRESS_PLACE_RE,
+  ADDRESS_POSTAL_RE,
+  ADDRESS_STREET_RE,
+} from "@/lib/validation/address-format";
 import type { CheckoutGuestContactCopy } from "@/lib/types/checkout-copy";
+
+function requiredTrimmed(
+  min: number,
+  requiredMsg: string,
+  invalidMsg: string,
+  pattern: RegExp,
+) {
+  return z
+    .string()
+    .transform((v) => v.trim())
+    .refine((v) => v.length >= min, requiredMsg)
+    .refine((v) => pattern.test(v), invalidMsg);
+}
+
+const optionalTrimmed = z.string().transform((v) => v.trim()).optional();
 
 const emailOrEmpty = z.union([
   z.literal(""),
@@ -14,16 +38,53 @@ const emailOrEmpty = z.union([
 ]);
 
 const addressSchema = z.object({
-  label: z.string().min(1, "Label is required"),
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  street1: z.string().min(1, "Street is required"),
-  street2: z.string().optional(),
-  city: z.string().min(1, "City is required"),
-  state: z.string().optional(),
-  postalCode: z.string().min(1, "Postal code is required"),
-  country: z.string().min(2, "Country is required").max(2, "Use ISO country code"),
-  phone: z.string().optional(),
+  label: requiredTrimmed(
+    2,
+    "Label is required",
+    "Label contains invalid characters",
+    ADDRESS_LABEL_RE,
+  ),
+  firstName: requiredTrimmed(
+    1,
+    "First name is required",
+    "First name contains invalid characters",
+    ADDRESS_PERSON_NAME_RE,
+  ),
+  lastName: requiredTrimmed(
+    1,
+    "Last name is required",
+    "Last name contains invalid characters",
+    ADDRESS_PERSON_NAME_RE,
+  ),
+  street1: requiredTrimmed(
+    3,
+    "Street is required",
+    "Street address looks invalid",
+    ADDRESS_STREET_RE,
+  ),
+  street2: optionalTrimmed,
+  city: requiredTrimmed(
+    2,
+    "City is required",
+    "City/local area looks invalid",
+    ADDRESS_PLACE_RE,
+  ),
+  state: optionalTrimmed.refine((v) => !v || ADDRESS_PLACE_RE.test(v), "Region looks invalid"),
+  postalCode: z
+    .string()
+    .transform((v) => v.trim())
+    .refine((v) => v.length > 0, "Postal code is required")
+    .refine((v) => ADDRESS_POSTAL_RE.test(v), "Postal code looks invalid"),
+  country: z
+    .string()
+    .transform((v) => v.trim().toUpperCase())
+    .refine((v) => ADDRESS_ISO_COUNTRY_RE.test(v), "Use a valid 2-letter ISO country code"),
+  phone: optionalTrimmed
+    .refine((v) => !v || ADDRESS_PHONE_RE.test(v), "Phone looks invalid")
+    .refine(
+      (v) => !v || (v.replace(/\D/g, "").length >= 5 && v.replace(/\D/g, "").length <= 15),
+      "Phone number must contain 5-15 digits",
+    ),
   guestEmail: emailOrEmpty,
 });
 
