@@ -12,6 +12,7 @@ const navItems = [
   { label: "Dashboard", href: "account" },
   { label: "Orders", href: "account/orders" },
   { label: "Addresses", href: "account/addresses" },
+  { label: "Wishlist", href: "account/wishlist" },
   { label: "Settings", href: "account/settings" },
 ] as const;
 

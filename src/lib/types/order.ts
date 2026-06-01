@@ -51,6 +51,7 @@ export interface SubOrder {
   trackingUrl: string | null;
   shippedAt: string | null;
   deliveredAt: string | null;
+  store?: string | { id?: string; name?: string } | null;
 }
 
 export interface BuyerSnapshot {
@@ -80,6 +81,7 @@ export interface Order {
   paymentStatus: "unpaid" | "paid" | "partially-refunded" | "refunded";
   /** Recorded at checkout (admin read-only after create). */
   checkoutPaymentChannel?: "online" | "cash_on_delivery";
+  store?: string | { id?: string; name?: string } | null;
   notes: string | null;
   placedAt: string;
 }

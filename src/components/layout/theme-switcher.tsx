@@ -28,7 +28,7 @@ export function ThemeSwitcher({ idPrefix = "theme" }: { idPrefix?: string }) {
       <span className="sr-only">Color theme</span>
       <select
         id={`${idPrefix}-select`}
-        value={theme ?? "system"}
+        value={theme ?? "light"}
         onChange={(e) => setTheme(e.target.value)}
         className="max-w-36 rounded-md border border-border bg-card py-1 pl-2 pr-6 text-xs font-medium text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
       >
