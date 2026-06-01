@@ -4,6 +4,7 @@ import { formatDate } from "@/lib/utils/format-date";
 import { formatPrice } from "@/lib/utils/format-price";
 import { Badge } from "@/components/shared/badge";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ReorderOrderButton } from "@/components/account/reorder-order-button";
 
 type OrderListProps = {
   orders: Order[];
@@ -52,6 +53,7 @@ export function OrderList({ orders, locale }: OrderListProps) {
               {formatPrice(order.grandTotal, order.currency)}
             </span>
           </div>
+          <ReorderOrderButton locale={locale} orderStore={order.store} items={order.items} />
         </article>
       ))}
     </div>

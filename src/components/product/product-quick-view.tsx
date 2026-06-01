@@ -17,6 +17,7 @@ import { PriceDisplay } from "@/components/shared/price-display";
 import type { Product, ProductVariant } from "@/lib/types/product";
 import type { ProductCompareLabels } from "@/lib/i18n/compare-labels";
 import { ProductCompareButton } from "@/components/product/product-compare-button";
+import { WishlistToggleButton } from "@/components/product/wishlist-toggle-button";
 import { getProductMedia } from "@/lib/utils/product-media";
 import { resolveSalePresentation } from "@/lib/utils/sale-presentation";
 import { formatPrice } from "@/lib/utils/format-price";
@@ -311,13 +312,16 @@ export function ProductQuickView({
               </DialogTitle>
 
               <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border px-4 pb-3 pt-4 sm:px-6">
-                <Link
-                  href={productHref}
-                  onClick={() => onOpenChange(false)}
-                  className="inline-flex min-h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
-                >
-                  {labels.viewFullDetails}
-                </Link>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Link
+                    href={productHref}
+                    onClick={() => onOpenChange(false)}
+                    className="inline-flex min-h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
+                  >
+                    {labels.viewFullDetails}
+                  </Link>
+                  <WishlistToggleButton locale={locale} productId={product.id} />
+                </div>
                 <button
                   type="button"
                   onClick={() => onOpenChange(false)}

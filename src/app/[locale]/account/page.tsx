@@ -51,6 +51,12 @@ export default async function AccountDashboardPage({ params }: AccountDashboardP
           Manage Addresses
         </Link>
         <Link
+          href={`/${locale}/account/wishlist`}
+          className="rounded-md border border-border bg-background px-2.5 py-1 text-xs font-medium text-foreground transition hover:bg-muted sm:px-3 sm:py-1.5 sm:text-sm lg:py-1.5 lg:text-[13px]"
+        >
+          View Wishlist
+        </Link>
+        <Link
           href={`/${locale}/account/settings`}
           className="rounded-md border border-border bg-background px-2.5 py-1 text-xs font-medium text-foreground transition hover:bg-muted sm:px-3 sm:py-1.5 sm:text-sm lg:py-1.5 lg:text-[13px]"
         >

@@ -19,6 +19,7 @@ import type { CheckoutShippingCopy } from "@/lib/types/checkout-copy";
 import type { ProductCompareLabels } from "@/lib/i18n/compare-labels";
 import { ProductCompareButton } from "@/components/product/product-compare-button";
 import { BundleItemInsights } from "@/components/product/bundle-item-insights";
+import { WishlistToggleButton } from "@/components/product/wishlist-toggle-button";
 
 type ProductDetailProps = {
   product: Product;
@@ -276,6 +277,7 @@ export function ProductDetail({
                     {compareLabels ? (
                       <ProductCompareButton productId={product.id} labels={compareLabels} />
                     ) : null}
+                    <WishlistToggleButton locale={locale} productId={product.id} />
                   </div>
                 </div>
                 {bundleBreakdown ? (
@@ -310,6 +312,12 @@ export function ProductDetail({
           </>
         )}
       </div>
+
+      {showVariantPdp ? (
+        <div>
+          <WishlistToggleButton locale={locale} productId={product.id} />
+        </div>
+      ) : null}
 
       <ProductDetailNarrative
         product={product}

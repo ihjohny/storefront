@@ -4,6 +4,7 @@ import { formatDate } from "@/lib/utils/format-date";
 import { formatPrice } from "@/lib/utils/format-price";
 import { orderItemProductDetailHref } from "@/lib/utils/product-detail-href";
 import { Badge } from "@/components/shared/badge";
+import { ReorderOrderButton } from "@/components/account/reorder-order-button";
 
 type OrderDetailProps = {
   order: Order;
@@ -51,6 +52,7 @@ export function OrderDetail({ order, locale, isMultivendor }: OrderDetailProps) 
         <p className="text-sm text-slate-600 dark:text-slate-300">
           Placed on {formatDate(order.placedAt, locale)} - Payment: {order.paymentStatus}
         </p>
+        <ReorderOrderButton locale={locale} orderStore={order.store} items={order.items} />
       </header>
 
       {order.buyerSnapshot &&

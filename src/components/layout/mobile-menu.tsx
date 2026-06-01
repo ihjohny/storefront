@@ -121,6 +121,15 @@ export function MobileMenu({
                   My Orders
                 </Link>
               )}
+              {isAuthenticated && (
+                <Link
+                  href={`/${locale}/account/wishlist`}
+                  onClick={onClose}
+                  className="rounded-md px-2 py-2 text-sm hover:bg-muted"
+                >
+                  Wishlist
+                </Link>
+              )}
 
               <div className="flex flex-col gap-2 pt-2">
                 <ThemeSwitcher idPrefix="menu" />

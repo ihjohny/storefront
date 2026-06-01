@@ -210,7 +210,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (!activeUserId && !activeGuestId) {
         return;
       }
-      if (features.multiStore && !storeId && nextItems.length > 0) {
+      if (features.multiStore && features.singleStoreCart && !storeId && nextItems.length > 0) {
         return;
       }
 
@@ -241,7 +241,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addItem = useCallback(
     async (productId: string, variantId?: string, quantity = 1) => {
-      if (features.multiStore && !storeId) {
+      if (features.multiStore && features.singleStoreCart && !storeId) {
         return;
       }
       const safeQuantity = Math.max(1, quantity);
