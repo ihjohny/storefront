@@ -22,16 +22,24 @@ export async function getHeader(
   locale: string,
   options: GlobalRequestOptions = {},
 ) {
-  return apiClient<Record<string, unknown>>(buildGlobalPath("header", locale), {
-    next: { revalidate: 60, ...options.next },
-  } as RequestInit);
+  try {
+    return await apiClient<Record<string, unknown>>(buildGlobalPath("header", locale), {
+      next: { revalidate: 60, ...options.next },
+    } as RequestInit);
+  } catch {
+    return null;
+  }
 }
 
 export async function getFooter(
   locale: string,
   options: GlobalRequestOptions = {},
 ) {
-  return apiClient<Record<string, unknown>>(buildGlobalPath("footer", locale), {
-    next: { revalidate: 60, ...options.next },
-  } as RequestInit);
+  try {
+    return await apiClient<Record<string, unknown>>(buildGlobalPath("footer", locale), {
+      next: { revalidate: 60, ...options.next },
+    } as RequestInit);
+  } catch {
+    return null;
+  }
 }

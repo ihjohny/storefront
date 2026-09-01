@@ -3,19 +3,23 @@ import type { PaginatedResponse } from "../types/api-response";
 import type { Category } from "../types/category";
 
 export async function getCategories(locale: string): Promise<Category[]> {
-  const params = new URLSearchParams();
-  params.set("where[isActive][equals]", "true");
-  params.set("locale", locale);
-  params.set("depth", "1");
-  params.set("sort", "displayOrder");
-  params.set("limit", "100");
+  try {
+    const params = new URLSearchParams();
+    params.set("where[isActive][equals]", "true");
+    params.set("locale", locale);
+    params.set("depth", "1");
+    params.set("sort", "displayOrder");
+    params.set("limit", "100");
 
-  const response = await apiClient<PaginatedResponse<Category>>(
-    `/categories?${params.toString()}`,
-    { next: { revalidate: 60 } } as RequestInit,
-  );
+    const response = await apiClient<PaginatedResponse<Category>>(
+      `/categories?${params.toString()}`,
+      { next: { revalidate: 60 } } as RequestInit,
+    );
 
-  return response.docs;
+    return response.docs ?? [];
+  } catch {
+    return [];
+  }
 }
 
 export async function getTopLevelCategories(locale: string): Promise<Category[]> {

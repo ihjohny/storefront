@@ -35,8 +35,26 @@ function buildMediaRemotePatterns(): RemotePattern[] {
     },
     {
       protocol: "http",
+      hostname: "127.0.0.1",
+      port: "3000",
+      pathname: "/api/media/file/**",
+    },
+    {
+      protocol: "http",
+      hostname: "bs-commerce-backend",
+      port: "3000",
+      pathname: "/api/media/file/**",
+    },
+    {
+      protocol: "http",
       hostname: "localhost",
       port: "4000",
+      pathname: "/api/media/file/**",
+    },
+    {
+      protocol: "http",
+      hostname: "localhost",
+      port: "3001",
       pathname: "/api/media/file/**",
     },
   ];
@@ -54,7 +72,6 @@ function buildMediaRemotePatterns(): RemotePattern[] {
     } catch {
       return;
     }
-    if (u.hostname === "localhost") return;
     const key = `${u.protocol === "https:" ? "https" : "http"}://${u.hostname}:${u.port || ""}`;
     if (seen.has(key)) return;
     seen.add(key);
@@ -73,6 +90,15 @@ function buildMediaRemotePatterns(): RemotePattern[] {
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  async rewrites() {
+    const backendOrigin = resolveBackendPublicOrigin();
+    return [
+      {
+        source: "/api/media/file/:path*",
+        destination: `${backendOrigin}/api/media/file/:path*`,
+      },
+    ];
+  },
   async headers() {
     const backendOrigin = resolveBackendPublicOrigin();
     const apiUrl =
@@ -82,8 +108,8 @@ const nextConfig: NextConfig = {
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "style-src 'self' 'unsafe-inline'",
-      `img-src 'self' data: blob: ${backendOrigin}`,
-      `connect-src 'self' ${apiOrigin} ${backendOrigin} ws: wss:`,
+      `img-src 'self' data: blob: ${backendOrigin} ${apiOrigin} http://bs-commerce-backend:3000 http://localhost:3000`,
+      `connect-src 'self' ${apiOrigin} ${backendOrigin} http://bs-commerce-backend:3000 http://localhost:3000 ws: wss:`,
       "font-src 'self'",
       "frame-ancestors 'none'",
     ].join("; ");

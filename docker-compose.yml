@@ -1,0 +1,27 @@
+services:
+  storefront:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000/api}
+        BACKEND_URL: ${BACKEND_URL:-http://bs-commerce-backend:3000}
+        NEXT_PUBLIC_STOREFRONT_URL: ${NEXT_PUBLIC_STOREFRONT_URL:-http://localhost:3001}
+    container_name: bs-commerce-storefront
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - HOSTNAME=0.0.0.0
+      - BACKEND_URL=${BACKEND_URL:-http://bs-commerce-backend:3000}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:3000/api}
+      - NEXT_PUBLIC_STOREFRONT_URL=${NEXT_PUBLIC_STOREFRONT_URL:-http://localhost:3001}
+    networks:
+      - bs-commerce-network
+
+networks:
+  bs-commerce-network:
+    name: bs-commerce_default
+    external: true

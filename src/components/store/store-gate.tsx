@@ -77,14 +77,17 @@ function StoreCard({
 export function StoreGate({ children }: { children: ReactNode }) {
   const { stores, selectedStore, selectStore, isLoading, serviceArea } = useStore();
 
+  const useGeoPicker = features.serviceAreaStoreSelection && Boolean(serviceArea);
+
   const shouldGate =
-    features.multiStore && features.singleStoreCart && !selectedStore;
+    features.multiStore &&
+    features.singleStoreCart &&
+    !selectedStore &&
+    (isLoading || useGeoPicker || stores.length > 0);
 
   if (!shouldGate) {
     return <>{children}</>;
   }
-
-  const useGeoPicker = features.serviceAreaStoreSelection && Boolean(serviceArea);
 
   return (
     <>

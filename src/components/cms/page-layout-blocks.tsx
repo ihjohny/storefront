@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { CmsRichText } from "@/components/cms/cms-rich-text";
 import type { CmsLayoutBlock } from "@/lib/types/cms-page";
 import { getMediaUrl } from "@/lib/utils/url";
@@ -50,11 +51,15 @@ export function PageLayoutBlocks({ blocks }: PageLayoutBlocksProps) {
               className="relative overflow-hidden rounded-2xl border border-border bg-muted/40 px-5 py-10 sm:px-8 sm:py-12"
             >
               {bg.url ? (
-                <div
-                  className="absolute inset-0 bg-cover bg-center opacity-30"
-                  style={{ backgroundImage: `url(${bg.url})` }}
-                  aria-hidden
-                />
+                <div className="absolute inset-0 overflow-hidden opacity-30" aria-hidden>
+                  <Image
+                    src={bg.url}
+                    alt={bg.alt || heading || "Hero background"}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 1280px) 100vw, 1280px"
+                  />
+                </div>
               ) : null}
               <div className="relative z-10 mx-auto max-w-3xl text-center">
                 {heading ? (

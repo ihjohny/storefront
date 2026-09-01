@@ -1,0 +1,11 @@
+node_modules
+.next
+.git
+.gitignore
+.yarnrc
+README.md
+.env*.local
+pm2
+e2e
+playwright-report
+test-results

@@ -110,8 +110,8 @@ export async function Header({ locale }: HeaderProps) {
   let navRaw: unknown = null;
   try {
     const response = await getHeader(locale);
-    const data = response as Record<string, unknown>;
-    navRaw = data.navLinks ?? data.navItems;
+    const data = response as Record<string, unknown> | null;
+    navRaw = data?.navLinks ?? data?.navItems;
     const fromApi = normalizeNavItems(navRaw, locale);
     const cmsNavHasRows = Array.isArray(navRaw) && navRaw.length > 0;
 
@@ -121,7 +121,7 @@ export async function Header({ locale }: HeaderProps) {
       navItems = fromApi;
     }
 
-    const announcement = data.announcementBar as Record<string, unknown> | undefined;
+    const announcement = data?.announcementBar as Record<string, unknown> | undefined;
     const enabled = announcement?.enabled === true;
     const text =
       typeof announcement?.message === "string"

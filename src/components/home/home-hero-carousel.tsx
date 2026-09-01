@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import type { HomeHeroSlide } from "@/lib/cms/home-hero";
 import { normalizeCmsPathToHref } from "@/lib/utils/normalize-cms-href";
@@ -111,11 +112,16 @@ export function HomeHeroCarousel({
               aria-hidden={!isActive}
             >
               {s.backgroundImageUrl ? (
-                <div
-                  className="absolute inset-0 bg-cover bg-center"
-                  style={{ backgroundImage: `url(${s.backgroundImageUrl})` }}
-                  aria-hidden
-                />
+                <div className="absolute inset-0 overflow-hidden" aria-hidden>
+                  <Image
+                    src={s.backgroundImageUrl}
+                    alt={s.heading || "Hero banner"}
+                    fill
+                    priority={i === 0}
+                    className="object-cover"
+                    sizes="(max-width: 1280px) 100vw, 1280px"
+                  />
+                </div>
               ) : null}
               <div
                 className="absolute inset-0 bg-linear-to-b from-white/90 via-white/75 to-white/92 dark:from-slate-950/90 dark:via-slate-950/75 dark:to-slate-950/92"

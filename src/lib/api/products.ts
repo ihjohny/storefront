@@ -87,57 +87,69 @@ async function getStoreProducts(
 }
 
 export async function getProductById(id: string, locale: string): Promise<Product | null> {
-  const params = new URLSearchParams();
-  params.set("where[id][equals]", id);
-  params.set("locale", locale);
-  params.set("depth", "2");
-  params.set("limit", "1");
+  try {
+    const params = new URLSearchParams();
+    params.set("where[id][equals]", id);
+    params.set("locale", locale);
+    params.set("depth", "2");
+    params.set("limit", "1");
 
-  const response = await apiClient<ProductsResponse>(`/products?${params.toString()}`, {
-    ...(typeof window === "undefined" ? { next: { revalidate: 30 } } : {}),
-  } as RequestInit);
+    const response = await apiClient<ProductsResponse>(`/products?${params.toString()}`, {
+      ...(typeof window === "undefined" ? { next: { revalidate: 30 } } : {}),
+    } as RequestInit);
 
-  const doc = response.docs[0];
-  if (!doc || doc.status !== "published") {
+    const doc = response.docs[0];
+    if (!doc || doc.status !== "published") {
+      return null;
+    }
+    return doc;
+  } catch {
     return null;
   }
-  return doc;
 }
 
 export async function getProductBySlug(
   slug: string,
   locale: string,
 ): Promise<Product | null> {
-  const params = new URLSearchParams();
-  params.set("where[slug][equals]", slug);
-  params.set("locale", locale);
-  params.set("depth", "2");
-  params.set("limit", "1");
+  try {
+    const params = new URLSearchParams();
+    params.set("where[slug][equals]", slug);
+    params.set("locale", locale);
+    params.set("depth", "2");
+    params.set("limit", "1");
 
-  const response = await apiClient<ProductsResponse>(`/products?${params.toString()}`, {
-    next: { revalidate: 60 },
-  } as RequestInit);
+    const response = await apiClient<ProductsResponse>(`/products?${params.toString()}`, {
+      next: { revalidate: 60 },
+    } as RequestInit);
 
-  return response.docs[0] ?? null;
+    return response.docs[0] ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export async function getProductVariants(
   productId: string,
   locale?: string,
 ): Promise<ProductVariant[]> {
-  const params = new URLSearchParams();
-  params.set("where[product][equals]", productId);
-  params.set("where[isActive][equals]", "true");
-  params.set("limit", "100");
-  params.set("depth", "2");
+  try {
+    const params = new URLSearchParams();
+    params.set("where[product][equals]", productId);
+    params.set("where[isActive][equals]", "true");
+    params.set("limit", "100");
+    params.set("depth", "2");
 
-  const response = await apiClient<PaginatedResponse<ProductVariant>>(
-    `/product-variants?${params.toString()}`,
-    {
-      ...(locale ? { locale } : {}),
-      ...(typeof window === "undefined" ? { next: { revalidate: 30 } } : {}),
-    } as RequestInit,
-  );
+    const response = await apiClient<PaginatedResponse<ProductVariant>>(
+      `/product-variants?${params.toString()}`,
+      {
+        ...(locale ? { locale } : {}),
+        ...(typeof window === "undefined" ? { next: { revalidate: 30 } } : {}),
+      } as RequestInit,
+    );
 
-  return response.docs;
+    return response.docs ?? [];
+  } catch {
+    return [];
+  }
 }
