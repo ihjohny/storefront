@@ -7,6 +7,7 @@ services:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000/api}
         BACKEND_URL: ${BACKEND_URL:-http://bs-commerce-backend:3000}
         NEXT_PUBLIC_STOREFRONT_URL: ${NEXT_PUBLIC_STOREFRONT_URL:-http://localhost:3001}
+        NEXT_PUBLIC_CONTACT_EMAIL: ${NEXT_PUBLIC_CONTACT_EMAIL:-support@bs-commerce.com}
     container_name: bs-commerce-storefront
     restart: unless-stopped
     ports:
@@ -18,6 +19,7 @@ services:
       - BACKEND_URL=${BACKEND_URL:-http://bs-commerce-backend:3000}
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:3000/api}
       - NEXT_PUBLIC_STOREFRONT_URL=${NEXT_PUBLIC_STOREFRONT_URL:-http://localhost:3001}
+      - NEXT_PUBLIC_CONTACT_EMAIL=${NEXT_PUBLIC_CONTACT_EMAIL:-support@bs-commerce.com}
     networks:
       - bs-commerce-network
 

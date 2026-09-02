@@ -28,26 +28,3 @@ export async function getPageBySlug(
     return null;
   }
 }
-
-/**
- * Fetches all published CMS pages for the given locale (excluding internal banner pages).
- */
-export async function getPublishedPages(locale: string): Promise<CmsPage[]> {
-  try {
-    const params = new URLSearchParams();
-    params.set("where[status][equals]", "published");
-    params.set("limit", "20");
-    params.set("depth", "1");
-    params.set("locale", locale);
-
-    const res = await apiClient<PaginatedResponse<CmsPage>>(`/pages?${params.toString()}`, {
-      locale,
-    });
-
-    return (res?.docs || []).filter(
-      (p) => p && p.slug && p.slug !== "home-hero-banners" && p.slug !== "home",
-    );
-  } catch {
-    return [];
-  }
-}

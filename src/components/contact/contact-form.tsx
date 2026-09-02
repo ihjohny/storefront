@@ -17,9 +17,9 @@ type ContactFormProps = {
 
 export function ContactForm({ strings }: ContactFormProps) {
   const toEmail =
-    typeof process.env.NEXT_PUBLIC_CONTACT_EMAIL === "string"
-      ? process.env.NEXT_PUBLIC_CONTACT_EMAIL.trim()
-      : "";
+    (typeof process.env.NEXT_PUBLIC_CONTACT_EMAIL === "string" &&
+      process.env.NEXT_PUBLIC_CONTACT_EMAIL.trim()) ||
+    "support@bs-commerce.com";
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");

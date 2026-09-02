@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { getFooter } from "@/lib/api/globals";
-import { getPublishedPages } from "@/lib/api/pages";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import {
   FooterColumns,
@@ -39,7 +38,7 @@ const fallbackColumns: FooterColumn[] = [
   {
     title: "Customer Support",
     links: [
-      { label: "Cart", href: "/cart", visibility: "public" },
+      { label: "Shopping Cart", href: "/cart", visibility: "public" },
       { label: "Track Your Order", href: "/track-order", visibility: "public" },
       { label: "Contact Us", href: "/contact", visibility: "public" },
     ],
@@ -62,22 +61,16 @@ export async function Footer({ locale }: FooterProps) {
   let bottomLinks: BottomLink[] = [];
 
   try {
-    const [footerRes, pagesRes] = await Promise.allSettled([
-      getFooter(locale),
-      getPublishedPages(locale),
-    ]);
+    const response = await getFooter(locale);
+    const data = response as Record<string, unknown> | null;
 
-    const footerData =
-      footerRes.status === "fulfilled" ? (footerRes.value as Record<string, unknown> | null) : null;
-    const cmsPages = pagesRes.status === "fulfilled" ? pagesRes.value : [];
-
-    if (footerData) {
-      if (typeof footerData.copyrightText === "string" && footerData.copyrightText.trim()) {
-        copyrightText = footerData.copyrightText.trim();
+    if (data) {
+      if (typeof data.copyrightText === "string" && data.copyrightText.trim()) {
+        copyrightText = data.copyrightText.trim();
       }
 
-      if (Array.isArray(footerData.bottomLinks)) {
-        bottomLinks = footerData.bottomLinks
+      if (Array.isArray(data.bottomLinks)) {
+        bottomLinks = data.bottomLinks
           .map((item) => {
             if (!item || typeof item !== "object") return null;
             const b = item as Record<string, unknown>;
@@ -89,8 +82,8 @@ export async function Footer({ locale }: FooterProps) {
           .filter((item): item is BottomLink => item !== null);
       }
 
-      if (Array.isArray(footerData.columns)) {
-        const parsed = footerData.columns
+      if (Array.isArray(data.columns)) {
+        const parsed = data.columns
           .map((column) => {
             if (!column || typeof column !== "object") {
               return null;
@@ -134,50 +127,12 @@ export async function Footer({ locale }: FooterProps) {
           .filter((item): item is FooterColumn => Boolean(item));
 
         if (parsed.length > 0) {
-          // If CMS columns are configured, check if we should add a Pages column
-          const hasPagesColumn = parsed.some(
-            (col) =>
-              col.title.toLowerCase().includes("page") ||
-              col.title.toLowerCase().includes("about") ||
-              col.title.toLowerCase().includes("info") ||
-              col.title.toLowerCase().includes("company"),
-          );
-
-          if (!hasPagesColumn && cmsPages.length > 0) {
-            const dynamicPagesLinks: FooterLink[] = cmsPages.map((p) => ({
-              label: p.title,
-              href: `/${p.slug}`,
-              visibility: "public" as const,
-            }));
-
-            // Insert Pages column
-            parsed.splice(1, 0, {
-              title: "Pages & Information",
-              links: dynamicPagesLinks,
-            });
-          }
-
           columns = parsed;
         }
       }
-    } else if (cmsPages.length > 0) {
-      // Use dynamic pages to populate the fallback pages column
-      columns = columns.map((col) => {
-        if (col.title === "Pages & Information") {
-          return {
-            title: "Pages & Information",
-            links: cmsPages.map((p) => ({
-              label: p.title,
-              href: `/${p.slug}`,
-              visibility: "public" as const,
-            })),
-          };
-        }
-        return col;
-      });
     }
   } catch {
-    // Keep footer functional with local fallback links.
+    // Keep footer functional with fallback links when backend is unreachable.
   }
 
   return (
