@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { ThemeSwitcher } from "@/components/layout/theme-switcher";
 import { SearchBar } from "@/components/layout/search-bar";
@@ -45,315 +44,176 @@ export function Navbar({ locale, navItems }: NavbarProps) {
 
   return (
     <>
-      <div className="relative">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-2 px-4 py-3 sm:gap-3 sm:px-6 lg:px-8">
-        <div className="flex w-full min-w-0 flex-wrap items-center justify-between gap-3">
-          <Link
-            href={`/${locale}`}
-            className="shrink-0 text-base font-semibold tracking-tight"
-          >
-            BS Commerce
-          </Link>
-
-        <nav
-          aria-label="Primary navigation"
-          className="hidden min-w-0 flex-1 flex-wrap items-center justify-center gap-x-2 gap-y-1.5 text-sm md:flex xl:flex-nowrap xl:overflow-x-auto xl:overflow-y-hidden xl:px-1 [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5"
-        >
-          {desktopNavItems.map((item) => (
-            <Link
-              key={`${item.href}-${item.label}`}
-              href={item.href}
-              className="shrink-0 whitespace-nowrap rounded-md px-2 py-1 transition hover:bg-muted"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="hidden min-w-0 flex-1 items-center justify-end gap-2 xl:flex">
-          <div className="w-full max-w-sm">
-            <SearchBar locale={locale} />
-          </div>
-          <LocaleSwitcher locale={locale} dataTestId="locale-switcher-header" />
-          <ThemeSwitcher idPrefix="header" />
-          <Link
-            href={`/${locale}/cart`}
-            className="rounded-md border border-border px-3 py-1.5 text-sm"
-          >
-            Cart ({itemCount})
-          </Link>
-          <Link
-            href={`/${locale}/track-order`}
-            className="rounded-md border border-border px-3 py-1.5 text-sm"
-          >
-            Track Order
-          </Link>
-          {isAuthenticated ? (
-            <>
+      <div className="relative w-full">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-2 px-4 py-2.5 sm:px-6 lg:px-8">
+          <div className="flex w-full items-center justify-between gap-3 lg:gap-5">
+            {/* Left: Brand Logo & Desktop Nav Links */}
+            <div className="flex shrink-0 items-center gap-4 lg:gap-6">
               <Link
-                href={`/${locale}/account`}
-                className="rounded-md border border-border px-3 py-1.5 text-sm"
+                href={`/${locale}`}
+                className="flex items-center gap-2 text-base font-bold tracking-tight text-foreground transition hover:opacity-90"
               >
-                Account
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-xs font-bold text-primary-foreground shadow-2xs">
+                  BS
+                </span>
+                <span className="hidden font-semibold sm:inline-block">Commerce</span>
               </Link>
+
+              {/* Primary Navigation Links (Desktop) */}
+              <nav
+                aria-label="Primary navigation"
+                className="hidden items-center gap-1 text-sm font-medium lg:flex"
+              >
+                {desktopNavItems.map((item) => (
+                  <Link
+                    key={`${item.href}-${item.label}`}
+                    href={item.href}
+                    className="shrink-0 whitespace-nowrap rounded-md px-2.5 py-1.5 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </nav>
+            </div>
+
+            {/* Middle: Integrated Search Bar */}
+            <div className="hidden min-w-[180px] flex-1 max-w-xs xl:max-w-md md:block">
+              <SearchBar locale={locale} />
+            </div>
+
+            {/* Right: Actions & Controls */}
+            <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
+              {/* Mobile Search Toggle */}
               <button
                 type="button"
-                onClick={() => void logout()}
-                className="rounded-md border border-border px-3 py-1.5 text-sm"
+                onClick={() => setIsSearchExpanded((prev) => !prev)}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground shadow-2xs transition hover:bg-muted hover:text-foreground md:hidden"
+                aria-expanded={isSearchExpanded}
+                aria-label="Toggle search"
+                title="Search"
               >
-                Logout
-              </button>
-            </>
-          ) : (
-            <>
-              <Link
-                href={`/${locale}/auth/login`}
-                className="rounded-md border border-border px-3 py-1.5 text-sm"
-              >
-                Login
-              </Link>
-              <Link
-                href={`/${locale}/auth/register`}
-                className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground"
-              >
-                Register
-              </Link>
-            </>
-          )}
-        </div>
-
-        <div className="hidden items-center gap-2 md:flex xl:hidden">
-          <button
-            type="button"
-            onClick={() => setIsSearchExpanded((prev) => !prev)}
-            className="inline-flex h-9 min-w-28 items-center gap-2 rounded-md border border-border px-2.5 text-sm text-muted-foreground"
-            aria-expanded={isSearchExpanded}
-            aria-label="Toggle search panel"
-            title="Search"
-          >
-            <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" aria-hidden="true">
-              <path
-                d="M13.5 13.5L17 17M9 14a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
-            <span>Search</span>
-          </button>
-
-          <Link
-            href={`/${locale}/cart`}
-            className="relative inline-flex h-9 w-9 items-center justify-center rounded-md border border-border"
-            aria-label={`Cart with ${itemCount} items`}
-            title="Cart"
-          >
-            <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" aria-hidden="true">
-              <path
-                d="M3 4h1.2c.4 0 .75.28.84.67L5.4 6H16l-1.2 5.2a1 1 0 0 1-.98.8H7.2a1 1 0 0 1-.98-.8L4.5 4.7M8 16.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0Zm7 0a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0Z"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <span className="absolute -right-1 -top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-medium leading-4 text-primary-foreground">
-              {cartCountLabel}
-            </span>
-          </Link>
-
-          <Menu as="div" className="relative">
-            <MenuButton
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border"
-              aria-label="Profile options"
-              title={isAuthenticated ? "Account options" : "Sign in options"}
-            >
-              <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" aria-hidden="true">
-                <path
-                  d="M10 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-5 6a5 5 0 0 1 10 0"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </MenuButton>
-            <MenuItems className="absolute right-0 z-40 mt-2 w-44 rounded-md border border-border bg-card p-1 text-sm shadow-lg outline-none">
-              {isAuthenticated ? (
-                <>
-                  <MenuItem>
-                    <Link
-                      href={`/${locale}/account`}
-                      className="block rounded px-2 py-1.5 hover:bg-muted"
-                    >
-                      Account
-                    </Link>
-                  </MenuItem>
-                  <MenuItem>
-                    <Link
-                      href={`/${locale}/account/orders`}
-                      className="block rounded px-2 py-1.5 hover:bg-muted"
-                    >
-                      My Orders
-                    </Link>
-                  </MenuItem>
-                  <MenuItem>
-                    <Link
-                      href={`/${locale}/account/wishlist`}
-                      className="block rounded px-2 py-1.5 hover:bg-muted"
-                    >
-                      Wishlist
-                    </Link>
-                  </MenuItem>
-                  <MenuItem>
-                    <button
-                      type="button"
-                      onClick={() => void logout()}
-                      className="block w-full rounded px-2 py-1.5 text-left hover:bg-muted"
-                    >
-                      Logout
-                    </button>
-                  </MenuItem>
-                </>
-              ) : (
-                <>
-                  <MenuItem>
-                    <Link
-                      href={`/${locale}/auth/login`}
-                      className="block rounded px-2 py-1.5 hover:bg-muted"
-                    >
-                      Login
-                    </Link>
-                  </MenuItem>
-                  <MenuItem>
-                    <Link
-                      href={`/${locale}/auth/register`}
-                      className="block rounded px-2 py-1.5 hover:bg-muted"
-                    >
-                      Register
-                    </Link>
-                  </MenuItem>
-                </>
-              )}
-              <div className="mt-1 border-t border-border pt-1">
-                <MenuItem>
-                  <Link
-                    href={`/${locale}/track-order`}
-                    className="block rounded px-2 py-1.5 hover:bg-muted"
-                  >
-                    Track Order
-                  </Link>
-                </MenuItem>
-              </div>
-              <div className="mt-1 border-t border-border px-2 py-2">
-                <div className="flex flex-col gap-2">
-                  <ThemeSwitcher idPrefix="header-compact" />
-                  <LocaleSwitcher locale={locale} dataTestId="locale-switcher-header-compact" />
-                </div>
-              </div>
-            </MenuItems>
-          </Menu>
-        </div>
-
-        <div className="flex items-center gap-2 md:hidden">
-          <button
-            type="button"
-            onClick={() => setIsSearchExpanded((prev) => !prev)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border"
-            aria-expanded={isSearchExpanded}
-            aria-label="Toggle search panel"
-            title="Search"
-          >
-            <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" aria-hidden="true">
-              <path
-                d="M13.5 13.5L17 17M9 14a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
-
-          <Link
-            href={`/${locale}/cart`}
-            className="relative inline-flex h-9 w-9 items-center justify-center rounded-md border border-border"
-            aria-label={`Cart with ${itemCount} items`}
-            title="Cart"
-          >
-            <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" aria-hidden="true">
-              <path
-                d="M3 4h1.2c.4 0 .75.28.84.67L5.4 6H16l-1.2 5.2a1 1 0 0 1-.98.8H7.2a1 1 0 0 1-.98-.8L4.5 4.7M8 16.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0Zm7 0a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0Z"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <span className="absolute -right-1 -top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-medium leading-4 text-primary-foreground">
-              {cartCountLabel}
-            </span>
-          </Link>
-
-          <button
-            type="button"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border"
-            onClick={() => setIsMobileOpen(true)}
-            aria-label="Open navigation menu"
-            title="Menu"
-          >
-            <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" aria-hidden="true">
-              <path
-                d="M3 5.5h14M3 10h14M3 14.5h14"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
-        </div>
-
-        <button
-          type="button"
-          className="hidden rounded-md border border-border px-3 py-1.5 text-sm md:hidden"
-          onClick={() => setIsMobileOpen(true)}
-          aria-label="Open navigation menu"
-        >
-          Menu
-        </button>
-        </div>
-        {features.multiStore ? (
-          <div className="min-w-0 border-t border-border/60 pt-2 sm:pt-3">
-            <StoreSelector />
-          </div>
-        ) : null}
-        </div>
-
-        {isSearchExpanded ? (
-          <div className="absolute inset-x-0 top-full z-40 md:hidden">
-            <div className="mx-auto w-full max-w-7xl px-4 pt-2 sm:px-6 lg:px-8">
-              <div className="rounded-lg border border-border bg-card p-3 shadow-lg">
-                <div className="flex items-center gap-2">
-                  <SearchBar
-                    locale={locale}
-                    focusOnMount
-                    onSearchComplete={() => setIsSearchExpanded(false)}
+                <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" aria-hidden="true">
+                  <path
+                    d="M13.5 13.5L17 17M9 14a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
                   />
+                </svg>
+              </button>
+
+              {/* Switchers (Desktop) */}
+              <div className="hidden items-center gap-1.5 xl:flex">
+                <LocaleSwitcher locale={locale} dataTestId="locale-switcher-header" />
+                <ThemeSwitcher idPrefix="header" />
+              </div>
+
+              {/* Track Order Button */}
+              <Link
+                href={`/${locale}/track-order`}
+                className="hidden shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground shadow-2xs transition hover:bg-muted md:inline-flex"
+                title="Track Order"
+              >
+                <svg viewBox="0 0 20 20" className="h-3.5 w-3.5 text-muted-foreground" fill="none" aria-hidden="true">
+                  <path
+                    d="M3 4h14v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4Zm0 4h14M8 12h4"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <span>Track Order</span>
+              </Link>
+
+              {/* Cart Button */}
+              <Link
+                href={`/${locale}/cart`}
+                className="relative inline-flex shrink-0 whitespace-nowrap items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground shadow-2xs transition hover:bg-muted"
+                aria-label={`Cart with ${itemCount} items`}
+                title="Shopping Cart"
+              >
+                <svg viewBox="0 0 20 20" className="h-4 w-4 text-muted-foreground" fill="none" aria-hidden="true">
+                  <path
+                    d="M3 4h1.2c.4 0 .75.28.84.67L5.4 6H16l-1.2 5.2a1 1 0 0 1-.98.8H7.2a1 1 0 0 1-.98-.8L4.5 4.7M8 16.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0Zm7 0a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span className="hidden sm:inline">Cart</span>
+                <span className="inline-flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-none text-primary-foreground">
+                  {cartCountLabel}
+                </span>
+              </Link>
+
+              {/* Desktop / Tablet Auth Buttons */}
+              {isAuthenticated ? (
+                <div className="hidden shrink-0 items-center gap-1.5 sm:flex">
+                  <Link
+                    href={`/${locale}/account`}
+                    className="shrink-0 whitespace-nowrap rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground shadow-2xs transition hover:bg-muted"
+                  >
+                    Account
+                  </Link>
                   <button
                     type="button"
-                    onClick={() => setIsSearchExpanded(false)}
-                    className="rounded-md border border-border px-2 py-2 text-xs"
+                    onClick={() => void logout()}
+                    className="shrink-0 whitespace-nowrap rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-2xs transition hover:bg-muted hover:text-foreground"
                   >
-                    Close
+                    Logout
                   </button>
                 </div>
-              </div>
+              ) : (
+                <div className="hidden shrink-0 items-center gap-1.5 sm:flex">
+                  <Link
+                    href={`/${locale}/auth/login`}
+                    className="shrink-0 whitespace-nowrap rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground shadow-2xs transition hover:bg-muted"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href={`/${locale}/auth/register`}
+                    className="shrink-0 whitespace-nowrap rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-2xs transition hover:bg-primary/90"
+                  >
+                    Register
+                  </Link>
+                </div>
+              )}
+
+              {/* Mobile / Tablet Menu Trigger */}
+              <button
+                type="button"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-foreground shadow-2xs transition hover:bg-muted lg:hidden"
+                onClick={() => setIsMobileOpen(true)}
+                aria-label="Open navigation menu"
+                title="Menu"
+              >
+                <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" aria-hidden="true">
+                  <path
+                    d="M3 5.5h14M3 10h14M3 14.5h14"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
             </div>
           </div>
-        ) : null}
 
+          {/* Optional Multi-Store Bar */}
+          {features.multiStore ? (
+            <div className="min-w-0 border-t border-border/60 pt-2 sm:pt-2.5">
+              <StoreSelector />
+            </div>
+          ) : null}
+        </div>
+
+        {/* Expandable Search Overlay for Mobile */}
         {isSearchExpanded ? (
-          <div className="absolute inset-x-0 top-full z-40 hidden md:block xl:hidden">
-            <div className="mx-auto w-full max-w-7xl px-4 pt-2 sm:px-6 lg:px-8">
-              <div className="rounded-lg border border-border bg-card p-3 shadow-lg">
+          <div className="absolute inset-x-0 top-full z-40 md:hidden">
+            <div className="mx-auto w-full max-w-7xl px-4 pt-2 sm:px-6">
+              <div className="rounded-xl border border-border bg-card p-3 shadow-xl">
                 <div className="flex items-center gap-2">
                   <SearchBar
                     locale={locale}
@@ -363,7 +223,7 @@ export function Navbar({ locale, navItems }: NavbarProps) {
                   <button
                     type="button"
                     onClick={() => setIsSearchExpanded(false)}
-                    className="rounded-md border border-border px-2 py-2 text-xs"
+                    className="shrink-0 rounded-lg border border-border bg-muted/60 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted"
                   >
                     Close
                   </button>
