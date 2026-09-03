@@ -16,6 +16,10 @@ import { notFound } from "next/navigation";
 import { HomeHeroCarousel } from "@/components/home/home-hero-carousel";
 import { getHomeHeroSlides } from "@/lib/cms/home-hero";
 import { buildLocaleAlternates } from "@/lib/seo/locale-metadata";
+import { getFeaturedBrands } from "@/lib/api/attributes";
+import { getCustomerRecommendations } from "@/lib/api/customer";
+import { RecommendedProductsSection } from "@/components/personalization/recommended-products-section";
+import { RecentlyViewedSection } from "@/components/personalization/recently-viewed-section";
 
 type LocalePageProps = {
   params: Promise<{ locale: string }>;
@@ -121,11 +125,13 @@ export default async function LocaleHomePage({ params }: LocalePageProps) {
   const safeLocale = locale as Locale;
   const storeId = await getSelectedStoreId();
   const dict = await getDictionary(safeLocale);
-  const [featuredProducts, categories, vendors, homeHeroSlides] = await Promise.all([
+  const [featuredProducts, categories, vendors, homeHeroSlides, featuredBrands, recommendations] = await Promise.all([
     getFeaturedProducts(safeLocale, storeId),
     getRootCategories(safeLocale),
     getTopVendors(),
     getHomeHeroSlides(safeLocale),
+    getFeaturedBrands(safeLocale),
+    getCustomerRecommendations({ locale: safeLocale, limit: 4 }),
   ]);
   // Announcement bar is shown once in <Header> (layout); do not duplicate it below the hero.
 
@@ -237,6 +243,66 @@ export default async function LocaleHomePage({ params }: LocalePageProps) {
           </div>
         )}
       </section>
+
+      {/* Featured Brands Section */}
+      {featuredBrands.length > 0 ? (
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold sm:text-xl">Featured Brands</h2>
+              <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                Official Partners
+              </span>
+            </div>
+            <Link
+              href={`/${locale}/brands`}
+              className="text-xs font-medium text-primary hover:underline sm:text-sm"
+            >
+              All Brands →
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {featuredBrands.slice(0, 4).map((brand) => {
+              const logoUrl =
+                brand.logo && typeof brand.logo === "object" ? getMediaUrl(brand.logo.url) : null;
+              return (
+                <Link
+                  key={brand.id}
+                  href={`/${locale}/brands/${brand.slug}`}
+                  className="group flex items-center gap-3 rounded-xl border border-slate-200 bg-card p-3 shadow-xs transition hover:border-primary/50 hover:shadow-sm dark:border-slate-800"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/30 font-semibold text-sm text-primary">
+                    {logoUrl ? (
+                      <div className="relative h-8 w-8 overflow-hidden rounded">
+                        <Image src={logoUrl} alt={brand.label} fill className="object-contain" sizes="32px" />
+                      </div>
+                    ) : (
+                      brand.label.slice(0, 2).toUpperCase()
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-foreground group-hover:text-primary transition">
+                      {brand.label}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">Official Store</p>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
+
+      {/* Customer Personalized Recommendations */}
+      <RecommendedProductsSection
+        products={recommendations}
+        locale={locale}
+        title="Recommended For You"
+        subtitle="Specially curated based on your preferences, past orders, and top trending items"
+      />
+
+      {/* Browser Browsing History / Recently Viewed */}
+      <RecentlyViewedSection locale={locale} />
 
       {features.multivendor ? (
         <section className="space-y-4">

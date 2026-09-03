@@ -32,9 +32,17 @@ export default async function AccountOrdersPage({
   const response = await getOrders(me.user.id, page, cookieHeader);
 
   return (
-    <section className="space-y-4">
-      <h1 className="text-2xl font-semibold text-foreground sm:text-3xl">Order History</h1>
-      <OrderList orders={response.docs} locale={locale} />
+    <section className="space-y-6">
+      <div className="space-y-1">
+        <h1 className="text-2xl font-semibold text-foreground sm:text-3xl">Order History</h1>
+        <p className="text-xs text-muted-foreground">Manage and track your past purchases</p>
+      </div>
+
+      <div className="space-y-3">
+        <h2 className="text-base font-semibold text-foreground">All Orders ({response.totalDocs})</h2>
+        <OrderList orders={response.docs} locale={locale} />
+      </div>
+
       <Pagination
         currentPage={response.page}
         totalPages={response.totalPages}
