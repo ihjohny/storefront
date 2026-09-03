@@ -45,7 +45,9 @@ export function LoginForm({ locale, redirectTo }: LoginFormProps) {
       await login(values.identifier, values.password);
       const dest = redirectTo || `/${locale}/account`;
       router.push(dest);
-      router.refresh();
+      if (typeof window !== "undefined" && window.location) {
+        window.location.assign(dest);
+      }
     } catch {
       setError("Invalid credentials or verification required.");
     }

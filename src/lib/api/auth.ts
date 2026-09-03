@@ -34,9 +34,13 @@ export async function register(data: RegisterPayload): Promise<RegisterResponse>
 }
 
 export async function getMe(cookieHeader?: string): Promise<MeResponse> {
-  return apiClient<MeResponse>("/users/me", {
-    headers: cookieHeader ? { Cookie: cookieHeader } : undefined,
-  });
+  try {
+    return await apiClient<MeResponse>("/users/me", {
+      headers: cookieHeader ? { Cookie: cookieHeader } : undefined,
+    });
+  } catch {
+    return { user: null };
+  }
 }
 
 export async function logout(): Promise<void> {

@@ -51,8 +51,11 @@ export function RegisterForm({ locale }: { locale: string }) {
         lastName: values.lastName.trim() || undefined,
         displayName: buildDisplayNameForApi(values.firstName, values.lastName),
       });
-      router.push(`/${locale}/account`);
-      router.refresh();
+      const dest = `/${locale}/account`;
+      router.push(dest);
+      if (typeof window !== "undefined" && window.location) {
+        window.location.assign(dest);
+      }
     } catch {
       setError("Unable to create account. Please check your inputs.");
     }

@@ -2,11 +2,10 @@ import { NextResponse } from "next/server";
 
 const COOKIE_NAME = "payload-token";
 
-const cookieOpts = {
+const cookieBaseOpts = {
   httpOnly: true,
   sameSite: "lax" as const,
   path: "/",
-  secure: process.env.NODE_ENV === "production",
 };
 
 /**
@@ -28,9 +27,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "token required" }, { status: 400 });
   }
 
+  // Only mark cookie Secure if the incoming request actually used HTTPS or is forwarded from an HTTPS proxy.
+  // Over plain HTTP (http://localhost:3001 or http://10.112.185.133:3011), setting Secure causes browsers to drop the cookie.
+  const isSecure =
+    request.url.startsWith("https://") ||
+    request.headers.get("x-forwarded-proto") === "https";
+
   const res = NextResponse.json({ ok: true });
   res.cookies.set(COOKIE_NAME, token, {
-    ...cookieOpts,
+    ...cookieBaseOpts,
+    secure: isSecure,
     ...(typeof exp === "number" && Number.isFinite(exp)
       ? { expires: new Date(exp * 1000) }
       : {}),

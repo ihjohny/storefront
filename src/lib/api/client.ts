@@ -120,13 +120,20 @@ export async function apiClient<T>(
     requestHeaders.set("X-Guest-Id", guestId);
   }
 
-  if (
-    typeof window !== "undefined" &&
-    !requestHeaders.has("Authorization")
-  ) {
-    const bearer = getAuthToken();
-    if (bearer) {
-      requestHeaders.set("Authorization", `Bearer ${bearer}`);
+  if (!requestHeaders.has("Authorization")) {
+    if (typeof window !== "undefined") {
+      const bearer = getAuthToken();
+      if (bearer) {
+        requestHeaders.set("Authorization", `Bearer ${bearer}`);
+      }
+    } else {
+      const cookie = requestHeaders.get("Cookie");
+      if (cookie) {
+        const match = cookie.match(/payload-token=([^;]+)/);
+        if (match?.[1]) {
+          requestHeaders.set("Authorization", `Bearer ${match[1]}`);
+        }
+      }
     }
   }
 
