@@ -108,11 +108,15 @@ export async function Header({ locale }: HeaderProps) {
 
   let navItems = getDefaultItems(locale, labels);
   let announcementText: string | null = null;
+  let siteName: string | undefined = undefined;
 
   let navRaw: unknown = null;
   try {
     const response = await getHeader(locale);
     const data = response as Record<string, unknown> | null;
+    if (typeof data?.siteName === "string" && data.siteName.trim()) {
+      siteName = data.siteName.trim();
+    }
     navRaw = data?.navLinks ?? data?.navItems;
     const fromApi = normalizeNavItems(navRaw, locale);
     const cmsNavHasRows = Array.isArray(navRaw) && navRaw.length > 0;
@@ -154,13 +158,13 @@ export async function Header({ locale }: HeaderProps) {
   navItems = withoutToolbarCartLink(navItems, locale);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border/80 bg-background/95 backdrop-blur">
-      {announcementText ? (
-        <div className="border-b border-border bg-muted px-4 py-2 text-center text-xs text-foreground">
-          {announcementText}
-        </div>
-      ) : null}
-      <Navbar locale={locale} navItems={navItems} />
+    <header className="sticky top-0 z-30 w-full border-b border-border/80 bg-background/95 backdrop-blur-md shadow-2xs">
+      <Navbar
+        locale={locale}
+        navItems={navItems}
+        siteName={siteName}
+        announcementText={announcementText}
+      />
     </header>
   );
 }

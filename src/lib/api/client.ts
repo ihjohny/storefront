@@ -131,9 +131,9 @@ export async function apiClient<T>(
   }
 
   const response = await fetch(toApiUrl(endpoint), {
+    credentials: "include",
     ...fetchOptions,
     headers: requestHeaders,
-    credentials: "include",
   });
 
   const rawBody = await response.text();

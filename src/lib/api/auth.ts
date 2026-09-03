@@ -40,7 +40,13 @@ export async function getMe(cookieHeader?: string): Promise<MeResponse> {
 }
 
 export async function logout(): Promise<void> {
-  await apiClient("/users/logout", { method: "POST" });
+  // Storefront customer authentication is managed through client-side tokens
+  // (sessionStorage via clearAuthToken) and storefront-scoped cookies (DELETE /api/auth/sync-token).
+  // We intentionally do not call the backend's /api/users/logout with credentials,
+  // because Payload CMS uses the shared users collection and returns a Set-Cookie
+  // header expiring 'payload-token' on the backend origin (localhost:3000).
+  // Calling that endpoint from the storefront would inadvertently terminate active
+  // admin sessions running in the admin panel on the same browser.
 }
 
 export async function updateUser(

@@ -49,6 +49,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
     notFound();
   }
 
+  const dict = await getDictionary(locale as Locale);
   const page =
     (await getPageBySlug("about-us", locale)) ?? (await getPageBySlug("about", locale));
 
