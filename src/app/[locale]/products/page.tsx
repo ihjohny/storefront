@@ -3,14 +3,17 @@ import { notFound } from "next/navigation";
 import { ApiError } from "@/lib/api/client";
 import { getProducts } from "@/lib/api/products";
 import { getCategories } from "@/lib/api/categories";
+import { getBrands, getAttributes } from "@/lib/api/attributes";
 import { getSelectedStoreId } from "@/lib/utils/get-store-id";
 import { emptyProductListingResponse } from "@/lib/utils/empty-product-listing";
 import { i18nConfig, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { ProductGrid } from "@/components/product/product-grid";
 import { ProductFilters } from "@/components/product/product-filters";
+import { ActiveFilterPills } from "@/components/catalog/active-filter-pills";
 import { Pagination } from "@/components/shared/pagination";
 import type { Category } from "@/lib/types/category";
+import type { Attribute } from "@/lib/types/attribute";
 import type { ProductsResponse } from "@/lib/types/product";
 import { features } from "@/lib/config/features";
 import { resolveListingStoreId } from "@/lib/utils/listing-store-id";
@@ -71,10 +74,14 @@ export default async function ProductsPage({
   });
 
   const page = Math.max(1, toNumber(firstParam(query.page)) ?? 1);
+  const brandParam = firstParam(query.brand);
+  const attributesParam = firstParam(query.attributes);
   const filters = {
     locale,
     page,
     category: firstParam(query.category),
+    brand: brandParam,
+    attributes: attributesParam,
     search: firstParam(query.search),
     sort: firstParam(query.sort) ?? "-createdAt",
     minPrice: toNumber(firstParam(query.minPrice)),
@@ -85,15 +92,21 @@ export default async function ProductsPage({
 
   let productsResponse: ProductsResponse = emptyProductListingResponse(page);
   let categories: Category[] = [];
+  let brands: Attribute[] = [];
+  let attributes: Attribute[] = [];
   let catalogError: string | null = null;
 
   try {
-    const [products, cats] = await Promise.all([
+    const [products, cats, brandList, attrList] = await Promise.all([
       getProducts(filters),
       getCategories(locale),
+      getBrands(locale),
+      getAttributes({ locale }),
     ]);
     productsResponse = products;
     categories = cats;
+    brands = brandList;
+    attributes = attrList;
   } catch (err) {
     if (err instanceof ApiError) {
       catalogError =
@@ -108,6 +121,8 @@ export default async function ProductsPage({
   const dict = await getDictionary(locale as Locale);
   const paginationQuery = {
     category: filters.category,
+    brand: filters.brand,
+    attributes: typeof filters.attributes === "string" ? filters.attributes : undefined,
     search: filters.search,
     sort: filters.sort,
     minPrice: filters.minPrice ? String(filters.minPrice) : undefined,
@@ -142,6 +157,12 @@ export default async function ProductsPage({
 
       <section className="grid gap-6 lg:grid-cols-[280px_1fr]">
         <div className="order-2 space-y-5 lg:order-2">
+          <ActiveFilterPills
+            categories={categories}
+            brands={brands}
+            attributes={attributes}
+          />
+
           <ProductGrid
             products={productsResponse.docs}
             locale={locale}
@@ -163,6 +184,8 @@ export default async function ProductsPage({
         <div className="order-1 lg:order-1 lg:sticky lg:top-24 lg:self-start">
           <ProductFilters
             categories={categories}
+            brands={brands}
+            attributes={attributes}
             inStockLocationToggleEnabled={showStockToggle}
             inStockLocationLabel={dict.catalog.inStockAtLocationLabel}
             inStockLocationHint={dict.catalog.inStockAtLocationHint}

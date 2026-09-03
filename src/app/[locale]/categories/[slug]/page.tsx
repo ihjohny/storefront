@@ -3,17 +3,19 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getCategoryBySlug } from "@/lib/api/categories";
 import { getProducts } from "@/lib/api/products";
+import { getBrands, getAttributes } from "@/lib/api/attributes";
 import { getMediaUrl } from "@/lib/utils/url";
 import { getSelectedStoreId } from "@/lib/utils/get-store-id";
 import { i18nConfig, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { ProductGrid } from "@/components/product/product-grid";
+import { ProductFilters } from "@/components/product/product-filters";
+import { ActiveFilterPills } from "@/components/catalog/active-filter-pills";
 import { Pagination } from "@/components/shared/pagination";
 import { CategoryBreadcrumb } from "@/components/category/category-breadcrumb";
 import { features } from "@/lib/config/features";
 import { resolveListingStoreId } from "@/lib/utils/listing-store-id";
 import { buildLocaleAlternates } from "@/lib/seo/locale-metadata";
-import { InStockLocationCatalogToggle } from "@/components/product/in-stock-location-catalog-toggle";
 
 export const dynamic = "force-dynamic";
 
@@ -81,16 +83,29 @@ export default async function CategoryPage({
 
   const page = Math.max(1, toNumber(firstParam(query.page)) ?? 1);
   const sort = firstParam(query.sort) ?? "-createdAt";
+  const brand = firstParam(query.brand);
+  const attributesParam = firstParam(query.attributes);
+  const minPrice = toNumber(firstParam(query.minPrice));
+  const maxPrice = toNumber(firstParam(query.maxPrice));
+  const featured = firstParam(query.featured) === "1";
 
-  const products = await getProducts({
-    category: category.id,
-    locale,
-    sort,
-    page,
-    storeId: listingStoreId,
-  });
-
-  const dict = await getDictionary(locale as Locale);
+  const [products, brands, attributes, dict] = await Promise.all([
+    getProducts({
+      category: category.id,
+      brand,
+      attributes: attributesParam,
+      minPrice,
+      maxPrice,
+      featured,
+      locale,
+      sort,
+      page,
+      storeId: listingStoreId,
+    }),
+    getBrands(locale),
+    getAttributes({ locale }),
+    getDictionary(locale as Locale),
+  ]);
 
   const categoryImageUrl =
     category.image && typeof category.image === "object"
@@ -105,10 +120,22 @@ export default async function CategoryPage({
       ? dict.catalog.availableAtLocationBadge
       : null;
 
+  const paginationQuery = {
+    sort,
+    brand,
+    attributes: attributesParam,
+    minPrice: minPrice ? String(minPrice) : undefined,
+    maxPrice: maxPrice ? String(maxPrice) : undefined,
+    featured: featured ? "1" : undefined,
+    inStockAtStore: inStockAtStoreParam === "0" ? "0" : undefined,
+  };
+
   return (
     <main className="mx-auto w-full max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
       <CategoryBreadcrumb locale={locale} category={category} />
-      <section className="grid gap-4 rounded-xl border border-slate-200 p-4 dark:border-slate-800 sm:grid-cols-[160px_1fr] sm:p-6">
+
+      {/* Category Hero Banner */}
+      <section className="grid gap-4 rounded-xl border border-slate-200 bg-card p-4 shadow-xs dark:border-slate-800 sm:grid-cols-[160px_1fr] sm:p-6">
         <div className="relative aspect-3/2 overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-900">
           {categoryImageUrl ? (
             <Image
@@ -117,45 +144,59 @@ export default async function CategoryPage({
               fill
               className="object-cover"
               sizes="160px"
+              priority
             />
           ) : null}
         </div>
-        <div className="space-y-2">
-          <h1 className="text-2xl font-semibold sm:text-3xl">{category.name}</h1>
-          <p className="text-sm text-slate-600 dark:text-slate-300">
-            {dict.catalog.categoryProductsSubtitle}
+        <div className="flex flex-col justify-center space-y-2">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+            {category.name}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {dict.catalog.categoryProductsSubtitle} · {products.totalDocs} products available
           </p>
         </div>
       </section>
 
-      {showStockToggle ? (
-        <InStockLocationCatalogToggle
-          enabled
-          label={dict.catalog.inStockAtLocationLabel}
-          hint={dict.catalog.inStockAtLocationHint}
-        />
-      ) : null}
+      {/* Two-column Layout: Sidebar Filters + Products Grid */}
+      <section className="grid gap-6 lg:grid-cols-[280px_1fr]">
+        <div className="order-2 space-y-5 lg:order-2">
+          <ActiveFilterPills
+            brands={brands}
+            attributes={attributes}
+          />
 
-      <ProductGrid
-        products={products.docs}
-        locale={locale}
-        emptyMessage={dict.catalog.noProductsFiltered}
-        availabilityBadgeLabel={availabilityBadgeLabel}
-        quickViewCopy={dict.catalog.quickView}
-        quickViewGalleryLabels={dict.product.gallery}
-        quickViewProductDetailsTitle={dict.product.productDetails}
-        quickViewProductDetailsSeeLess={dict.product.descriptionSeeLess}
-        compareLabels={dict.catalog.compare}
-      />
-      <Pagination
-        currentPage={products.page}
-        totalPages={products.totalPages}
-        pathname={`/${locale}/categories/${slug}`}
-        query={{
-          sort,
-          inStockAtStore: inStockAtStoreParam === "0" ? "0" : undefined,
-        }}
-      />
+          <ProductGrid
+            products={products.docs}
+            locale={locale}
+            emptyMessage={dict.catalog.noProductsFiltered}
+            availabilityBadgeLabel={availabilityBadgeLabel}
+            quickViewCopy={dict.catalog.quickView}
+            quickViewGalleryLabels={dict.product.gallery}
+            quickViewProductDetailsTitle={dict.product.productDetails}
+            quickViewProductDetailsSeeLess={dict.product.descriptionSeeLess}
+            compareLabels={dict.catalog.compare}
+          />
+
+          <Pagination
+            currentPage={products.page}
+            totalPages={products.totalPages}
+            pathname={`/${locale}/categories/${slug}`}
+            query={paginationQuery}
+          />
+        </div>
+
+        <div className="order-1 lg:order-1 lg:sticky lg:top-24 lg:self-start">
+          <ProductFilters
+            brands={brands}
+            attributes={attributes}
+            hideCategoryFilter
+            inStockLocationToggleEnabled={showStockToggle}
+            inStockLocationLabel={dict.catalog.inStockAtLocationLabel}
+            inStockLocationHint={dict.catalog.inStockAtLocationHint}
+          />
+        </div>
+      </section>
     </main>
   );
 }

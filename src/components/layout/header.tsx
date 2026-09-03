@@ -16,6 +16,7 @@ function getDefaultItems(locale: string, labels: Record<string, string>): NavIte
     { label: labels.products, href: `/${locale}/products` },
     { label: labels.bundles, href: `/${locale}/bundles` },
     { label: labels.categories, href: `/${locale}/categories` },
+    { label: labels.brands, href: `/${locale}/brands` },
   ];
 }
 
@@ -101,6 +102,7 @@ export async function Header({ locale }: HeaderProps) {
     products: dictionary.common?.products ?? "Products",
     bundles: dictionary.common?.bundles ?? "Bundles",
     categories: dictionary.common?.categories ?? "Categories",
+    brands: dictionary.common?.brands ?? "Brands",
     vendor: dictionary.vendor?.directory ?? "Vendors",
   };
 
@@ -135,6 +137,10 @@ export async function Header({ locale }: HeaderProps) {
     }
   } catch {
     // Fallback UI keeps layout stable when globals endpoint is unavailable.
+  }
+
+  if (!navItems.some((item) => item.href.includes("/brands"))) {
+    navItems.push({ label: labels.brands, href: `/${locale}/brands` });
   }
 
   if (

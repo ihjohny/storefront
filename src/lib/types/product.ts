@@ -1,5 +1,6 @@
 import type { PaginatedResponse } from "./api-response";
 import type { Category } from "./category";
+import type { Attribute } from "./attribute";
 import type { SaleDisplayMode, VariantSaleDisplayMode } from "@/lib/utils/sale-presentation";
 
 export interface Media {
@@ -24,6 +25,7 @@ export interface Product {
   status: "draft" | "pending-review" | "published" | "archived";
   featured: boolean;
   categories: Category[] | string[];
+  attributes?: Array<Attribute | string> | null;
   images: Media[];
   basePrice: number;
   compareAtPrice: number | null;

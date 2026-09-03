@@ -8,6 +8,7 @@ import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { ProductDetail } from "@/components/product/product-detail";
 import type { CheckoutShippingCopy } from "@/lib/types/checkout-copy";
 import { RelatedProductsSection } from "@/components/product/related-products-section";
+import { ProductSpecifications } from "@/components/product/product-specifications";
 import { buildLocaleAlternates } from "@/lib/seo/locale-metadata";
 import { parseProductVariantSearchParam } from "@/lib/utils/product-detail-href";
 
@@ -101,6 +102,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
         bundleItemQuantityLabel={dict.product.bundleItemQuantity}
         bundleItemLineTotalLabel={dict.product.bundleItemLineTotal}
       />
+      <ProductSpecifications product={product} locale={locale} />
       <RelatedProductsSection
         locale={locale}
         currentProductId={product.id}

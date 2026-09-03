@@ -8,6 +8,8 @@ type ProductFilters = {
   search?: string;
   minPrice?: number;
   maxPrice?: number;
+  brand?: string;
+  attributes?: string | string[];
   tenant?: string;
   productType?: "standard" | "bundle";
   featured?: boolean;
@@ -37,6 +39,13 @@ export async function getProducts(
   }
   if (filters.category) {
     params.set("where[categories][in]", filters.category);
+  }
+  if (filters.brand) {
+    params.set("where[attributes][in]", filters.brand);
+  }
+  if (filters.attributes) {
+    const attrList = Array.isArray(filters.attributes) ? filters.attributes.join(",") : filters.attributes;
+    params.set("where[attributes][in]", attrList);
   }
   if (filters.search) {
     params.set("where[name][like]", filters.search);

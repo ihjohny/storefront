@@ -247,7 +247,7 @@ export function ProductDetail({
                 />
               ) : (
                 <>
-                  <ProductDetailHeading product={product} />
+                  <ProductDetailHeading product={product} locale={locale} />
                 <div className="space-y-4 rounded-xl border border-border bg-card p-4 shadow-sm">
                   <div className="flex flex-wrap items-center gap-3">
                     <PriceDisplay

@@ -15,6 +15,7 @@ import type { QuickViewCopy } from "@/components/product/product-quick-view";
 import { ProductQuickView } from "@/components/product/product-quick-view";
 import type { ProductGalleryLabels } from "@/components/product/product-gallery";
 import type { ProductCompareLabels } from "@/lib/i18n/compare-labels";
+import { getProductBrand } from "@/lib/utils/product-attributes";
 
 type ProductCardProps = {
   product: Product;
@@ -75,6 +76,7 @@ export function ProductCard({
   const firstImage = media[0];
   const imageUrl = getMediaUrl(firstImage?.url);
   const vendor = getVendor(product.tenant);
+  const brand = getProductBrand(product);
   const productHref = `/${locale}/${productHrefBase}/${product.slug}`;
   const salePresentation = resolveSalePresentation({
     sellingPrice: product.basePrice,
@@ -149,7 +151,17 @@ export function ProductCard({
         )}
       </div>
 
-      <div className="space-y-3 p-4">
+      <div className="space-y-2 p-4">
+        {brand ? (
+          <Link
+            href={`/${locale}/brands/${brand.slug}`}
+            className="inline-block text-[11px] font-semibold uppercase tracking-wider text-primary hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {brand.label}
+          </Link>
+        ) : null}
+
         {features.multivendor && vendor?.slug ? (
           <Link
             href={`/${locale}/store/${vendor.slug}`}
