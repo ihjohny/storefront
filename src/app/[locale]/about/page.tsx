@@ -20,7 +20,8 @@ export async function generateMetadata({
     return {};
   }
 
-  const page = await getPageBySlug("about", locale);
+  const page =
+    (await getPageBySlug("about-us", locale)) ?? (await getPageBySlug("about", locale));
 
   if (!page) {
     return { title: "About" };
@@ -48,8 +49,8 @@ export default async function AboutPage({ params }: AboutPageProps) {
     notFound();
   }
 
-  const dict = await getDictionary(locale as Locale);
-  const page = await getPageBySlug("about", locale);
+  const page =
+    (await getPageBySlug("about-us", locale)) ?? (await getPageBySlug("about", locale));
 
   if (!page) {
     return (
