@@ -10,6 +10,8 @@ type ProductFilters = {
   maxPrice?: number;
   brand?: string;
   attributes?: string | string[];
+  productClass?: string;
+  specs?: Record<string, string | string[]>;
   tenant?: string;
   productType?: "standard" | "bundle";
   featured?: boolean;
@@ -47,6 +49,21 @@ export async function getProducts(
     const attrList = Array.isArray(filters.attributes) ? filters.attributes.join(",") : filters.attributes;
     params.set("where[attributes][in]", attrList);
   }
+  if (filters.productClass) {
+    params.set("class", filters.productClass);
+  }
+  if (filters.specs) {
+    for (const [key, val] of Object.entries(filters.specs)) {
+      if (!key) continue;
+      if (Array.isArray(val)) {
+        if (val.length > 0) {
+          params.set(`specs[${key}]`, val.join(","));
+        }
+      } else if (typeof val === "string" && val.trim()) {
+        params.set(`specs[${key}]`, val.trim());
+      }
+    }
+  }
   if (filters.search) {
     params.set("where[name][like]", filters.search);
   }
@@ -83,6 +100,19 @@ async function getStoreProducts(
   if (filters.sort) params.set("sort", filters.sort);
   if (filters.category) params.set("category", filters.category);
   if (filters.brand) params.set("brand", filters.brand);
+  if (filters.productClass) params.set("class", filters.productClass);
+  if (filters.specs) {
+    for (const [key, val] of Object.entries(filters.specs)) {
+      if (!key) continue;
+      if (Array.isArray(val)) {
+        if (val.length > 0) {
+          params.set(`specs[${key}]`, val.join(","));
+        }
+      } else if (typeof val === "string" && val.trim()) {
+        params.set(`specs[${key}]`, val.trim());
+      }
+    }
+  }
   if (filters.search) params.set("search", filters.search);
   if (typeof filters.minPrice === "number") params.set("minPrice", String(filters.minPrice));
   if (typeof filters.maxPrice === "number") params.set("maxPrice", String(filters.maxPrice));

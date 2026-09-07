@@ -5,12 +5,21 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { Category } from "@/lib/types/category";
 import type { Attribute } from "@/lib/types/attribute";
 import type { Brand } from "@/lib/types/brand";
+import type { ClassFacetsResult, FacetGroup } from "@/lib/types/facet";
 import { InStockLocationCatalogToggle } from "@/components/product/in-stock-location-catalog-toggle";
+import {
+  parseSpecsFromUrlParams,
+  toggleSpecOptionInParams,
+  setClassInParams,
+} from "@/lib/utils/spec-filters";
 
 export type ProductFiltersProps = {
   categories?: Category[];
   brands?: Array<Brand | Attribute>;
   attributes?: Attribute[];
+  classes?: ClassFacetsResult[];
+  facets?: FacetGroup[];
+  activeClass?: string;
   hideCategoryFilter?: boolean;
   hideBrandFilter?: boolean;
   /** Multi-store + geography + visitor has a bound stock location — shows PLP-only stock filter. */
@@ -33,6 +42,9 @@ export function ProductFilters({
   categories = [],
   brands = [],
   attributes = [],
+  classes = [],
+  facets = [],
+  activeClass,
   hideCategoryFilter = false,
   hideBrandFilter = false,
   inStockLocationToggleEnabled = false,
@@ -75,11 +87,54 @@ export function ProductFilters({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const parsedSpecs = useMemo(() => parseSpecsFromUrlParams(searchParams), [searchParams]);
+  const selectedClass = parsedSpecs.productClass || activeClass;
+  const selectedSpecs = parsedSpecs.specs;
+
+  const [openAccordions, setOpenAccordions] = useState<Record<string, boolean>>({});
+
+  function toggleAccordion(key: string) {
+    setOpenAccordions((prev) => ({
+      ...prev,
+      [key]: prev[key] === undefined ? false : !prev[key],
+    }));
+  }
+
+  function isAccordionOpen(key: string) {
+    return openAccordions[key] !== false;
+  }
+
+  function selectClass(slug: string | null) {
+    const currentParams = new URLSearchParams(searchParams.toString());
+    const nextParams = setClassInParams(currentParams, slug);
+    const nextQuery = nextParams.toString();
+    router.push(nextQuery ? `${pathname}?${nextQuery}` : pathname);
+  }
+
+  function toggleSpecOption(paramKey: string, optionValue: string) {
+    const currentParams = new URLSearchParams(searchParams.toString());
+    const nextParams = toggleSpecOptionInParams(currentParams, paramKey, optionValue);
+    const nextQuery = nextParams.toString();
+    router.push(nextQuery ? `${pathname}?${nextQuery}` : pathname);
+  }
+
+  const visibleFacets = useMemo(() => {
+    if (!facets || facets.length === 0) return [];
+    if (!selectedClass) return facets;
+    return facets.filter(
+      (f) => f.classSlug === selectedClass || f.classId === selectedClass
+    );
+  }, [facets, selectedClass]);
+
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (selectedCategory && !hideCategoryFilter) count += 1;
     if (selectedBrand && !hideBrandFilter) count += 1;
     if (selectedAttributes.length > 0) count += selectedAttributes.length;
+    if (selectedClass) count += 1;
+    Object.values(selectedSpecs).forEach((vals) => {
+      count += vals.length;
+    });
     if (minPrice.trim()) count += 1;
     if (maxPrice.trim()) count += 1;
     if (featuredOnly) count += 1;
@@ -96,7 +151,9 @@ export function ProductFilters({
     selectedAttributes.length,
     selectedBrand,
     selectedCategory,
+    selectedClass,
     selectedSort,
+    selectedSpecs,
   ]);
 
   function pushWithUpdates(updates: Record<string, string | null>) {
@@ -148,8 +205,15 @@ export function ProductFilters({
       "featured",
       "sort",
       "inStockAtStore",
+      "class",
+      "productClass",
     ].forEach((key) => {
       params.delete(key);
+    });
+    Array.from(params.keys()).forEach((k) => {
+      if (k.startsWith("specs[") || k.startsWith("specs.")) {
+        params.delete(k);
+      }
     });
     params.delete("page");
     setMinPrice("");
@@ -253,6 +317,141 @@ export function ProductFilters({
             ))}
           </select>
         </div>
+
+        {/* Product Classes Selector */}
+        {classes.length > 0 ? (
+          <div className="space-y-2 border-t border-border pt-4">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Product Class
+              </p>
+              {selectedClass ? (
+                <button
+                  type="button"
+                  onClick={() => selectClass(null)}
+                  className="text-[11px] text-muted-foreground hover:text-foreground"
+                >
+                  Clear
+                </button>
+              ) : null}
+            </div>
+            <div className="flex flex-col gap-1 max-h-52 overflow-y-auto pr-1">
+              <button
+                type="button"
+                className={`rounded-md px-2.5 py-1.5 text-left text-sm transition hover:bg-muted ${
+                  !selectedClass
+                    ? "bg-primary/15 font-medium text-foreground ring-1 ring-inset ring-border"
+                    : "text-foreground/90"
+                }`}
+                onClick={() => selectClass(null)}
+              >
+                All Classes
+              </button>
+              {classes.map((cls) => {
+                const isSelected =
+                  selectedClass === cls.slug || selectedClass === cls.id;
+                return (
+                  <button
+                    key={cls.id}
+                    type="button"
+                    className={`rounded-md px-2.5 py-1.5 text-left text-sm transition hover:bg-muted ${
+                      isSelected
+                        ? "bg-primary/15 font-medium text-foreground ring-1 ring-inset ring-border"
+                        : "text-foreground/90"
+                    }`}
+                    onClick={() => selectClass(cls.slug)}
+                  >
+                    {cls.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+
+        {/* Dynamic Specification Accordions */}
+        {visibleFacets.length > 0 ? (
+          <div className="space-y-3">
+            {visibleFacets.map((facet) => {
+              const isOpen = isAccordionOpen(facet.key);
+              const selectedValues = selectedSpecs[facet.key] || [];
+              const selectedCount = selectedValues.length;
+
+              return (
+                <div
+                  key={`${facet.classSlug}-${facet.key}`}
+                  className="space-y-2 border-t border-border pt-4"
+                >
+                  <button
+                    type="button"
+                    onClick={() => toggleAccordion(facet.key)}
+                    className="flex w-full items-center justify-between text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground transition hover:text-foreground"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span>{facet.label}</span>
+                      {selectedCount > 0 ? (
+                        <span className="rounded-full bg-primary/20 px-1.5 py-0.2 text-[10px] font-bold text-primary">
+                          {selectedCount}
+                        </span>
+                      ) : null}
+                    </span>
+                    <svg
+                      viewBox="0 0 20 20"
+                      className={`h-4 w-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 8l4 4 4-4" />
+                    </svg>
+                  </button>
+
+                  {isOpen ? (
+                    <div className="max-h-48 space-y-1 overflow-y-auto pr-1">
+                      {facet.options.map((option) => {
+                        const isChecked = selectedValues.includes(option.value);
+                        const unitSuffix =
+                          facet.unit &&
+                          !option.label.toLowerCase().includes(facet.unit.toLowerCase())
+                            ? ` ${facet.unit}`
+                            : "";
+
+                        return (
+                          <label
+                            key={option.value}
+                            className={`flex cursor-pointer items-center justify-between rounded-md px-2 py-1.5 text-sm transition hover:bg-muted ${
+                              isChecked
+                                ? "bg-primary/10 font-medium text-foreground"
+                                : "text-foreground/90"
+                            }`}
+                          >
+                            <span className="flex items-center gap-2.5">
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => toggleSpecOption(facet.key, option.value)}
+                                className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
+                              />
+                              <span>
+                                {option.label}
+                                {unitSuffix}
+                              </span>
+                            </span>
+                            {option.count > 0 ? (
+                              <span className="text-[11px] text-muted-foreground">
+                                ({option.count})
+                              </span>
+                            ) : null}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        ) : null}
 
         {/* Brands Filter */}
         {!hideBrandFilter && brands.length > 0 ? (

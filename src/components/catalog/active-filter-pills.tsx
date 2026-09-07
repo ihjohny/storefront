@@ -4,17 +4,27 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { Attribute } from "@/lib/types/attribute";
 import type { Category } from "@/lib/types/category";
 import type { Brand } from "@/lib/types/brand";
+import type { ClassFacetsResult, FacetGroup } from "@/lib/types/facet";
+import {
+  parseSpecsFromUrlParams,
+  removeSpecOptionFromParams,
+  setClassInParams,
+} from "@/lib/utils/spec-filters";
 
 interface ActiveFilterPillsProps {
   categories?: Category[];
   brands?: Array<Brand | Attribute>;
   attributes?: Attribute[];
+  classes?: ClassFacetsResult[];
+  facets?: FacetGroup[];
 }
 
 export function ActiveFilterPills({
   categories = [],
   brands = [],
   attributes = [],
+  classes = [],
+  facets = [],
 }: ActiveFilterPillsProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -28,6 +38,8 @@ export function ActiveFilterPills({
   const inStockAtStore = searchParams.get("inStockAtStore");
   const rawAttrs = searchParams.get("attributes");
   const selectedAttrs = rawAttrs ? rawAttrs.split(",").filter(Boolean) : [];
+
+  const { productClass, specs } = parseSpecsFromUrlParams(searchParams);
 
   const activePills: Array<{ label: string; onRemove: () => void }> = [];
 
@@ -48,11 +60,37 @@ export function ActiveFilterPills({
     router.push(nextQuery ? `${pathname}?${nextQuery}` : pathname);
   }
 
+  function removeClass() {
+    const params = setClassInParams(new URLSearchParams(searchParams.toString()), null);
+    const nextQuery = params.toString();
+    router.push(nextQuery ? `${pathname}?${nextQuery}` : pathname);
+  }
+
+  function removeSpec(paramKey: string, value?: string) {
+    const currentParams = new URLSearchParams(searchParams.toString());
+    const nextParams = removeSpecOptionFromParams(currentParams, paramKey, value);
+    const nextQuery = nextParams.toString();
+    router.push(nextQuery ? `${pathname}?${nextQuery}` : pathname);
+  }
+
   function clearAll() {
     const params = new URLSearchParams(searchParams.toString());
-    ["brand", "category", "attributes", "minPrice", "maxPrice", "featured", "inStockAtStore"].forEach(
-      (k) => params.delete(k)
-    );
+    [
+      "brand",
+      "category",
+      "attributes",
+      "minPrice",
+      "maxPrice",
+      "featured",
+      "inStockAtStore",
+      "class",
+      "productClass",
+    ].forEach((k) => params.delete(k));
+    Array.from(params.keys()).forEach((k) => {
+      if (k.startsWith("specs[") || k.startsWith("specs.")) {
+        params.delete(k);
+      }
+    });
     params.delete("page");
     const nextQuery = params.toString();
     router.push(nextQuery ? `${pathname}?${nextQuery}` : pathname);
@@ -118,6 +156,35 @@ export function ActiveFilterPills({
     activePills.push({
       label: attr ? attr.label : "Attribute",
       onRemove: () => removeParam("attributes", attrId),
+    });
+  });
+
+  if (productClass) {
+    const cls = classes.find((c) => c.slug === productClass || c.id === productClass);
+    activePills.push({
+      label: `Class: ${cls ? cls.name : productClass}`,
+      onRemove: removeClass,
+    });
+  }
+
+  Object.entries(specs).forEach(([paramKey, values]) => {
+    const facet = facets.find((f) => f.key === paramKey);
+    const paramLabel =
+      facet?.label ||
+      paramKey.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+    values.forEach((val) => {
+      const option = facet?.options.find((o) => o.value === val);
+      const optLabel = option?.label || val;
+      const unitSuffix =
+        facet?.unit && !optLabel.toLowerCase().includes(facet.unit.toLowerCase())
+          ? ` ${facet.unit}`
+          : "";
+
+      activePills.push({
+        label: `${paramLabel}: ${optLabel}${unitSuffix}`,
+        onRemove: () => removeSpec(paramKey, val),
+      });
     });
   });
 

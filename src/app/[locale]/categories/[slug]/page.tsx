@@ -5,6 +5,8 @@ import { getCategoryBySlug } from "@/lib/api/categories";
 import { getProducts } from "@/lib/api/products";
 import { getBrands } from "@/lib/api/brands";
 import { getAttributes } from "@/lib/api/attributes";
+import { getFacets } from "@/lib/api/facets";
+import { parseSpecsFromUrlParams } from "@/lib/utils/spec-filters";
 import { getMediaUrl } from "@/lib/utils/url";
 import { getSelectedStoreId } from "@/lib/utils/get-store-id";
 import { i18nConfig, type Locale } from "@/lib/i18n/config";
@@ -86,15 +88,18 @@ export default async function CategoryPage({
   const sort = firstParam(query.sort) ?? "-createdAt";
   const brand = firstParam(query.brand);
   const attributesParam = firstParam(query.attributes);
+  const { productClass: classParam, specs } = parseSpecsFromUrlParams(query);
   const minPrice = toNumber(firstParam(query.minPrice));
   const maxPrice = toNumber(firstParam(query.maxPrice));
   const featured = firstParam(query.featured) === "1";
 
-  const [products, brands, attributes, dict] = await Promise.all([
+  const [products, brands, attributes, facetsData, dict] = await Promise.all([
     getProducts({
       category: category.id,
       brand,
       attributes: attributesParam,
+      productClass: classParam,
+      specs,
       minPrice,
       maxPrice,
       featured,
@@ -105,6 +110,12 @@ export default async function CategoryPage({
     }),
     getBrands({ locale }),
     getAttributes({ locale }),
+    getFacets({
+      category: category.id,
+      productClass: classParam,
+      storeId: listingStoreId,
+      locale,
+    }),
     getDictionary(locale as Locale),
   ]);
 
@@ -121,15 +132,22 @@ export default async function CategoryPage({
       ? dict.catalog.availableAtLocationBadge
       : null;
 
-  const paginationQuery = {
+  const paginationQuery: Record<string, string | undefined> = {
     sort,
     brand,
     attributes: attributesParam,
+    class: classParam,
     minPrice: minPrice ? String(minPrice) : undefined,
     maxPrice: maxPrice ? String(maxPrice) : undefined,
     featured: featured ? "1" : undefined,
     inStockAtStore: inStockAtStoreParam === "0" ? "0" : undefined,
   };
+
+  for (const [k, vals] of Object.entries(specs)) {
+    if (vals.length > 0) {
+      paginationQuery[`specs[${k}]`] = vals.join(",");
+    }
+  }
 
   return (
     <main className="mx-auto w-full max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
@@ -165,6 +183,8 @@ export default async function CategoryPage({
           <ActiveFilterPills
             brands={brands}
             attributes={attributes}
+            classes={facetsData.classes}
+            facets={facetsData.facets}
           />
 
           <ProductGrid
@@ -191,6 +211,9 @@ export default async function CategoryPage({
           <ProductFilters
             brands={brands}
             attributes={attributes}
+            classes={facetsData.classes}
+            facets={facetsData.facets}
+            activeClass={classParam}
             hideCategoryFilter
             inStockLocationToggleEnabled={showStockToggle}
             inStockLocationLabel={dict.catalog.inStockAtLocationLabel}

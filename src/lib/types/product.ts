@@ -15,6 +15,32 @@ export interface Media {
   filesize: number;
 }
 
+export interface ClassParameterOption {
+  id?: string;
+  label: string | Record<string, string>;
+  value: string;
+}
+
+export interface ClassParameter {
+  id?: string;
+  key: string;
+  label: string | Record<string, string>;
+  type?: "select" | "text" | "number" | "boolean" | string;
+  unit?: string | null;
+  isFilterable?: boolean;
+  isRequired?: boolean;
+  displayOrder?: number;
+  options?: ClassParameterOption[];
+}
+
+export interface ProductClass {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string | null;
+  parameters?: ClassParameter[];
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -28,6 +54,14 @@ export interface Product {
   brand?: Brand | string | null;
   categories: Category[] | string[];
   attributes?: Array<Attribute | string> | null;
+  productClass?: ProductClass | string | null;
+  specifications?: Array<{
+    id?: string;
+    key: string;
+    value: string;
+    label?: string;
+    unit?: string;
+  }> | null;
   images: Media[];
   basePrice: number;
   compareAtPrice: number | null;

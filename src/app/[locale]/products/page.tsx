@@ -5,6 +5,8 @@ import { getProducts } from "@/lib/api/products";
 import { getCategories } from "@/lib/api/categories";
 import { getBrands } from "@/lib/api/brands";
 import { getAttributes } from "@/lib/api/attributes";
+import { getFacets } from "@/lib/api/facets";
+import { parseSpecsFromUrlParams } from "@/lib/utils/spec-filters";
 import { getSelectedStoreId } from "@/lib/utils/get-store-id";
 import { emptyProductListingResponse } from "@/lib/utils/empty-product-listing";
 import { i18nConfig, type Locale } from "@/lib/i18n/config";
@@ -16,6 +18,7 @@ import { Pagination } from "@/components/shared/pagination";
 import type { Category } from "@/lib/types/category";
 import type { Attribute } from "@/lib/types/attribute";
 import type { Brand } from "@/lib/types/brand";
+import type { ClassFacetsResult, FacetGroup } from "@/lib/types/facet";
 import type { ProductsResponse } from "@/lib/types/product";
 import { features } from "@/lib/config/features";
 import { resolveListingStoreId } from "@/lib/utils/listing-store-id";
@@ -78,12 +81,16 @@ export default async function ProductsPage({
   const page = Math.max(1, toNumber(firstParam(query.page)) ?? 1);
   const brandParam = firstParam(query.brand);
   const attributesParam = firstParam(query.attributes);
+  const { productClass: classParam, specs } = parseSpecsFromUrlParams(query);
+
   const filters = {
     locale,
     page,
     category: firstParam(query.category),
     brand: brandParam,
     attributes: attributesParam,
+    productClass: classParam,
+    specs,
     search: firstParam(query.search),
     sort: firstParam(query.sort) ?? "-createdAt",
     minPrice: toNumber(firstParam(query.minPrice)),
@@ -96,19 +103,30 @@ export default async function ProductsPage({
   let categories: Category[] = [];
   let brands: Brand[] = [];
   let attributes: Attribute[] = [];
+  let facetsData: { classes: ClassFacetsResult[]; facets: FacetGroup[] } = {
+    classes: [],
+    facets: [],
+  };
   let catalogError: string | null = null;
 
   try {
-    const [products, cats, brandList, attrList] = await Promise.all([
+    const [products, cats, brandList, attrList, facets] = await Promise.all([
       getProducts(filters),
       getCategories(locale),
       getBrands({ locale }),
       getAttributes({ locale }),
+      getFacets({
+        category: filters.category,
+        productClass: classParam,
+        storeId: listingStoreId,
+        locale,
+      }),
     ]);
     productsResponse = products;
     categories = cats;
     brands = brandList;
     attributes = attrList;
+    facetsData = facets;
   } catch (err) {
     if (err instanceof ApiError) {
       catalogError =
@@ -121,10 +139,11 @@ export default async function ProductsPage({
   }
 
   const dict = await getDictionary(locale as Locale);
-  const paginationQuery = {
+  const paginationQuery: Record<string, string | undefined> = {
     category: filters.category,
     brand: filters.brand,
     attributes: typeof filters.attributes === "string" ? filters.attributes : undefined,
+    class: classParam,
     search: filters.search,
     sort: filters.sort,
     minPrice: filters.minPrice ? String(filters.minPrice) : undefined,
@@ -132,6 +151,12 @@ export default async function ProductsPage({
     featured: filters.featured ? "1" : undefined,
     inStockAtStore: inStockAtStoreParam === "0" ? "0" : undefined,
   };
+
+  for (const [k, vals] of Object.entries(specs)) {
+    if (vals.length > 0) {
+      paginationQuery[`specs[${k}]`] = vals.join(",");
+    }
+  }
 
   const showStockToggle =
     features.serviceAreaStoreSelection && Boolean(cookieStoreId);
@@ -163,6 +188,8 @@ export default async function ProductsPage({
             categories={categories}
             brands={brands}
             attributes={attributes}
+            classes={facetsData.classes}
+            facets={facetsData.facets}
           />
 
           <ProductGrid
@@ -188,6 +215,9 @@ export default async function ProductsPage({
             categories={categories}
             brands={brands}
             attributes={attributes}
+            classes={facetsData.classes}
+            facets={facetsData.facets}
+            activeClass={classParam}
             inStockLocationToggleEnabled={showStockToggle}
             inStockLocationLabel={dict.catalog.inStockAtLocationLabel}
             inStockLocationHint={dict.catalog.inStockAtLocationHint}
