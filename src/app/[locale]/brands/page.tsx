@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { getBrands } from "@/lib/api/attributes";
+import { getBrands } from "@/lib/api/brands";
 import { getMediaUrl } from "@/lib/utils/url";
 import { i18nConfig, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
@@ -35,7 +35,7 @@ export default async function BrandsPage({ params }: BrandsPageProps) {
   }
 
   const [brands, dict] = await Promise.all([
-    getBrands(locale),
+    getBrands({ locale }),
     getDictionary(locale as Locale),
   ]);
 
@@ -43,7 +43,8 @@ export default async function BrandsPage({ params }: BrandsPageProps) {
 
   // Group brands alphabetically
   const groupedBrands = brands.reduce<Record<string, typeof brands>>((acc, brand) => {
-    const letter = (brand.label[0] || "#").toUpperCase();
+    const brandName = brand.name || brand.label || "";
+    const letter = (brandName[0] || "#").toUpperCase();
     if (!acc[letter]) acc[letter] = [];
     acc[letter].push(brand);
     return acc;
@@ -100,10 +101,10 @@ export default async function BrandsPage({ params }: BrandsPageProps) {
                       <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-border bg-muted/40 font-semibold text-lg text-primary shadow-xs">
                         {logoUrl ? (
                           <div className="relative h-10 w-10 overflow-hidden rounded-md">
-                            <Image src={logoUrl} alt={brand.label} fill className="object-contain" sizes="40px" />
+                            <Image src={logoUrl} alt={brand.name || brand.label || ""} fill className="object-contain" sizes="40px" />
                           </div>
                         ) : (
-                          brand.label.slice(0, 2).toUpperCase()
+                          (brand.name || brand.label || "").slice(0, 2).toUpperCase()
                         )}
                       </div>
                       <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
@@ -112,7 +113,7 @@ export default async function BrandsPage({ params }: BrandsPageProps) {
                     </div>
                     <div>
                       <h3 className="font-semibold text-foreground group-hover:text-primary transition">
-                        {brand.label}
+                        {brand.name || brand.label}
                       </h3>
                       {brand.description ? (
                         <p className="line-clamp-2 mt-1 text-xs text-muted-foreground">
@@ -166,7 +167,7 @@ export default async function BrandsPage({ params }: BrandsPageProps) {
                     href={`/${locale}/brands/${brand.slug}`}
                     className="flex items-center justify-between rounded-lg border border-border bg-card p-3 shadow-2xs transition hover:bg-muted/40 hover:border-border/80"
                   >
-                    <span className="font-medium text-sm text-foreground">{brand.label}</span>
+                    <span className="font-medium text-sm text-foreground">{brand.name || brand.label}</span>
                     <span className="text-xs text-muted-foreground">→</span>
                   </Link>
                 ))}

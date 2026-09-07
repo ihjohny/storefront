@@ -8,6 +8,7 @@ import { getProductBrand } from "@/lib/utils/product-attributes";
 
 type ProductDetailHeadingProps = {
   product: Pick<Product, "name" | "shortDescription" | "sku"> & {
+    brand?: Product["brand"];
     attributes?: Array<Attribute | string> | null;
   };
   locale?: string;
@@ -31,7 +32,7 @@ export function ProductDetailHeading({ product, locale: localeProp, skuOverride 
             href={`/${locale}/brands/${brand.slug}`}
             className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-primary hover:underline"
           >
-            <span>{brand.label}</span>
+            <span>{brand.name || brand.label}</span>
           </Link>
           <span className="text-xs text-muted-foreground">·</span>
           <span className="rounded-full bg-primary/10 px-2 py-0.2 text-[10px] font-semibold text-primary">

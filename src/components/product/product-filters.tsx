@@ -4,11 +4,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { Category } from "@/lib/types/category";
 import type { Attribute } from "@/lib/types/attribute";
+import type { Brand } from "@/lib/types/brand";
 import { InStockLocationCatalogToggle } from "@/components/product/in-stock-location-catalog-toggle";
 
 export type ProductFiltersProps = {
   categories?: Category[];
-  brands?: Attribute[];
+  brands?: Array<Brand | Attribute>;
   attributes?: Attribute[];
   hideCategoryFilter?: boolean;
   hideBrandFilter?: boolean;
@@ -179,9 +180,11 @@ export function ProductFilters({
   const filteredBrands = useMemo(() => {
     if (!brandSearch.trim()) return brands;
     const q = brandSearch.toLowerCase();
-    return brands.filter(
-      (b) => b.label.toLowerCase().includes(q) || b.key.toLowerCase().includes(q)
-    );
+    return brands.filter((b) => {
+      const label = "name" in b ? (b as Brand).name : (b as Attribute).label;
+      const code = b.slug;
+      return (label && label.toLowerCase().includes(q)) || (code && code.toLowerCase().includes(q));
+    });
   }, [brands, brandSearch]);
 
   const seriesAttributes = useMemo(() => {
@@ -294,7 +297,7 @@ export function ProductFilters({
                         onChange={() => updateParam("brand", isChecked ? null : brand.id)}
                         className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
                       />
-                      <span>{brand.label}</span>
+                      <span>{"name" in brand ? brand.name : brand.label}</span>
                     </span>
                     {brand.featured ? (
                       <span className="rounded bg-amber-500/10 px-1 py-0.2 text-[10px] font-medium text-amber-600 dark:text-amber-400">

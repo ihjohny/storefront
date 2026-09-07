@@ -1,6 +1,7 @@
 import type { PaginatedResponse } from "./api-response";
 import type { Category } from "./category";
 import type { Attribute } from "./attribute";
+import type { Brand } from "./brand";
 import type { SaleDisplayMode, VariantSaleDisplayMode } from "@/lib/utils/sale-presentation";
 
 export interface Media {
@@ -24,6 +25,7 @@ export interface Product {
   sku: string | null;
   status: "draft" | "pending-review" | "published" | "archived";
   featured: boolean;
+  brand?: Brand | string | null;
   categories: Category[] | string[];
   attributes?: Array<Attribute | string> | null;
   images: Media[];

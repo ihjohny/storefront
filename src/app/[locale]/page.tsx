@@ -16,7 +16,7 @@ import { notFound } from "next/navigation";
 import { HomeHeroCarousel } from "@/components/home/home-hero-carousel";
 import { getHomeHeroSlides } from "@/lib/cms/home-hero";
 import { buildLocaleAlternates } from "@/lib/seo/locale-metadata";
-import { getFeaturedBrands } from "@/lib/api/attributes";
+import { getFeaturedBrands } from "@/lib/api/brands";
 import { getCustomerRecommendations } from "@/lib/api/customer";
 import { RecommendedProductsSection } from "@/components/personalization/recommended-products-section";
 import { RecentlyViewedSection } from "@/components/personalization/recently-viewed-section";
@@ -274,15 +274,15 @@ export default async function LocaleHomePage({ params }: LocalePageProps) {
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/30 font-semibold text-sm text-primary">
                     {logoUrl ? (
                       <div className="relative h-8 w-8 overflow-hidden rounded">
-                        <Image src={logoUrl} alt={brand.label} fill className="object-contain" sizes="32px" />
+                        <Image src={logoUrl} alt={brand.name || brand.label || ""} fill className="object-contain" sizes="32px" />
                       </div>
                     ) : (
-                      brand.label.slice(0, 2).toUpperCase()
+                      (brand.name || brand.label || "").slice(0, 2).toUpperCase()
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-foreground group-hover:text-primary transition">
-                      {brand.label}
+                      {brand.name || brand.label}
                     </p>
                     <p className="text-[11px] text-muted-foreground">Official Store</p>
                   </div>

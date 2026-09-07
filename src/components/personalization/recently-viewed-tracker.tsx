@@ -40,7 +40,7 @@ export function RecentlyViewedTracker({ product }: { product: Product }) {
         price: product.basePrice,
         currency: product.currency,
         imageUrl,
-        brand: brand?.label ?? null,
+        brand: (brand ? brand.name || brand.label : null) ?? null,
         brandSlug: brand?.slug ?? null,
         viewedAt: Date.now(),
       };

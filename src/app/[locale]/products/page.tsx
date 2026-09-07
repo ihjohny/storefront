@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { ApiError } from "@/lib/api/client";
 import { getProducts } from "@/lib/api/products";
 import { getCategories } from "@/lib/api/categories";
-import { getBrands, getAttributes } from "@/lib/api/attributes";
+import { getBrands } from "@/lib/api/brands";
+import { getAttributes } from "@/lib/api/attributes";
 import { getSelectedStoreId } from "@/lib/utils/get-store-id";
 import { emptyProductListingResponse } from "@/lib/utils/empty-product-listing";
 import { i18nConfig, type Locale } from "@/lib/i18n/config";
@@ -14,6 +15,7 @@ import { ActiveFilterPills } from "@/components/catalog/active-filter-pills";
 import { Pagination } from "@/components/shared/pagination";
 import type { Category } from "@/lib/types/category";
 import type { Attribute } from "@/lib/types/attribute";
+import type { Brand } from "@/lib/types/brand";
 import type { ProductsResponse } from "@/lib/types/product";
 import { features } from "@/lib/config/features";
 import { resolveListingStoreId } from "@/lib/utils/listing-store-id";
@@ -92,7 +94,7 @@ export default async function ProductsPage({
 
   let productsResponse: ProductsResponse = emptyProductListingResponse(page);
   let categories: Category[] = [];
-  let brands: Attribute[] = [];
+  let brands: Brand[] = [];
   let attributes: Attribute[] = [];
   let catalogError: string | null = null;
 
@@ -100,7 +102,7 @@ export default async function ProductsPage({
     const [products, cats, brandList, attrList] = await Promise.all([
       getProducts(filters),
       getCategories(locale),
-      getBrands(locale),
+      getBrands({ locale }),
       getAttributes({ locale }),
     ]);
     productsResponse = products;

@@ -22,7 +22,7 @@ export function ProductSpecifications({ product, locale }: ProductSpecifications
           href={`/${locale}/brands/${brand.slug}`}
           className="font-medium text-primary hover:underline"
         >
-          {brand.label}
+          {brand.name || brand.label}
         </Link>
       ),
     });
@@ -39,8 +39,16 @@ export function ProductSpecifications({ product, locale }: ProductSpecifications
   allAttrs.forEach((attr) => {
     if (attr.type === "material") {
       specs.push({ label: "Material", value: attr.label });
-    } else if (attr.type === "manufacturer") {
-      specs.push({ label: "Manufacturer", value: attr.label });
+    } else if (attr.type === "specification") {
+      specs.push({ label: "Specification", value: attr.label });
+    } else if (attr.type === "feature") {
+      specs.push({ label: "Feature", value: attr.label });
+    } else if (attr.type === "connectivity") {
+      specs.push({ label: "Connectivity", value: attr.label });
+    } else if (attr.type === "compatibility") {
+      specs.push({ label: "Compatibility", value: attr.label });
+    } else if (attr.type === "certification") {
+      specs.push({ label: "Certification", value: attr.label });
     }
 
     if (attr.properties && Array.isArray(attr.properties)) {
@@ -74,7 +82,7 @@ export function ProductSpecifications({ product, locale }: ProductSpecifications
             href={`/${locale}/brands/${brand.slug}`}
             className="text-xs font-medium text-primary hover:underline"
           >
-            More from {brand.label} →
+            More from {brand.name || brand.label} →
           </Link>
         ) : null}
       </div>

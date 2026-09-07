@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { getBrandBySlug, getAttributes } from "@/lib/api/attributes";
+import { getBrandBySlug } from "@/lib/api/brands";
+import { getAttributes } from "@/lib/api/attributes";
 import { getCategories } from "@/lib/api/categories";
 import { getProducts } from "@/lib/api/products";
 import { getMediaUrl } from "@/lib/utils/url";
@@ -37,10 +38,11 @@ export async function generateMetadata({
   if (!brand) {
     return {};
   }
+  const brandName = brand.name || brand.label || slug;
   const path = `/brands/${slug}`;
   return {
-    title: `${brand.label} Products — Official Brand Catalog`,
-    description: brand.description || `Browse the official collection of ${brand.label} products. Authentic gear, warranty-backed and fast delivery.`,
+    title: `${brandName} Products — Official Brand Catalog`,
+    description: brand.description || `Browse the official collection of ${brandName} products. Authentic gear, warranty-backed and fast delivery.`,
     alternates: buildLocaleAlternates(locale as Locale, path),
   };
 }
@@ -139,7 +141,7 @@ export default async function BrandDetailPage({
           Brands
         </Link>
         <span>/</span>
-        <span className="font-medium text-foreground">{brand.label}</span>
+        <span className="font-medium text-foreground">{brand.name || brand.label}</span>
       </nav>
 
       {/* Brand Hero Banner */}
@@ -149,16 +151,16 @@ export default async function BrandDetailPage({
             <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-border bg-muted/30 font-bold text-2xl text-primary shadow-xs">
               {logoUrl ? (
                 <div className="relative h-12 w-12 overflow-hidden rounded-lg">
-                  <Image src={logoUrl} alt={brand.label} fill className="object-contain" sizes="48px" priority />
+                  <Image src={logoUrl} alt={brand.name || brand.label || ""} fill className="object-contain" sizes="48px" priority />
                 </div>
               ) : (
-                brand.label.slice(0, 2).toUpperCase()
+                (brand.name || brand.label || "").slice(0, 2).toUpperCase()
               )}
             </div>
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-                  {brand.label}
+                  {brand.name || brand.label}
                 </h1>
                 <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
                   Official Brand
@@ -220,7 +222,7 @@ export default async function BrandDetailPage({
           <ProductGrid
             products={products.docs}
             locale={locale}
-            emptyMessage={`No ${brand.label} products found matching your current filter selection.`}
+            emptyMessage={`No ${brand.name || brand.label || slug} products found matching your current filter selection.`}
             availabilityBadgeLabel={availabilityBadgeLabel}
             quickViewCopy={dict.catalog.quickView}
             quickViewGalleryLabels={dict.product.gallery}

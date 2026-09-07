@@ -158,7 +158,7 @@ export function ProductCard({
             className="inline-block text-[11px] font-semibold uppercase tracking-wider text-primary hover:underline"
             onClick={(e) => e.stopPropagation()}
           >
-            {brand.label}
+            {brand.name || brand.label}
           </Link>
         ) : null}
 

@@ -3,7 +3,8 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getCategoryBySlug } from "@/lib/api/categories";
 import { getProducts } from "@/lib/api/products";
-import { getBrands, getAttributes } from "@/lib/api/attributes";
+import { getBrands } from "@/lib/api/brands";
+import { getAttributes } from "@/lib/api/attributes";
 import { getMediaUrl } from "@/lib/utils/url";
 import { getSelectedStoreId } from "@/lib/utils/get-store-id";
 import { i18nConfig, type Locale } from "@/lib/i18n/config";
@@ -102,7 +103,7 @@ export default async function CategoryPage({
       page,
       storeId: listingStoreId,
     }),
-    getBrands(locale),
+    getBrands({ locale }),
     getAttributes({ locale }),
     getDictionary(locale as Locale),
   ]);

@@ -41,7 +41,7 @@ export async function getProducts(
     params.set("where[categories][in]", filters.category);
   }
   if (filters.brand) {
-    params.set("where[attributes][in]", filters.brand);
+    params.set("where[brand][equals]", filters.brand);
   }
   if (filters.attributes) {
     const attrList = Array.isArray(filters.attributes) ? filters.attributes.join(",") : filters.attributes;
@@ -82,6 +82,7 @@ async function getStoreProducts(
   if (filters.locale) params.set("locale", filters.locale);
   if (filters.sort) params.set("sort", filters.sort);
   if (filters.category) params.set("category", filters.category);
+  if (filters.brand) params.set("brand", filters.brand);
   if (filters.search) params.set("search", filters.search);
   if (typeof filters.minPrice === "number") params.set("minPrice", String(filters.minPrice));
   if (typeof filters.maxPrice === "number") params.set("maxPrice", String(filters.maxPrice));

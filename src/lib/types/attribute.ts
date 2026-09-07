@@ -1,12 +1,13 @@
-import type { Media } from './product'
-
 export type AttributeType =
-  | 'brand'
-  | 'manufacturer'
+  | 'specification'
   | 'series'
-  | 'material'
   | 'feature'
+  | 'material'
+  | 'connectivity'
+  | 'compatibility'
+  | 'certification'
   | 'custom'
+  | string
 
 export interface DynamicProperty {
   id?: string
@@ -20,24 +21,12 @@ export interface Attribute {
   key: string
   label: string
   type: AttributeType
+  customType?: string | null
   slug: string
   description?: string | null
-  logo?: Media | string | null
-  website?: string | null
   featured?: boolean
   displayOrder?: number
   properties?: DynamicProperty[] | null
   createdAt?: string
   updatedAt?: string
-}
-
-export interface BrandSummary {
-  id: string
-  name: string
-  slug: string
-  description?: string | null
-  logoUrl?: string | null
-  website?: string | null
-  productCount?: number
-  featured?: boolean
 }

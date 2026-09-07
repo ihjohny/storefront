@@ -3,10 +3,11 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { Attribute } from "@/lib/types/attribute";
 import type { Category } from "@/lib/types/category";
+import type { Brand } from "@/lib/types/brand";
 
 interface ActiveFilterPillsProps {
   categories?: Category[];
-  brands?: Attribute[];
+  brands?: Array<Brand | Attribute>;
   attributes?: Attribute[];
 }
 
@@ -59,8 +60,9 @@ export function ActiveFilterPills({
 
   if (brandId) {
     const brand = brands.find((b) => b.id === brandId);
+    const brandName = brand ? ("name" in brand ? brand.name : brand.label) : "Selected";
     activePills.push({
-      label: `Brand: ${brand?.label || "Selected"}`,
+      label: `Brand: ${brandName}`,
       onRemove: () => removeParam("brand"),
     });
   }
