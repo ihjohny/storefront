@@ -7,7 +7,6 @@ import { ProductDetailHeading } from "@/components/product/product-detail-headin
 import { ProductDetailNarrative } from "@/components/product/product-detail-narrative";
 import { ProductVariants } from "@/components/product/product-variants";
 import { WarehouseAwareAddToCartButton } from "@/components/product/warehouse-aware-add-to-cart-button";
-import { ProductReviews } from "@/components/product/product-reviews";
 import { ProductDeliveryOptions } from "@/components/product/product-delivery-options";
 import { SaleBadge } from "@/components/product/sale-badge";
 import { PriceDisplay } from "@/components/shared/price-display";
@@ -335,8 +334,6 @@ export function ProductDetail({
         collapsible
         defaultOpen
       />
-
-      <ProductReviews productId={product.id} locale={locale} />
     </section>
   );
 }

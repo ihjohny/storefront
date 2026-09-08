@@ -9,6 +9,7 @@ import { ProductDetail } from "@/components/product/product-detail";
 import type { CheckoutShippingCopy } from "@/lib/types/checkout-copy";
 import { RelatedProductsSection } from "@/components/product/related-products-section";
 import { ProductSpecifications } from "@/components/product/product-specifications";
+import { ProductReviews } from "@/components/product/product-reviews";
 import { RecentlyViewedTracker } from "@/components/personalization/recently-viewed-tracker";
 import { RecentlyViewedSection } from "@/components/personalization/recently-viewed-section";
 import { buildLocaleAlternates } from "@/lib/seo/locale-metadata";
@@ -105,6 +106,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
         bundleItemLineTotalLabel={dict.product.bundleItemLineTotal}
       />
       <ProductSpecifications product={product} locale={locale} />
+      <ProductReviews productId={product.id} locale={locale} />
       <RelatedProductsSection
         locale={locale}
         currentProductId={product.id}

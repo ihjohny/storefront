@@ -6,6 +6,7 @@ import { getProductMedia } from "@/lib/utils/product-media";
 import { i18nConfig, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { ProductDetail } from "@/components/product/product-detail";
+import { ProductReviews } from "@/components/product/product-reviews";
 import type { CheckoutShippingCopy } from "@/lib/types/checkout-copy";
 import { buildLocaleAlternates } from "@/lib/seo/locale-metadata";
 import { parseProductVariantSearchParam } from "@/lib/utils/product-detail-href";
@@ -100,6 +101,7 @@ export default async function BundlePage({ params, searchParams }: BundlePagePro
         bundleItemQuantityLabel={dict.product.bundleItemQuantity}
         bundleItemLineTotalLabel={dict.product.bundleItemLineTotal}
       />
+      <ProductReviews productId={product.id} locale={locale} />
     </main>
   );
 }
