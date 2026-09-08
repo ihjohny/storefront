@@ -101,6 +101,7 @@ export interface CheckoutRequest {
   guestPhone?: string;
   simulatePayment?: boolean;
   cashOnDelivery?: boolean;
+  currency?: string;
 }
 
 export interface CheckoutOrderSummary {

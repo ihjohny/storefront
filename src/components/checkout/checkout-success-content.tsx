@@ -145,7 +145,7 @@ export function CheckoutSuccessContent({
   }
 
   const items = order?.items ?? [];
-  const currency = order?.currency ?? "USD";
+  const currency = order?.currency ?? "BDT";
   const address = order?.shippingAddress;
 
   return (

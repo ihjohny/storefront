@@ -1,3 +1,4 @@
+import { features } from "@/lib/config/features";
 import { formatPrice } from "@/lib/utils/format-price";
 import {
   resolveSalePresentation,
@@ -18,7 +19,7 @@ type PriceDisplayProps = {
 export function PriceDisplay({
   price,
   compareAtPrice = null,
-  currency = "USD",
+  currency = features.currency.default,
   size = "default",
   productSaleDisplayMode,
   variantSaleDisplayMode,

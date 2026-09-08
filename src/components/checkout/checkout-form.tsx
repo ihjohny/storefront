@@ -482,6 +482,7 @@ export function CheckoutForm({ copy }: CheckoutFormProps) {
           guestPhone: !isAuthenticated && guestPhone.trim() ? guestPhone.trim() : undefined,
           simulatePayment: codOnly ? false : features.checkoutSimulatePayment,
           cashOnDelivery: codOnly,
+          currency: items[0]?.product?.currency || features.currency.default,
         },
         !isAuthenticated ? guestId ?? undefined : undefined,
       );

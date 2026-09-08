@@ -59,7 +59,7 @@ export function CartVendorGroup({
                 </h3>
               )}
               <p className="text-sm font-medium text-muted-foreground">
-                Subtotal: {formatPrice(groupSubtotal)}
+                Subtotal: {formatPrice(groupSubtotal, vendorItems[0]?.product?.currency)}
               </p>
             </div>
             <div className="space-y-3">

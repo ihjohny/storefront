@@ -132,7 +132,7 @@ export function TrackOrderForm() {
 }
 
 function OrderDetails({ order }: { order: Order }) {
-  const currency = order.currency ?? "USD";
+  const currency = order.currency ?? "BDT";
 
   return (
     <div className="space-y-4 rounded-xl border border-border bg-card p-5">

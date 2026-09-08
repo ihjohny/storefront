@@ -11,7 +11,7 @@ type SaleBadgeProps = {
 
 export function SaleBadge({
   presentation,
-  currency = "USD",
+  currency = "BDT",
   className = "",
   size = "default",
 }: SaleBadgeProps) {

@@ -136,6 +136,7 @@ export function CartPageClient({ params, labels }: CartPageClientProps) {
           applyCouponCode={applyCouponCode}
           removeCoupon={removeCoupon}
           isLoading={isLoading}
+          currency={items[0]?.product?.currency}
           checkoutLabel={labels.checkout}
           continueShoppingLabel={labels.continueShopping}
         />

@@ -189,7 +189,7 @@ export const features = {
       .split(",")
       .map((currency) => currency.trim())
       .filter(Boolean),
-    default: process.env.NEXT_PUBLIC_DEFAULT_CURRENCY || "USD",
+    default: process.env.NEXT_PUBLIC_DEFAULT_CURRENCY || "BDT",
   },
 } as const;
 

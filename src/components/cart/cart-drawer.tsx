@@ -87,7 +87,7 @@ export function CartDrawer({ locale }: CartDrawerProps) {
               <div className="mt-auto space-y-3 border-t border-border pt-4">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span className="font-semibold">{formatPrice(subtotal)}</span>
+                  <span className="font-semibold">{formatPrice(subtotal, items[0]?.product?.currency)}</span>
                 </div>
 
                 <div className="space-y-2">

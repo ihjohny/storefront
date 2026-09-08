@@ -17,7 +17,11 @@ type OrderReviewProps = {
 function resolveCheckoutCurrency(
   selectedMethodIds: string[],
   shippingMethods: ShippingMethod[],
+  items: CartItem[],
 ): string {
+  if (items.length > 0 && items[0]?.product?.currency) {
+    return items[0].product.currency.toUpperCase();
+  }
   for (const id of selectedMethodIds) {
     const m = shippingMethods.find((entry) => entry.id === id);
     const c = m?.currency?.trim();
@@ -34,8 +38,8 @@ export function OrderReview({
   shippingMethods,
 }: OrderReviewProps) {
   const currency = useMemo(
-    () => resolveCheckoutCurrency(selectedMethodIds, shippingMethods),
-    [selectedMethodIds, shippingMethods],
+    () => resolveCheckoutCurrency(selectedMethodIds, shippingMethods, items),
+    [selectedMethodIds, shippingMethods, items],
   );
 
   const shippingTotal = selectedMethodIds.reduce((total, id) => {

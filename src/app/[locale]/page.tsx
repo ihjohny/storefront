@@ -164,7 +164,7 @@ export default async function LocaleHomePage({ params }: LocalePageProps) {
               const firstImage = getProductMedia(product.images as Parameters<typeof getProductMedia>[0])[0];
               const mediaUrl = getMediaUrl(firstImage?.url);
               const price = Number(product.basePrice ?? 0);
-              const currency = product.currency ?? "USD";
+              const currency = product.currency ?? "BDT";
 
               return (
                 <Link

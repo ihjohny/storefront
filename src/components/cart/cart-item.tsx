@@ -69,7 +69,7 @@ export function CartItem({
             </p>
           ) : null}
           <p className="text-sm text-foreground sm:text-base">
-            {formatPrice(lineTotal)}
+            {formatPrice(lineTotal, item.product.currency)}
           </p>
         </div>
 

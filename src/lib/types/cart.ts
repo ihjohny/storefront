@@ -3,6 +3,7 @@ export interface CartItem {
     id: string;
     name: string;
     slug: string;
+    currency?: string;
     images: Array<{ id: string; url: string; alt: string }>;
     tenant?: { id: string; name: string; slug: string } | null;
   };

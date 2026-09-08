@@ -13,6 +13,7 @@ type CartSummaryProps = {
   applyCouponCode: (code: string) => Promise<void>;
   removeCoupon: () => Promise<void>;
   isLoading: boolean;
+  currency?: string;
   checkoutLabel?: string;
   continueShoppingLabel?: string;
 };
@@ -25,6 +26,7 @@ export function CartSummary({
   applyCouponCode,
   removeCoupon,
   isLoading,
+  currency,
   checkoutLabel = "Proceed to checkout",
   continueShoppingLabel = "Continue shopping",
 }: CartSummaryProps) {
@@ -117,21 +119,21 @@ export function CartSummary({
       <div className="space-y-2 text-sm">
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Subtotal</span>
-          <span>{formatPrice(subtotal)}</span>
+          <span>{formatPrice(subtotal, currency)}</span>
         </div>
         {discountTotal > 0 ? (
           <div className="flex items-center justify-between text-primary">
             <span>Discount{appliedCouponCode ? ` (${appliedCouponCode})` : ""}</span>
-            <span>−{formatPrice(discountTotal)}</span>
+            <span>−{formatPrice(discountTotal, currency)}</span>
           </div>
         ) : null}
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Shipping (estimate)</span>
-          <span>{formatPrice(shippingEstimate)}</span>
+          <span>{formatPrice(shippingEstimate, currency)}</span>
         </div>
         <div className="flex items-center justify-between border-t border-border pt-2 text-base font-semibold">
           <span>Total</span>
-          <span>{formatPrice(total)}</span>
+          <span>{formatPrice(total, currency)}</span>
         </div>
       </div>
 
