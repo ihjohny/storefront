@@ -1,3 +1,11 @@
+export type AttributeDataType =
+  | 'select'
+  | 'multiselect'
+  | 'text'
+  | 'number'
+  | 'boolean'
+  | 'color'
+
 export type AttributeType =
   | 'specification'
   | 'series'
@@ -9,24 +17,30 @@ export type AttributeType =
   | 'custom'
   | string
 
-export interface DynamicProperty {
+export interface AttributeOption {
   id?: string
-  propertyKey: string
-  propertyValue: string
-  propertyType?: 'text' | 'number' | 'boolean' | 'color'
+  value: string
+  label: string | Record<string, string>
+  hexColor?: string | null
 }
 
 export interface Attribute {
   id: string
   key: string
-  label: string
-  type: AttributeType
-  customType?: string | null
+  label: string | Record<string, string>
   slug: string
-  description?: string | null
+  dataType?: AttributeDataType
+  category?: AttributeType
+  type?: AttributeType
+  unit?: string | null
+  defaultGroup?: string | null
+  options?: AttributeOption[] | null
+  isFilterable?: boolean
+  isComparable?: boolean
   featured?: boolean
   displayOrder?: number
-  properties?: DynamicProperty[] | null
+  description?: string | null
   createdAt?: string
   updatedAt?: string
 }
+

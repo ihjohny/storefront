@@ -19,6 +19,18 @@ interface ActiveFilterPillsProps {
   facets?: FacetGroup[];
 }
 
+function getLocalizedLabel(
+  label: string | Record<string, string> | undefined | null,
+  fallback = "Attribute",
+): string {
+  if (!label) return fallback;
+  if (typeof label === "string") return label;
+  if (typeof label === "object") {
+    return label.en || Object.values(label)[0] || fallback;
+  }
+  return String(label);
+}
+
 export function ActiveFilterPills({
   categories = [],
   brands = [],
@@ -154,7 +166,7 @@ export function ActiveFilterPills({
   selectedAttrs.forEach((attrId) => {
     const attr = attributes.find((a) => a.id === attrId);
     activePills.push({
-      label: attr ? attr.label : "Attribute",
+      label: getLocalizedLabel(attr?.label, "Attribute"),
       onRemove: () => removeParam("attributes", attrId),
     });
   });

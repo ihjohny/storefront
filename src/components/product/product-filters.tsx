@@ -13,6 +13,18 @@ import {
   setClassInParams,
 } from "@/lib/utils/spec-filters";
 
+function getLocalizedLabel(
+  label: string | Record<string, string> | undefined | null,
+  fallback = "",
+): string {
+  if (!label) return fallback;
+  if (typeof label === "string") return label;
+  if (typeof label === "object") {
+    return label.en || Object.values(label)[0] || fallback;
+  }
+  return String(label);
+}
+
 export type ProductFiltersProps = {
   categories?: Category[];
   brands?: Array<Brand | Attribute>;
@@ -245,7 +257,8 @@ export function ProductFilters({
     if (!brandSearch.trim()) return brands;
     const q = brandSearch.toLowerCase();
     return brands.filter((b) => {
-      const label = "name" in b ? (b as Brand).name : (b as Attribute).label;
+      const rawLabel = "name" in b ? (b as Brand).name : (b as Attribute).label;
+      const label = getLocalizedLabel(rawLabel);
       const code = b.slug;
       return (label && label.toLowerCase().includes(q)) || (code && code.toLowerCase().includes(q));
     });
@@ -496,7 +509,7 @@ export function ProductFilters({
                         onChange={() => updateParam("brand", isChecked ? null : brand.id)}
                         className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
                       />
-                      <span>{"name" in brand ? brand.name : brand.label}</span>
+                      <span>{getLocalizedLabel("name" in brand ? brand.name : brand.label)}</span>
                     </span>
                     {brand.featured ? (
                       <span className="rounded bg-amber-500/10 px-1 py-0.2 text-[10px] font-medium text-amber-600 dark:text-amber-400">
@@ -598,7 +611,7 @@ export function ProductFilters({
                       onChange={() => toggleAttribute(attr.id)}
                       className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
                     />
-                    <span>{attr.label}</span>
+                    <span>{getLocalizedLabel(attr.label)}</span>
                   </label>
                 );
               })}

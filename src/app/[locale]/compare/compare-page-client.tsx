@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -22,6 +22,8 @@ import {
   COMPARE_LABEL_COLUMN_CLASS,
   CompareLoadingSkeleton,
 } from "@/app/[locale]/compare/compare-loading-skeleton";
+
+import type { Attribute } from "@/lib/types/attribute";
 
 function categorySummary(categories: Product["categories"]): string {
   if (!categories?.length) {
@@ -49,6 +51,168 @@ function variantOptionSummary(variant: ProductVariant | null): string {
 function productDetailHref(locale: string, slug: string, variantId: string | null): string {
   const base = `/${locale}/products/${slug}`;
   return variantId ? `${base}?variant=${encodeURIComponent(variantId)}` : base;
+}
+
+function getLocalizedText(
+  value: string | Record<string, string> | null | undefined,
+  locale: string,
+  fallback = "",
+): string {
+  if (!value) return fallback;
+  if (typeof value === "string") return value;
+  if (typeof value === "object") {
+    return value[locale] || value.en || Object.values(value)[0] || fallback;
+  }
+  return String(value);
+}
+
+interface ComparedSpecMeta {
+  key: string;
+  label: string;
+  group: string;
+  unit: string;
+}
+
+function extractAllComparedSpecs(products: Product[], locale: string): {
+  groups: string[];
+  specsByGroup: Record<string, ComparedSpecMeta[]>;
+} {
+  const groupOrder = [
+    "General",
+    "Display",
+    "Performance",
+    "Storage & Memory",
+    "Battery & Power",
+    "Connectivity & Ports",
+    "Audio & Multimedia",
+    "Durability & Build",
+    "Additional Specifications",
+  ];
+
+  const seenKeys = new Set<string>();
+  const specsByGroup: Record<string, ComparedSpecMeta[]> = {};
+
+  products.forEach((p) => {
+    if (!Array.isArray(p.specifications)) return;
+    p.specifications.forEach((spec) => {
+      if (!spec || !spec.key) return;
+      if (seenKeys.has(spec.key)) return;
+      seenKeys.add(spec.key);
+
+      const attrDoc =
+        typeof spec.attribute === "object" && spec.attribute !== null
+          ? (spec.attribute as Attribute)
+          : null;
+
+      const label =
+        spec.label ||
+        (attrDoc ? getLocalizedText(attrDoc.label, locale) : "") ||
+        spec.key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+      const group =
+        spec.group ||
+        attrDoc?.defaultGroup ||
+        "Additional Specifications";
+
+      const unit = spec.unit || attrDoc?.unit || "";
+
+      if (!specsByGroup[group]) {
+        specsByGroup[group] = [];
+      }
+      specsByGroup[group].push({
+        key: spec.key,
+        label,
+        group,
+        unit,
+      });
+    });
+  });
+
+  const sortedGroups = Object.keys(specsByGroup).sort((a, b) => {
+    const idxA = groupOrder.indexOf(a);
+    const idxB = groupOrder.indexOf(b);
+    if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+    if (idxA !== -1) return -1;
+    if (idxB !== -1) return 1;
+    return a.localeCompare(b);
+  });
+
+  return { groups: sortedGroups, specsByGroup };
+}
+
+function renderProductSpecValue(product: Product, specMeta: ComparedSpecMeta, locale: string): React.ReactNode {
+  if (!Array.isArray(product.specifications)) return "—";
+  const found = product.specifications.find((s) => s && s.key === specMeta.key);
+  if (!found) return "—";
+
+  const hasSingleVal =
+    found.value !== null &&
+    found.value !== undefined &&
+    found.value !== "";
+  const hasMultiVal = Array.isArray(found.values) && found.values.length > 0;
+
+  if (!hasSingleVal && !hasMultiVal) return "—";
+
+  const attrDoc =
+    typeof found.attribute === "object" && found.attribute !== null
+      ? (found.attribute as Attribute)
+      : null;
+
+  if (hasMultiVal && Array.isArray(found.values)) {
+    return (
+      <div className="flex flex-wrap gap-1">
+        {found.values.map((v, i) => {
+          const opt = attrDoc?.options?.find((o) => o.value.toLowerCase() === v.toLowerCase());
+          const text = opt ? getLocalizedText(opt.label, locale, v) : v;
+          return (
+            <span
+              key={i}
+              className="inline-flex items-center rounded-md border border-border bg-muted/60 px-2 py-0.5 text-xs text-foreground"
+            >
+              {text}
+            </span>
+          );
+        })}
+      </div>
+    );
+  }
+
+  const rawVal = String(found.value).trim();
+  if (attrDoc?.options && attrDoc.options.length > 0) {
+    const match = attrDoc.options.find((o) => o.value.toLowerCase() === rawVal.toLowerCase());
+    if (match) {
+      const optText = getLocalizedText(match.label, locale, rawVal);
+      return match.hexColor ? (
+        <span className="inline-flex items-center gap-1.5">
+          <span
+            className="size-3 rounded-full border border-border shrink-0"
+            style={{ backgroundColor: match.hexColor }}
+          />
+          <span>{optText}</span>
+        </span>
+      ) : (
+        optText
+      );
+    }
+  }
+
+  if (rawVal.toLowerCase() === "true") {
+    return (
+      <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
+        ✓ Yes
+      </span>
+    );
+  }
+  if (rawVal.toLowerCase() === "false") {
+    return <span className="text-muted-foreground">✕ No</span>;
+  }
+
+  const unit = found.unit || specMeta.unit;
+  if (unit && !rawVal.toLowerCase().endsWith(unit.toLowerCase())) {
+    return `${rawVal} ${unit}`;
+  }
+
+  return rawVal;
 }
 
 type ResolvedCompareRow = {
@@ -182,6 +346,11 @@ export function ComparePageClient({
     };
   }, [entries, hydrated, locale, labels.loadError]);
 
+  const allComparedSpecs = useMemo(() => {
+    const products = rows.map((r) => r.product);
+    return extractAllComparedSpecs(products, locale);
+  }, [rows, locale]);
+
   if (!features.productCompareEnabled) {
     return null;
   }
@@ -291,6 +460,22 @@ export function ComparePageClient({
                     <SpecPair label={labels.tableSummary}>
                       <span className="text-muted-foreground">{product.shortDescription?.trim() || "—"}</span>
                     </SpecPair>
+                    {/* Dynamic Specifications for Mobile Card */}
+                    {allComparedSpecs.groups.map((groupName) => {
+                      const specItems = allComparedSpecs.specsByGroup[groupName] || [];
+                      return (
+                        <div key={groupName} className="border-t border-border bg-muted/40 pt-1 pb-1">
+                          <div className="px-4 py-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                            {groupName}
+                          </div>
+                          {specItems.map((specMeta) => (
+                            <SpecPair key={specMeta.key} label={specMeta.label}>
+                              {renderProductSpecValue(product, specMeta, locale)}
+                            </SpecPair>
+                          ))}
+                        </div>
+                      );
+                    })}
                   </div>
                 </article>
               );
@@ -451,6 +636,44 @@ export function ComparePageClient({
                       </td>
                     ))}
                   </tr>
+
+                  {/* Dynamic Technical Specifications Groups */}
+                  {allComparedSpecs.groups.map((groupName) => {
+                    const specItems = allComparedSpecs.specsByGroup[groupName] || [];
+                    if (specItems.length === 0) return null;
+
+                    return (
+                      <tr key={`header-${groupName}`} className="bg-muted/60">
+                        <th
+                          colSpan={rows.length + 1}
+                          className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                        >
+                          {groupName}
+                        </th>
+                      </tr>
+                    );
+                  })}
+
+                  {allComparedSpecs.groups.flatMap((groupName) => {
+                    const specItems = allComparedSpecs.specsByGroup[groupName] || [];
+                    return specItems.map((specMeta) => (
+                      <tr key={specMeta.key} className="hover:bg-muted/20 transition-colors">
+                        <th scope="row" className={COMPARE_LABEL_COLUMN_CLASS}>
+                          {specMeta.label}
+                        </th>
+                        {rows.map(({ line, product }) => (
+                          <td
+                            key={`${line.productId}:${line.variantId ?? ""}-${specMeta.key}`}
+                            className="border-l border-border px-3 align-middle"
+                          >
+                            <div className="text-sm">
+                              {renderProductSpecValue(product, specMeta, locale)}
+                            </div>
+                          </td>
+                        ))}
+                      </tr>
+                    ));
+                  })}
                 </tbody>
               </table>
             </div>

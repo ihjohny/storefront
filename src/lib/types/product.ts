@@ -19,13 +19,30 @@ export interface ClassParameterOption {
   id?: string;
   label: string | Record<string, string>;
   value: string;
+  hexColor?: string | null;
+}
+
+export interface ClassGroupAttributeRef {
+  id?: string;
+  attribute: Attribute | string;
+  isRequired?: boolean;
+  displayOrder?: number;
+  helpText?: string | null;
+}
+
+export interface ClassGroup {
+  id?: string;
+  title: string;
+  slug?: string;
+  displayOrder?: number;
+  attributes?: ClassGroupAttributeRef[];
 }
 
 export interface ClassParameter {
   id?: string;
   key: string;
   label: string | Record<string, string>;
-  type?: "select" | "text" | "number" | "boolean" | string;
+  type?: "select" | "multiselect" | "text" | "number" | "boolean" | string;
   unit?: string | null;
   isFilterable?: boolean;
   isRequired?: boolean;
@@ -37,8 +54,24 @@ export interface ProductClass {
   id: string;
   name: string;
   slug: string;
+  icon?: string | null;
   description?: string | null;
+  groups?: ClassGroup[];
   parameters?: ClassParameter[];
+}
+
+export interface ProductSpecificationItem {
+  id?: string;
+  attribute?: Attribute | string | null;
+  key: string;
+  label?: string;
+  value?: string | number | boolean | null;
+  values?: string[] | null;
+  unit?: string | null;
+  group?: string | null;
+  isCustom?: boolean;
+  isAdHoc?: boolean;
+  displayOrder?: number;
 }
 
 export interface Product {
@@ -55,13 +88,9 @@ export interface Product {
   categories: Category[] | string[];
   attributes?: Array<Attribute | string> | null;
   productClass?: ProductClass | string | null;
-  specifications?: Array<{
-    id?: string;
-    key: string;
-    value: string;
-    label?: string;
-    unit?: string;
-  }> | null;
+  specifications?: ProductSpecificationItem[] | null;
+  rating?: number | null;
+  totalReviews?: number | null;
   images: Media[];
   basePrice: number;
   compareAtPrice: number | null;

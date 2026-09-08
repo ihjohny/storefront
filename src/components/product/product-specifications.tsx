@@ -1,6 +1,7 @@
 import Link from "next/link";
-import type { Product, ClassParameter } from "@/lib/types/product";
-import { getProductBrand, getProductSeries, getProductAttributes } from "@/lib/utils/product-attributes";
+import type { Product, ProductSpecificationItem } from "@/lib/types/product";
+import type { Attribute } from "@/lib/types/attribute";
+import { getProductBrand } from "@/lib/utils/product-attributes";
 
 function getLocalizedText(
   value: string | Record<string, string> | null | undefined,
@@ -20,16 +21,46 @@ interface ProductSpecificationsProps {
   locale: string;
 }
 
+interface DisplaySpecItem {
+  key: string;
+  label: string;
+  value: React.ReactNode;
+  group: string;
+  isCustom?: boolean;
+  isAdHoc?: boolean;
+}
+
 export function ProductSpecifications({ product, locale }: ProductSpecificationsProps) {
   const brand = getProductBrand(product);
-  const series = getProductSeries(product);
-  const allAttrs = getProductAttributes(product);
 
-  const specs: Array<{ label: string; value: React.ReactNode }> = [];
+  const groupOrder = [
+    "General",
+    "Display",
+    "Performance",
+    "Storage & Memory",
+    "Battery & Power",
+    "Connectivity & Ports",
+    "Audio & Multimedia",
+    "Durability & Build",
+    "Additional Specifications",
+  ];
 
+  const groupedSpecs: Record<string, DisplaySpecItem[]> = {};
+
+  function addSpec(groupName: string, item: DisplaySpecItem) {
+    const grp = groupName || "General";
+    if (!groupedSpecs[grp]) {
+      groupedSpecs[grp] = [];
+    }
+    groupedSpecs[grp].push(item);
+  }
+
+  // Brand in General group
   if (brand) {
-    specs.push({
+    addSpec("General", {
+      key: "brand",
       label: "Brand",
+      group: "General",
       value: (
         <Link
           href={`/${locale}/brands/${brand.slug}`}
@@ -41,141 +72,214 @@ export function ProductSpecifications({ product, locale }: ProductSpecifications
     });
   }
 
-  if (series) {
-    specs.push({
-      label: "Series / Collection",
-      value: series.label,
+  // Model / SKU in General group
+  if (product.sku) {
+    addSpec("General", {
+      key: "sku",
+      label: "Model / SKU",
+      group: "General",
+      value: <span className="font-mono text-sm">{product.sku}</span>,
     });
   }
 
-  // Add all other attributes and dynamic properties
-  allAttrs.forEach((attr) => {
-    if (attr.type === "material") {
-      specs.push({ label: "Material", value: attr.label });
-    } else if (attr.type === "specification") {
-      specs.push({ label: "Specification", value: attr.label });
-    } else if (attr.type === "feature") {
-      specs.push({ label: "Feature", value: attr.label });
-    } else if (attr.type === "connectivity") {
-      specs.push({ label: "Connectivity", value: attr.label });
-    } else if (attr.type === "compatibility") {
-      specs.push({ label: "Compatibility", value: attr.label });
-    } else if (attr.type === "certification") {
-      specs.push({ label: "Certification", value: attr.label });
-    }
-
-    if (attr.properties && Array.isArray(attr.properties)) {
-      attr.properties.forEach((prop) => {
-        const formattedKey = prop.propertyKey
-          .replace(/([A-Z])/g, " $1")
-          .replace(/^./, (str) => str.toUpperCase());
-
-        specs.push({
-          label: formattedKey,
-          value: prop.propertyValue,
-        });
-      });
-    }
-  });
-
-  // Add class-inherited dynamic specifications
+  // Process unified specifications array
   if (Array.isArray(product.specifications) && product.specifications.length > 0) {
-    const classParamsMap = new Map<string, ClassParameter>();
-    if (
-      product.productClass &&
-      typeof product.productClass === "object" &&
-      Array.isArray(product.productClass.parameters)
-    ) {
-      for (const param of product.productClass.parameters) {
-        if (param?.key) {
-          classParamsMap.set(param.key, param);
-        }
-      }
-    }
+    product.specifications.forEach((spec: ProductSpecificationItem) => {
+      if (!spec) return;
 
-    product.specifications.forEach((spec) => {
-      if (!spec || spec.value === null || spec.value === undefined || spec.value === "") return;
+      const hasSingleVal =
+        spec.value !== null &&
+        spec.value !== undefined &&
+        spec.value !== "";
+      const hasMultiVal = Array.isArray(spec.values) && spec.values.length > 0;
 
-      const param = classParamsMap.get(spec.key);
+      if (!hasSingleVal && !hasMultiVal) return;
+
+      // Resolve attribute relation if populated
+      const attrDoc =
+        typeof spec.attribute === "object" && spec.attribute !== null
+          ? (spec.attribute as Attribute)
+          : null;
+
       const label =
         spec.label ||
-        (param?.label ? getLocalizedText(param.label, locale) : "") ||
+        (attrDoc ? getLocalizedText(attrDoc.label, locale) : "") ||
         spec.key
           .replace(/_/g, " ")
           .replace(/\b\w/g, (c) => c.toUpperCase());
 
-      const rawVal = Array.isArray(spec.value)
-        ? (spec.value as string[]).join(", ")
-        : String(spec.value).trim();
-      let displayVal = rawVal;
+      const group =
+        spec.group ||
+        attrDoc?.defaultGroup ||
+        "Additional Specifications";
 
-      if (param?.options && param.options.length > 0) {
-        const directMatch = param.options.find(
+      const unit = spec.unit || attrDoc?.unit || "";
+
+      // Format multi-select values as badges
+      if (hasMultiVal && Array.isArray(spec.values)) {
+        const renderedValues = (
+          <div className="flex flex-wrap gap-1.5">
+            {spec.values.map((v, i) => {
+              const opt = attrDoc?.options?.find((o) => o.value.toLowerCase() === v.toLowerCase());
+              const text = opt ? getLocalizedText(opt.label, locale, v) : v;
+              return (
+                <span
+                  key={i}
+                  className="inline-flex items-center rounded-md border border-border bg-muted/60 px-2.5 py-0.5 text-xs font-medium text-foreground"
+                >
+                  {text}
+                </span>
+              );
+            })}
+          </div>
+        );
+
+        addSpec(group, {
+          key: spec.key,
+          label,
+          group,
+          value: renderedValues,
+          isCustom: spec.isCustom,
+          isAdHoc: spec.isAdHoc,
+        });
+        return;
+      }
+
+      // Single value
+      const rawVal = String(spec.value).trim();
+      let displayNode: React.ReactNode = rawVal;
+
+      // Option label lookup
+      if (attrDoc?.options && attrDoc.options.length > 0) {
+        const directMatch = attrDoc.options.find(
           (opt) => opt.value.toLowerCase() === rawVal.toLowerCase(),
         );
         if (directMatch) {
-          displayVal = getLocalizedText(directMatch.label, locale, rawVal);
+          const optText = getLocalizedText(directMatch.label, locale, rawVal);
+          displayNode = directMatch.hexColor ? (
+            <span className="inline-flex items-center gap-2">
+              <span
+                className="size-3.5 rounded-full border border-border shrink-0"
+                style={{ backgroundColor: directMatch.hexColor }}
+              />
+              <span>{optText}</span>
+            </span>
+          ) : (
+            optText
+          );
         } else if (rawVal.includes(",")) {
           const parts = rawVal.split(",").map((p) => p.trim());
-          const matchedParts = parts.map((part) => {
-            const found = param.options?.find(
-              (opt) => opt.value.toLowerCase() === part.toLowerCase(),
-            );
-            return found ? getLocalizedText(found.label, locale, part) : part;
+          const matchedParts = parts.map((p) => {
+            const found = attrDoc.options?.find((o) => o.value.toLowerCase() === p.toLowerCase());
+            return found ? getLocalizedText(found.label, locale, p) : p;
           });
-          displayVal = matchedParts.join(", ");
+          displayNode = matchedParts.join(", ");
         }
       } else if (rawVal.toLowerCase() === "true") {
-        displayVal = "Yes";
+        displayNode = (
+          <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
+            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            Yes
+          </span>
+        );
       } else if (rawVal.toLowerCase() === "false") {
-        displayVal = "No";
+        displayNode = (
+          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            No
+          </span>
+        );
       } else {
-        const unit = spec.unit || param?.unit;
         if (unit && !rawVal.toLowerCase().endsWith(unit.toLowerCase())) {
-          displayVal = `${rawVal} ${unit}`;
+          displayNode = `${rawVal} ${unit}`;
         }
       }
 
-      specs.push({
+      addSpec(group, {
+        key: spec.key,
         label,
-        value: displayVal,
+        group,
+        value: displayNode,
+        isCustom: spec.isCustom,
+        isAdHoc: spec.isAdHoc,
       });
     });
   }
 
-  if (product.sku) {
-    specs.push({ label: "Model / SKU", value: product.sku });
-  }
+  const availableGroups = Object.keys(groupedSpecs).sort((a, b) => {
+    const idxA = groupOrder.indexOf(a);
+    const idxB = groupOrder.indexOf(b);
+    if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+    if (idxA !== -1) return -1;
+    if (idxB !== -1) return 1;
+    return a.localeCompare(b);
+  });
 
-  if (specs.length === 0) return null;
+  if (availableGroups.length === 0) return null;
 
   return (
-    <section className="rounded-xl border border-border bg-card p-6 shadow-xs sm:p-8">
+    <section className="space-y-6">
       <div className="flex items-center justify-between border-b border-border pb-4">
-        <h2 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
-          Product Specifications & Details
-        </h2>
+        <div>
+          <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+            Technical Specifications
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Comprehensive hardware, software, and physical attributes.
+          </p>
+        </div>
         {brand ? (
           <Link
             href={`/${locale}/brands/${brand.slug}`}
-            className="text-xs font-medium text-primary hover:underline"
+            className="text-xs font-semibold text-primary hover:underline"
           >
             More from {brand.name || brand.label} →
           </Link>
         ) : null}
       </div>
 
-      <div className="mt-4 divide-y divide-border">
-        {specs.map((spec, idx) => (
-          <div
-            key={idx}
-            className="grid grid-cols-1 py-3 text-sm sm:grid-cols-3 sm:gap-4"
-          >
-            <dt className="font-medium text-muted-foreground">{spec.label}</dt>
-            <dd className="text-foreground sm:col-span-2">{spec.value}</dd>
-          </div>
-        ))}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        {availableGroups.map((groupName) => {
+          const items = groupedSpecs[groupName];
+          if (!items || items.length === 0) return null;
+
+          return (
+            <div
+              key={groupName}
+              className="rounded-xl border border-border bg-card p-5 shadow-xs transition hover:border-border/80"
+            >
+              <h3 className="border-b border-border/80 pb-2.5 text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                {groupName}
+              </h3>
+              <dl className="mt-3 divide-y divide-border/60">
+                {items.map((item, idx) => (
+                  <div
+                    key={`${item.key}-${idx}`}
+                    className="grid grid-cols-1 py-2.5 text-sm sm:grid-cols-3 sm:gap-3 items-baseline"
+                  >
+                    <dt className="font-medium text-muted-foreground flex items-center gap-1.5">
+                      <span>{item.label}</span>
+                      {item.isCustom ? (
+                        <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground" title="Custom specification">
+                          Custom
+                        </span>
+                      ) : null}
+                    </dt>
+                    <dd className="text-foreground sm:col-span-2 font-normal">
+                      {item.value}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          );
+        })}
       </div>
     </section>
   );
 }
+
