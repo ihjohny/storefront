@@ -61,39 +61,8 @@ export function Navbar({
             </span>
           </div>
 
-          {/* Right: Quick Utility Links & Theme/Locale Controls */}
-          <div className="hidden shrink-0 items-center gap-3.5 sm:flex">
-            <Link
-              href={`/${locale}/showrooms`}
-              className="inline-flex items-center gap-1 text-muted-foreground transition hover:text-foreground"
-            >
-              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-                <circle cx="12" cy="10" r="3" />
-              </svg>
-              <span>Our Showrooms</span>
-            </Link>
-
-            <Link
-              href={`/${locale}/track-order`}
-              className="inline-flex items-center gap-1 text-muted-foreground transition hover:text-foreground"
-            >
-              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-                <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-                <line x1="12" y1="22.08" x2="12" y2="12" />
-              </svg>
-              <span>Track Order</span>
-            </Link>
-
-            <Link
-              href={`/${locale}/faq`}
-              className="inline-flex items-center gap-1 text-muted-foreground transition hover:text-foreground"
-            >
-              <span>Help & FAQ</span>
-            </Link>
-
-            <div className="h-3 w-[1px] bg-border/80" aria-hidden="true" />
+          {/* Right: Theme & Locale Controls */}
+          <div className="flex shrink-0 items-center gap-2">
             <LocaleSwitcher locale={locale} dataTestId="locale-switcher-header" />
             <ThemeSwitcher idPrefix="header" />
           </div>
@@ -213,32 +182,34 @@ export function Navbar({
       </div>
 
       {/* ─── TIER 3: Sleek Horizontal Category Navigation Bar ─── */}
-      <div className="border-t border-border/60 bg-muted/15">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-3 sm:px-6 lg:px-8">
-          {/* Scrollable Category Navigation (Never Overflows!) */}
-          <nav
-            aria-label="Category navigation"
-            className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto py-1.5 no-scrollbar scroll-smooth whitespace-nowrap"
-          >
-            {desktopNavItems.map((item) => (
-              <Link
-                key={`${item.href}-${item.label}`}
-                href={item.href}
-                className="shrink-0 rounded-md px-3 py-1 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+      {desktopNavItems.length > 0 ? (
+        <div className="border-t border-border/60 bg-muted/15">
+          <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-3 sm:px-6 lg:px-8">
+            {/* Scrollable Category Navigation (Never Overflows!) */}
+            <nav
+              aria-label="Category navigation"
+              className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto py-1.5 no-scrollbar scroll-smooth whitespace-nowrap"
+            >
+              {desktopNavItems.map((item) => (
+                <Link
+                  key={`${item.href}-${item.label}`}
+                  href={item.href}
+                  className="shrink-0 rounded-md px-3 py-1 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
 
-          {/* Store Location Selector on md+ */}
-          {features.multiStore ? (
-            <div className="hidden shrink-0 border-l border-border/60 pl-3 md:block py-1">
-              <StoreSelector />
-            </div>
-          ) : null}
+            {/* Store Location Selector on md+ */}
+            {features.multiStore ? (
+              <div className="hidden shrink-0 border-l border-border/60 pl-3 md:block py-1">
+                <StoreSelector />
+              </div>
+            ) : null}
+          </div>
         </div>
-      </div>
+      ) : null}
 
       {/* Mobile Location Selector Bar */}
       {features.multiStore ? (

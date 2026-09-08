@@ -104,14 +104,6 @@ export function MobileMenu({
                 Cart ({cartCount})
               </Link>
 
-              <Link
-                href={`/${locale}/track-order`}
-                onClick={onClose}
-                className="rounded-md px-2 py-2 text-sm hover:bg-muted"
-              >
-                Track Order
-              </Link>
-
               {isAuthenticated && (
                 <Link
                   href={`/${locale}/account/orders`}
@@ -131,9 +123,12 @@ export function MobileMenu({
                 </Link>
               )}
 
-              <div className="flex flex-col gap-2 pt-2">
-                <ThemeSwitcher idPrefix="menu" />
-                <LocaleSwitcher locale={locale} dataTestId="locale-switcher-menu" />
+              <div className="flex items-center justify-between rounded-lg border border-border/70 bg-muted/30 p-2.5">
+                <span className="text-xs font-medium text-muted-foreground">Preferences</span>
+                <div className="flex items-center gap-2">
+                  <LocaleSwitcher locale={locale} dataTestId="locale-switcher-menu" />
+                  <ThemeSwitcher idPrefix="menu" />
+                </div>
               </div>
 
               <div className="mt-auto flex flex-col gap-2 border-t border-border pt-4">

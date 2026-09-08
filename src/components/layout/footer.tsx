@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { getFooter } from "@/lib/api/globals";
-import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import {
   FooterColumns,
   type FooterColumn,
@@ -156,10 +155,6 @@ export async function Footer({ locale }: FooterProps) {
               ))}
             </div>
           ) : null}
-
-          <div className="flex items-center gap-2">
-            <LocaleSwitcher locale={locale} dataTestId="locale-switcher-footer" />
-          </div>
         </div>
       </div>
     </footer>

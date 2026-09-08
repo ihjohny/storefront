@@ -1,4 +1,3 @@
-import { features } from "@/lib/config/features";
 import { getHeader } from "@/lib/api/globals";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import type { Locale } from "@/lib/i18n/config";
@@ -14,9 +13,9 @@ function getDefaultItems(locale: string, labels: Record<string, string>): NavIte
   return [
     { label: labels.home, href: `/${locale}` },
     { label: labels.products, href: `/${locale}/products` },
-    { label: labels.bundles, href: `/${locale}/bundles` },
     { label: labels.categories, href: `/${locale}/categories` },
     { label: labels.brands, href: `/${locale}/brands` },
+    { label: labels.trackOrder, href: `/${locale}/track-order` },
   ];
 }
 
@@ -26,27 +25,16 @@ function withoutToolbarCartLink(items: NavItem[], locale: string): NavItem[] {
   return items.filter((item) => item.href !== cartHref);
 }
 
-/** When the CMS has a /vendors row with enabled: false, we must not auto-inject the link again. */
-function wasVendorsLinkDisabledInCms(raw: unknown): boolean {
-  if (!Array.isArray(raw)) {
-    return false;
-  }
-  for (const item of raw) {
-    if (!item || typeof item !== "object") {
-      continue;
-    }
-    const record = item as Record<string, unknown>;
-    const u =
-      typeof record.url === "string"
-        ? record.url
-        : typeof record.href === "string"
-          ? record.href
-          : "";
-    if (u.includes("/vendors") && record.enabled === false) {
-      return true;
-    }
-  }
-  return false;
+const EXCLUDED_NAV_PATHS = ["/showrooms", "/faq"];
+
+/** Remove quick utility links from main nav that are excluded by user request. */
+function withoutRemovedLinks(items: NavItem[]): NavItem[] {
+  return items.filter(
+    (item) =>
+      !EXCLUDED_NAV_PATHS.some(
+        (path) => item.href.endsWith(path) || item.href.includes(`${path}/`),
+      ),
+  );
 }
 
 function normalizeNavItems(raw: unknown, locale: string): NavItem[] {
@@ -103,6 +91,7 @@ export async function Header({ locale }: HeaderProps) {
     bundles: dictionary.common?.bundles ?? "Bundles",
     categories: dictionary.common?.categories ?? "Categories",
     brands: dictionary.common?.brands ?? "Brands",
+    trackOrder: dictionary.order?.trackOrder ?? "Track Order",
     vendor: dictionary.vendor?.directory ?? "Vendors",
   };
 
@@ -119,9 +108,8 @@ export async function Header({ locale }: HeaderProps) {
     }
     navRaw = data?.navLinks ?? data?.navItems;
     const fromApi = normalizeNavItems(navRaw, locale);
-    const cmsNavHasRows = Array.isArray(navRaw) && navRaw.length > 0;
-
-    if (cmsNavHasRows) {
+    if (Array.isArray(navRaw)) {
+      // Admin panel / CMS has navLinks configured (can be empty or populated)
       navItems = fromApi;
     } else if (fromApi.length > 0) {
       navItems = fromApi;
@@ -143,19 +131,7 @@ export async function Header({ locale }: HeaderProps) {
     // Fallback UI keeps layout stable when globals endpoint is unavailable.
   }
 
-  if (!navItems.some((item) => item.href.includes("/brands"))) {
-    navItems.push({ label: labels.brands, href: `/${locale}/brands` });
-  }
-
-  if (
-    features.multivendor &&
-    !navItems.some((item) => item.href.includes("/vendors")) &&
-    !wasVendorsLinkDisabledInCms(navRaw)
-  ) {
-    navItems.push({ label: labels.vendor, href: `/${locale}/vendors` });
-  }
-
-  navItems = withoutToolbarCartLink(navItems, locale);
+  navItems = withoutRemovedLinks(withoutToolbarCartLink(navItems, locale));
 
   return (
     <header className="sticky top-0 z-30 w-full border-b border-border/80 bg-background/95 backdrop-blur-md shadow-2xs">
