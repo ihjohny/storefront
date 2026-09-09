@@ -19,6 +19,8 @@ type BundlePageProps = BundlePageParams & {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({
   params,
 }: BundlePageParams): Promise<Metadata> {

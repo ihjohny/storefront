@@ -160,7 +160,7 @@ export async function getProductBySlug(
     params.set("limit", "1");
 
     const response = await apiClient<ProductsResponse>(`/products?${params.toString()}`, {
-      next: { revalidate: 60 },
+      cache: "no-store",
     } as RequestInit);
 
     return response.docs[0] ?? null;
@@ -184,7 +184,7 @@ export async function getProductVariants(
       `/product-variants?${params.toString()}`,
       {
         ...(locale ? { locale } : {}),
-        ...(typeof window === "undefined" ? { next: { revalidate: 30 } } : {}),
+        cache: "no-store",
       } as RequestInit,
     );
 
