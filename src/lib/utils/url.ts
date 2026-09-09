@@ -3,18 +3,24 @@ export function getMediaUrl(path: string | null | undefined): string | null {
     return null;
   }
 
-  // If path is a full URL, handle localhost:3000 / 127.0.0.1:3000 translation in container
+  const backendInternalOrigin = process.env.BACKEND_URL
+    ? new URL(process.env.BACKEND_URL).origin
+    : null;
+
+  // If path is a full URL, handle internal Docker routing and localhost translation
   if (path.startsWith("http://") || path.startsWith("https://")) {
     try {
       const url = new URL(path);
-      // When running in Docker, localhost:3000 from the backend database needs to map to BACKEND_URL
+      // When running in Docker with BACKEND_URL configured, route media fetches through internal backend origin
+      if (backendInternalOrigin && url.pathname.startsWith("/api/media/file/")) {
+        return `${backendInternalOrigin}${url.pathname}${url.search}`;
+      }
       if (
         (url.hostname === "localhost" || url.hostname === "127.0.0.1") &&
         url.port === "3000" &&
-        process.env.BACKEND_URL
+        backendInternalOrigin
       ) {
-        const backendOrigin = new URL(process.env.BACKEND_URL).origin;
-        return `${backendOrigin}${url.pathname}${url.search}`;
+        return `${backendInternalOrigin}${url.pathname}${url.search}`;
       }
       return path;
     } catch {
@@ -23,7 +29,7 @@ export function getMediaUrl(path: string | null | undefined): string | null {
   }
 
   const backendUrl = (
-    process.env.BACKEND_URL ||
+    backendInternalOrigin ||
     process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, "") ||
     "http://localhost:3000"
   ).replace(/\/$/, "");
