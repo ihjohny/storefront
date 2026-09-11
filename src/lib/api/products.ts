@@ -32,6 +32,7 @@ export async function getProducts(
   const params = new URLSearchParams();
   params.set("limit", String(filters.limit ?? ITEMS_PER_PAGE));
   params.set("page", String(filters.page ?? 1));
+  params.set("depth", "1");
 
   if (filters.locale) {
     params.set("locale", filters.locale);

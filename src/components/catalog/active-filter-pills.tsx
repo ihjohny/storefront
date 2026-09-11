@@ -1,5 +1,6 @@
 "use client";
 
+import { useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { Attribute } from "@/lib/types/attribute";
 import type { Category } from "@/lib/types/category";
@@ -41,6 +42,13 @@ export function ActiveFilterPills({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
+
+  function navigate(url: string) {
+    startTransition(() => {
+      router.push(url, { scroll: false });
+    });
+  }
 
   const brandId = searchParams.get("brand");
   const categoryId = searchParams.get("category");
@@ -69,20 +77,20 @@ export function ActiveFilterPills({
     }
     params.delete("page");
     const nextQuery = params.toString();
-    router.push(nextQuery ? `${pathname}?${nextQuery}` : pathname);
+    navigate(nextQuery ? `${pathname}?${nextQuery}` : pathname);
   }
 
   function removeClass() {
     const params = setClassInParams(new URLSearchParams(searchParams.toString()), null);
     const nextQuery = params.toString();
-    router.push(nextQuery ? `${pathname}?${nextQuery}` : pathname);
+    navigate(nextQuery ? `${pathname}?${nextQuery}` : pathname);
   }
 
   function removeSpec(paramKey: string, value?: string) {
     const currentParams = new URLSearchParams(searchParams.toString());
     const nextParams = removeSpecOptionFromParams(currentParams, paramKey, value);
     const nextQuery = nextParams.toString();
-    router.push(nextQuery ? `${pathname}?${nextQuery}` : pathname);
+    navigate(nextQuery ? `${pathname}?${nextQuery}` : pathname);
   }
 
   function clearAll() {
@@ -105,7 +113,7 @@ export function ActiveFilterPills({
     });
     params.delete("page");
     const nextQuery = params.toString();
-    router.push(nextQuery ? `${pathname}?${nextQuery}` : pathname);
+    navigate(nextQuery ? `${pathname}?${nextQuery}` : pathname);
   }
 
   if (brandId) {
@@ -134,7 +142,7 @@ export function ActiveFilterPills({
         params.delete("maxPrice");
         params.delete("page");
         const nextQuery = params.toString();
-        router.push(nextQuery ? `${pathname}?${nextQuery}` : pathname);
+        navigate(nextQuery ? `${pathname}?${nextQuery}` : pathname);
       },
     });
   } else if (minPrice) {
@@ -203,7 +211,11 @@ export function ActiveFilterPills({
   if (activePills.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5 py-1">
+    <div
+      className={`flex flex-wrap items-center gap-1.5 py-1 transition-opacity duration-150 ${
+        isPending ? "opacity-60 pointer-events-none" : "opacity-100"
+      }`}
+    >
       <span className="text-xs font-medium text-muted-foreground mr-1">Active filters:</span>
       {activePills.map((pill, idx) => (
         <span

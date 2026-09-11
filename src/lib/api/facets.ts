@@ -22,7 +22,9 @@ export async function getFacets(
     const endpoint = query ? `/storefront/facets?${query}` : "/storefront/facets";
 
     const response = await apiClient<FacetsResponse>(endpoint, {
-      cache: "no-store",
+      ...(typeof window === "undefined"
+        ? { next: { revalidate: 60, tags: ["facets"] } }
+        : {}),
     } as RequestInit);
 
     return (

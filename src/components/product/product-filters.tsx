@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { Category } from "@/lib/types/category";
 import type { Attribute } from "@/lib/types/attribute";
@@ -66,6 +66,7 @@ export function ProductFilters({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
 
   const [minPrice, setMinPrice] = useState(searchParams.get("minPrice") ?? "");
   const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") ?? "");
@@ -73,6 +74,12 @@ export function ProductFilters({
   const [isOpen, setIsOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const asideRef = useRef<HTMLElement | null>(null);
+
+  function navigate(url: string) {
+    startTransition(() => {
+      router.push(url, { scroll: false });
+    });
+  }
 
   const selectedCategory = searchParams.get("category");
   const selectedBrand = searchParams.get("brand");
@@ -120,14 +127,14 @@ export function ProductFilters({
     const currentParams = new URLSearchParams(searchParams.toString());
     const nextParams = setClassInParams(currentParams, slug);
     const nextQuery = nextParams.toString();
-    router.push(nextQuery ? `${pathname}?${nextQuery}` : pathname);
+    navigate(nextQuery ? `${pathname}?${nextQuery}` : pathname);
   }
 
   function toggleSpecOption(paramKey: string, optionValue: string) {
     const currentParams = new URLSearchParams(searchParams.toString());
     const nextParams = toggleSpecOptionInParams(currentParams, paramKey, optionValue);
     const nextQuery = nextParams.toString();
-    router.push(nextQuery ? `${pathname}?${nextQuery}` : pathname);
+    navigate(nextQuery ? `${pathname}?${nextQuery}` : pathname);
   }
 
   const visibleFacets = useMemo(() => {
@@ -179,7 +186,7 @@ export function ProductFilters({
     });
     params.delete("page");
     const nextQuery = params.toString();
-    router.push(nextQuery ? `${pathname}?${nextQuery}` : pathname);
+    navigate(nextQuery ? `${pathname}?${nextQuery}` : pathname);
   }
 
   function updateParam(key: string, value: string | null) {
@@ -231,7 +238,7 @@ export function ProductFilters({
     setMinPrice("");
     setMaxPrice("");
     const nextQuery = params.toString();
-    router.push(nextQuery ? `${pathname}?${nextQuery}` : pathname);
+    navigate(nextQuery ? `${pathname}?${nextQuery}` : pathname);
   }
 
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -275,28 +282,46 @@ export function ProductFilters({
   return (
     <aside
       ref={asideRef}
-      className={
+      className={`relative overflow-hidden ${
         showMobilePanel
           ? panelClass
-          : "h-0 overflow-visible border-0 p-0 lg:h-auto lg:space-y-5 lg:rounded-xl lg:border lg:border-border lg:bg-card/90 lg:p-5 lg:shadow-sm lg:backdrop-blur"
-      }
+          : "h-0 border-0 p-0 lg:h-auto lg:space-y-5 lg:rounded-xl lg:border lg:border-border lg:bg-card/90 lg:p-5 lg:shadow-sm lg:backdrop-blur"
+      }`}
     >
+      {isPending ? (
+        <div className="absolute top-0 left-0 right-0 h-1 overflow-hidden bg-primary/20 z-30" aria-hidden="true">
+          <div className="h-full bg-primary animate-pulse w-full" />
+        </div>
+      ) : null}
+
       <div className={`${showMobilePanel ? "flex" : "hidden"} items-center justify-between lg:flex`}>
         <div className="inline-flex items-center gap-2">
           <span className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-background shadow-xs">
-            <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" aria-hidden="true">
-              <path
-                d="M3 5h14M6 10h8M8 15h4"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
+            {isPending ? (
+              <svg className="h-4 w-4 animate-spin text-primary" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" aria-hidden="true">
+                <path
+                  d="M3 5h14M6 10h8M8 15h4"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+            )}
           </span>
           <p className="text-sm font-semibold tracking-tight text-foreground">Filters</p>
           {activeFilterCount > 0 ? (
             <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
               {activeFilterCount}
+            </span>
+          ) : null}
+          {isPending ? (
+            <span className="text-[11px] font-medium text-primary animate-pulse ml-1">
+              Updating...
             </span>
           ) : null}
         </div>
